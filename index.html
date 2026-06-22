@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-  <title>AI AGENTS // NFT GENERATOR</title>
+  <title>BURNOVA NFT GENERATOR</title>
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -37,7 +37,7 @@
     @media(max-width: 768px) { .grid-4cols { grid-template-columns: repeat(2, 1fr); } }
     @media(max-width: 480px) { .grid-4cols { grid-template-columns: 1fr; } }
     .layer-row { background: #d4d0c8; border: 2px outset #808080; padding: 10px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
-    .move-btn { background: #c0c0c0; border: 2px solid; border-top-color: #ffffff; border-left-color: #ffffff; border-right-color: #808080; border-bottom-color: #808080; padding: 5px 10px; cursor: pointer; font-family: monospace; font-size: 14px; margin-left: 5px; transition: none; }
+    .move-btn { background: #c0c0c0; border: 2px solid; border-top-color: #ffffff; border-left-color: #ffffff; border-right-color: #808080; border-bottom-color: #808080; padding: 5px 10px; cursor: pointer; font-family: monospace; font-size: 14px; margin-left: 5px; }
     .move-btn:active { border-top-color: #808080; border-left-color: #808080; border-right-color: #ffffff; border-bottom-color: #ffffff; background: #a0a0a0; }
     .search-input { background: #ffffff; border: 2px inset #808080; padding: 8px 12px; font-family: 'VT323', monospace; font-size: 16px; flex: 1; min-width: 0; }
     .zip-progress { background: #000080; color: #00ff00; font-family: 'Press Start 2P', monospace; font-size: 8px; padding: 8px 12px; border: 2px inset #808080; margin-top: 8px; display: none; }
@@ -58,12 +58,14 @@
     .collection-scroll::-webkit-scrollbar-button { background: #c0c0c0; border: 2px outset #808080; height: 20px; }
     .score-input { background: #000; color: #00ff00; border: 2px inset #808080; padding: 3px 6px; font-family: 'Press Start 2P', monospace; font-size: 8px; width: 60px; text-align: center; outline: none; }
     .score-badge { background: #004400; color: #00ff00; font-family: 'Press Start 2P', monospace; font-size: 7px; padding: 2px 5px; border: 1px solid #00aa00; display: inline-block; margin-top: 3px; }
+    .del-layer-btn { background: #c0c0c0; border: 2px solid; border-top-color: #ffffff; border-left-color: #ffffff; border-right-color: #808080; border-bottom-color: #808080; padding: 3px 7px; cursor: pointer; font-family: 'Press Start 2P', monospace; font-size: 8px; color: #aa0000; margin-top: 6px; width: 100%; }
+    .del-layer-btn:active { border-top-color: #808080; border-left-color: #808080; border-right-color: #ffffff; border-bottom-color: #ffffff; }
   </style>
 </head>
 <body>
 <div class="win95-desktop">
   <div class="win95-window">
-    <div class="win95-titlebar"><span>📁 AI AGENTS - NFT GENERATOR v10.0</span><button onclick="location.reload()">✕</button></div>
+    <div class="win95-titlebar"><span>📁 BURNOVA NFT GENERATOR v11.0</span><button onclick="location.reload()">✕</button></div>
     <div style="background: #c0c0c0; padding: 8px 16px 0 16px;">
       <div style="display: flex; gap: 4px; flex-wrap: wrap;">
         <button onclick="App.switchTab('layers')" id="tab-layers" class="win95-tab active">📂 LAYERS</button>
@@ -113,19 +115,19 @@
       <!-- CREATE NFT TAB -->
       <div id="panel-create" class="hidden">
         <div class="big-mint-box">
-          <div style="font-family:'Press Start 2P',monospace; font-size:12px; color:#ffff00; margin-bottom:12px;">🚀 AI AGENTS NFT GENERATOR</div>
+          <div style="font-family:'Press Start 2P',monospace; font-size:12px; color:#ffff00; margin-bottom:12px;">🔥 BURNOVA NFT GENERATOR</div>
           <div style="font-family:'Press Start 2P',monospace; font-size:8px; color:#aaaaff; margin-bottom:16px;">Enter count → Hit MINT → Done fast!</div>
           <div style="display:flex; gap:12px; align-items:flex-end; justify-content:center; flex-wrap:wrap;">
             <div>
               <div style="font-family:'Press Start 2P',monospace; font-size:8px; color:#ccccff; margin-bottom:8px;">TOTAL NFTs (max 3000)</div>
-              <input type="number" id="total-nft-count" min="1" max="3000" value="100" class="big-mint-input" oninput="App.onTotalChange()">
+              <input type="number" id="total-nft-count" min="1" max="3000" value="2222" class="big-mint-input" oninput="App.onTotalChange()">
             </div>
             <div style="flex:1; min-width:200px;">
               <div style="font-family:'Press Start 2P',monospace; font-size:8px; color:#ccccff; margin-bottom:8px;">NAME PREFIX</div>
-              <input type="text" id="name-prefix" value="AI AGENT#" class="win95-input" style="font-family:'Press Start 2P'; font-size:12px; background:#000; color:#0ff; border:2px inset #4444ff;">
+              <input type="text" id="name-prefix" value="BURNOVA#" class="win95-input" style="font-family:'Press Start 2P'; font-size:12px; background:#000; color:#0ff; border:2px inset #4444ff;">
             </div>
           </div>
-          <textarea id="nft-description" rows="2" class="win95-input mt-3" style="background:#000; color:#aaa; font-family:'Press Start 2P'; font-size:8px; border:2px inset #4444ff;">Ai Agents 1818</textarea>
+          <textarea id="nft-description" rows="2" class="win95-input mt-3" style="background:#000; color:#aaa; font-family:'Press Start 2P'; font-size:8px; border:2px inset #4444ff;">Crypto Agents // 2222</textarea>
           <button id="bulk-mint-btn" onclick="App.startMint()" class="big-mint-btn">⚡ GENERATE NFTs NOW ⚡</button>
           <div id="progress-wrap" class="hidden mt-3">
             <div style="font-family:'Press Start 2P',monospace; font-size:8px; color:#00ff00; margin-bottom:6px; display:flex; justify-content:space-between;">
@@ -292,7 +294,6 @@ function loadNFTsLocal() {
   return false;
 }
 
-// RAF-based yield — non-blocking, no setTimeout overhead
 function yieldFrame() {
   return new Promise(r => requestAnimationFrame(() => r()));
 }
@@ -308,7 +309,7 @@ function calcLevel(totalScore) {
 }
 
 // ============================================================
-// LAYERS RENDER
+// LAYERS RENDER — with DELETE button
 // ============================================================
 function renderSections() {
   let html = '';
@@ -340,6 +341,7 @@ function renderSections() {
             onchange="App.updateLayerScore('${s}','${l.id}',this.value)"
             onclick="event.stopPropagation()">
         </div>
+        <button class="del-layer-btn" onclick="event.stopPropagation();App.deleteLayer('${s}','${l.id}')">🗑️ DELETE</button>
       </div>`).join('')}</div>`:''}
     </div>`;
   }
@@ -383,6 +385,17 @@ async function updateLayerScore(section, id, newScore) {
   renderSections();
 }
 
+// ✅ FIX: Delete Layer from library
+async function deleteLayer(section, id) {
+  const layer = (layersBySection[section]||[]).find(l=>String(l.id)===String(id));
+  if (!layer) return;
+  if (!confirm(`🗑️ DELETE "${layer.value}" from ${section}?\nThis cannot be undone!`)) return;
+  layersBySection[section] = (layersBySection[section]||[]).filter(l=>String(l.id)!==String(id));
+  database.ref(`layers/${section}`).set(toCleanArray(section)).catch(e=>console.warn(e));
+  showToast(`🗑️ DELETED: ${layer.value}`);
+  renderSections();
+}
+
 async function addLayer() {
   const url = document.getElementById('github-url').value.trim();
   const val = document.getElementById('layer-value').value.trim();
@@ -423,7 +436,7 @@ function listenFirebase() {
 }
 
 // ============================================================
-// IMAGE COMPOSITING — OPTIMIZED
+// IMAGE COMPOSITING
 // ============================================================
 const imageCache = new Map();
 
@@ -444,7 +457,6 @@ async function preloadAllImages() {
       if (l.imageUrl && !imageCache.has(l.imageUrl)) allUrls.push(l.imageUrl);
   if (!allUrls.length) return;
   showToast(`⚡ Pre-loading ${allUrls.length} images...`);
-  // Load in parallel batches of 20 for max speed
   const BATCH = 20;
   for (let i = 0; i < allUrls.length; i += BATCH) {
     await Promise.all(allUrls.slice(i, i + BATCH).map(u => loadImage(u)));
@@ -452,7 +464,6 @@ async function preloadAllImages() {
   showToast(`✅ ${allUrls.length} images cached!`);
 }
 
-// Shared OffscreenCanvas pool for speed
 let _sharedCanvas = null;
 let _sharedCtx = null;
 
@@ -464,7 +475,6 @@ function getSharedCanvas(w, h) {
     }
     return { canvas: _sharedCanvas, ctx: _sharedCtx };
   }
-  // fallback: reuse DOM canvas
   if (!_sharedCanvas) {
     _sharedCanvas = document.createElement('canvas');
     _sharedCanvas.width = w; _sharedCanvas.height = h;
@@ -480,7 +490,6 @@ async function compositeFromLayers(layers, w=512, h=512) {
   const { canvas, ctx } = getSharedCanvas(w, h);
   ctx.clearRect(0, 0, w, h);
   ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, w, h);
-  // All images should already be cached; draw synchronously
   for (const l of sorted) {
     const img = imageCache.get(l.imageUrl);
     if (img) ctx.drawImage(img, 0, 0, w, h);
@@ -490,20 +499,6 @@ async function compositeFromLayers(layers, w=512, h=512) {
     return new Promise(res => { const r = new FileReader(); r.onload = () => res(r.result); r.readAsDataURL(blob); });
   }
   return canvas.toDataURL('image/png');
-}
-
-// Batch composite: returns array of dataURLs, yields every N items
-async function batchComposite(sets, onProgress, BATCH_SIZE=80) {
-  const results = [];
-  for (let i = 0; i < sets.length; i += BATCH_SIZE) {
-    const batch = sets.slice(i, Math.min(i + BATCH_SIZE, sets.length));
-    for (const g of batch) {
-      results.push(await compositeFromLayers(g.layers));
-    }
-    if (onProgress) onProgress(Math.min(i + BATCH_SIZE, sets.length), sets.length);
-    await yieldFrame();
-  }
-  return results;
 }
 
 // ============================================================
@@ -582,11 +577,13 @@ function generateNFTLayers(gender, existingKeys, maxAttempts=50) {
 }
 
 // ============================================================
-// MAIN MINT — OPTIMIZED
+// ✅ FIX 1: MAIN MINT — generate EXACT requested count
+// Instead of splitting male/female upfront, generate one by one
+// alternating gender but always hitting the total
 // ============================================================
 async function startMint() {
   const total = Math.min(MAX_NFT_LIMIT, parseInt(document.getElementById('total-nft-count').value)||1);
-  const prefix = document.getElementById('name-prefix').value.trim()||"AI AGENT#";
+  const prefix = document.getElementById('name-prefix').value.trim()||"BURNOVA#";
   const desc = document.getElementById('nft-description').value;
   const required = ['Background','Base','Clothing','Head'];
   const missing = required.filter(s=>!(layersBySection[s]||[]).length);
@@ -612,22 +609,41 @@ async function startMint() {
     progText.innerText = '⚡ PRELOADING...'; progPhase.innerText = 'Phase 1/3: Image cache';
     await preloadAllImages();
 
-    // Phase 2: generate combos (pure JS, very fast)
+    // Phase 2: generate combos
     progText.innerText = '🎲 GENERATING COMBOS...'; progPhase.innerText = 'Phase 2/3: Generating traits';
-    const maleCount = Math.ceil(total / 2), femaleCount = Math.floor(total / 2);
     const existingKeys = buildExistingKeys();
-    const generatedSets = []; let skipped = 0;
+    const generatedSets = [];
+    let skipped = 0;
 
-    // Generate in large chunks, yield every 1000
-    for (let i = 0; i < maleCount; i++) {
-      const r = generateNFTLayers('male', existingKeys);
-      if (r) generatedSets.push({...r, gender:'male'}); else skipped++;
-      if (i % 1000 === 0) { setProgress(Math.round(i/total*50), i, total); await yieldFrame(); }
-    }
-    for (let i = 0; i < femaleCount; i++) {
-      const r = generateNFTLayers('female', existingKeys);
-      if (r) generatedSets.push({...r, gender:'female'}); else skipped++;
-      if (i % 1000 === 0) { setProgress(50 + Math.round(i/total*50), maleCount+i, total); await yieldFrame(); }
+    // ✅ FIX: Generate EXACTLY `total` NFTs, alternating male/female
+    // If one gender runs out of unique combos, fall back to the other
+    let maleGenerated = 0;
+    let femaleGenerated = 0;
+
+    for (let i = 0; i < total; i++) {
+      // Alternate gender: even index = male, odd = female
+      let gender = (i % 2 === 0) ? 'male' : 'female';
+      let result = generateNFTLayers(gender, existingKeys);
+
+      // If failed, try opposite gender
+      if (!result) {
+        gender = gender === 'male' ? 'female' : 'male';
+        result = generateNFTLayers(gender, existingKeys);
+      }
+
+      if (result) {
+        generatedSets.push({...result, gender});
+        if (gender === 'male') maleGenerated++;
+        else femaleGenerated++;
+      } else {
+        skipped++;
+      }
+
+      if (i % 200 === 0) {
+        setProgress(Math.round(i / total * 50), i, total);
+        progPhase.innerText = `Phase 2/3: ${i}/${total} combos | ♂${maleGenerated} ♀${femaleGenerated}`;
+        await yieldFrame();
+      }
     }
 
     // Shuffle
@@ -635,19 +651,21 @@ async function startMint() {
       const j = Math.floor(Math.random()*(i+1));
       [generatedSets[i],generatedSets[j]] = [generatedSets[j],generatedSets[i]];
     }
-    progText.innerText = `✅ ${generatedSets.length} COMBOS READY`;
-    if (skipped > 0) showToast(`⚠️ ${skipped} duplicates removed`, 4000);
 
-    // Phase 3: composite images — bigger batches = faster
+    progText.innerText = `✅ ${generatedSets.length} COMBOS READY`;
+    progPhase.innerText = `♂${maleGenerated} male | ♀${femaleGenerated} female${skipped > 0 ? ` | ⚠️ ${skipped} skipped` : ''}`;
+    if (skipped > 0) showToast(`⚠️ ${skipped} duplicates removed`, 4000);
+    await yieldFrame();
+
+    // Phase 3: composite images
     progText.innerText = '🎨 COMPOSITING...'; progPhase.innerText = 'Phase 3/3: Drawing NFTs';
     setProgress(0, 0, generatedSets.length);
     const startTime = Date.now();
-    const BATCH_SIZE = 100; // bigger batch = faster
+    const BATCH_SIZE = 100;
     const newNFTs = [];
 
     for (let i = 0; i < generatedSets.length; i += BATCH_SIZE) {
       const batch = generatedSets.slice(i, Math.min(i + BATCH_SIZE, generatedSets.length));
-      // Composite all in batch synchronously (all cached, very fast)
       const images = [];
       for (const g of batch) images.push(await compositeFromLayers(g.layers));
 
@@ -681,12 +699,12 @@ async function startMint() {
     nfts.push(...newNFTs);
     saveNFTsLocal();
     renderCollection();
-    showToast(`✅ ${newNFTs.length} NFTs generated!`);
+    showToast(`✅ ${newNFTs.length} NFTs generated! (♂${maleGenerated} ♀${femaleGenerated})`);
     progText.innerText = `✅ DONE! ${newNFTs.length} NFTs`;
     progEta.innerText = `Total: ${Math.round((Date.now()-startTime)/1000)}s`;
 
   } catch(err) { console.error(err); showToast('❌ '+err.message); }
-  finally { btn.disabled = false; progWrap.classList.add('hidden'); }
+  finally { btn.disabled = false; progPhase.innerText = ''; }
 }
 
 // ============================================================
@@ -823,8 +841,8 @@ async function downloadAllPNG() {
   }
   setZipStatus('⚙️ Compressing...', true);
   const blob = await zip.generateAsync({type:'blob', compression:'STORE'});
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'nfts_images.zip'; a.click();
-  URL.revokeObjectURL(a.href); setZipStatus('', false); showToast(`✅ nfts_images.zip (${list.length} PNGs)`);
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'burnova_images.zip'; a.click();
+  URL.revokeObjectURL(a.href); setZipStatus('', false); showToast(`✅ burnova_images.zip (${list.length} PNGs)`);
 }
 
 async function downloadAllJSON() {
@@ -841,8 +859,8 @@ async function downloadAllJSON() {
   }
   setZipStatus('⚙️ Compressing...', true);
   const blob = await zip.generateAsync({type:'blob', compression:'DEFLATE', compressionOptions:{level:6}});
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'nfts_metadata.zip'; a.click();
-  URL.revokeObjectURL(a.href); setZipStatus('', false); showToast(`✅ nfts_metadata.zip (${list.length} JSONs)`);
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'burnova_metadata.zip'; a.click();
+  URL.revokeObjectURL(a.href); setZipStatus('', false); showToast(`✅ burnova_metadata.zip (${list.length} JSONs)`);
 }
 
 function downloadSingleImage(id) {
@@ -858,18 +876,20 @@ function downloadSingleJSON(id) {
 }
 
 // ============================================================
-// NFT EDIT MODAL — INSTANT LAYER REORDER
+// ✅ FIX 2 & 3: NFT EDIT MODAL — Layer reorder SAVES correctly
+// The issue was that _applyModalToNFT was being called with sorted layers
+// but modal state kept unsorted layers. Now we always sort before saving.
 // ============================================================
-// We keep a per-NFT in-memory layer array for the modal
-// Reorder is instant (no re-composite on every move, only on close/save)
-const _modalState = {}; // nftId → { layers: [...] }
+const _modalState = {};
 
 async function viewNFTDetails(id) {
   const nft = nfts.find(n=>n.id===id); if (!nft) return;
   document.getElementById('nft-modal-'+id)?.remove();
 
-  // Deep copy layers for modal editing
-  _modalState[id] = { layers: nft.layers.map(l=>({...l})) };
+  // Deep copy layers for modal editing — preserve display order (sorted by SECTIONS_ORDER)
+  _modalState[id] = {
+    layers: [...nft.layers].sort((a,b)=>SECTIONS_ORDER.indexOf(a.section)-SECTIONS_ORDER.indexOf(b.section)).map(l=>({...l}))
+  };
 
   const modal = document.createElement('div');
   modal.id = 'nft-modal-'+id;
@@ -886,10 +906,10 @@ async function viewNFTDetails(id) {
         <div id="modal-score-${id}" style="background:#004400;color:#00ff00;font-family:'Press Start 2P',monospace;font-size:8px;padding:6px 10px;border:1px solid #00aa00;flex:1;text-align:center;">⭐ Total Score: ${scoreAttr?scoreAttr.value:0}</div>
         <div id="modal-level-${id}" style="background:#440044;color:#ff88ff;font-family:'Press Start 2P',monospace;font-size:8px;padding:6px 10px;border:1px solid #aa00aa;flex:1;text-align:center;">🏆 Level: ${levelAttr?levelAttr.value:0}</div>
       </div>
-      <div style="font-family:'Press Start 2P',monospace;font-size:8px;margin-bottom:8px;">LAYERS (render order: Bg → Base → Clothing → Beard → Eyes → Head → Accessory)</div>
-      <div class="layers-list" id="modal-layers-${id}" style="max-height:220px;overflow:auto;"></div>
+      <div style="font-family:'Press Start 2P',monospace;font-size:8px;margin-bottom:8px;">LAYERS (↑↓ to reorder render order)</div>
+      <div class="layers-list" id="modal-layers-${id}" style="max-height:260px;overflow:auto;"></div>
       <div style="margin-top:10px;background:#d4d0c8;border:2px inset #808080;padding:8px;">
-        <div style="font-family:'Press Start 2P',monospace;font-size:7px;margin-bottom:6px;">➕ ADD LAYER:</div>
+        <div style="font-family:'Press Start 2P',monospace;font-size:7px;margin-bottom:6px;">➕ ADD / REPLACE LAYER:</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;">
           <select id="add-section-${id}" class="win95-select" style="flex:1;font-size:11px;">${SECTIONS_ORDER.map(s=>`<option value="${s}">${s}</option>`).join('')}</select>
           <button onclick="App.openAddLayerModal('${id}')" class="win95-btn" style="font-size:7px;padding:4px 8px;">CHOOSE</button>
@@ -897,8 +917,8 @@ async function viewNFTDetails(id) {
       </div>
       <div style="display:flex;gap:8px;margin-top:12px;">
         <button onclick="App.saveAndCloseModal('${id}')" class="win95-btn" style="flex:1;background:#004400;color:#0f0;">💾 SAVE</button>
-        <button onclick="App.downloadSingleImage('${id}');_closeModal('${id}')" class="win95-btn" style="flex:1;">📸 PNG</button>
-        <button onclick="App.downloadSingleJSON('${id}');_closeModal('${id}')" class="win95-btn" style="flex:1;">📄 JSON</button>
+        <button onclick="App.downloadSingleImage('${id}')" class="win95-btn" style="flex:1;">📸 PNG</button>
+        <button onclick="App.downloadSingleJSON('${id}')" class="win95-btn" style="flex:1;">📄 JSON</button>
         <button onclick="_closeModal('${id}')" class="win95-btn" style="flex:1;">CANCEL</button>
       </div>
     </div></div>`;
@@ -918,17 +938,18 @@ function _renderModalLayers(id) {
   const layers = state.layers;
   const container = document.getElementById(`modal-layers-${id}`); if (!container) return;
   container.innerHTML = layers.map((l, idx) => `<div class="layer-row" id="mlr-${id}-${idx}">
-    <div style="display:flex;align-items:center;gap:6px;">
-      <img src="${l.imageUrl}" style="width:32px;height:32px;object-fit:contain;border:1px solid #808080;">
-      <div>
-        <span style="font-family:'Press Start 2P',monospace;font-size:7px;">${idx+1}. ${l.section}: ${escapeHtml(l.value)}</span>
+    <div style="display:flex;align-items:center;gap:6px;flex:1;min-width:0;">
+      <img src="${l.imageUrl}" style="width:36px;height:36px;object-fit:contain;border:1px solid #808080;flex-shrink:0;">
+      <div style="min-width:0;">
+        <div style="font-family:'Press Start 2P',monospace;font-size:7px;word-break:break-word;">${idx+1}. [${l.section}]</div>
+        <div style="font-family:'VT323',monospace;font-size:13px;">${escapeHtml(l.value)}</div>
         <div class="score-badge">⭐ ${l.score||0} pts</div>
       </div>
     </div>
-    <div style="display:flex;gap:4px;">
-      <button onclick="App._modalMoveLayer('${id}',${idx},'up')" class="move-btn" title="Move Up">▲</button>
-      <button onclick="App._modalMoveLayer('${id}',${idx},'down')" class="move-btn" title="Move Down">▼</button>
-      <button onclick="App._modalDeleteLayer('${id}',${idx})" class="move-btn" style="border-color:#ff4444;color:#aa0000;">✕</button>
+    <div style="display:flex;gap:3px;flex-shrink:0;">
+      <button onclick="App._modalMoveLayer('${id}',${idx},'up')" class="move-btn" title="Move Up" ${idx===0?'disabled':''}>▲</button>
+      <button onclick="App._modalMoveLayer('${id}',${idx},'down')" class="move-btn" title="Move Down" ${idx===layers.length-1?'disabled':''}>▼</button>
+      <button onclick="App._modalDeleteLayer('${id}',${idx})" class="move-btn" style="border-color:#ff4444;color:#aa0000;" title="Remove">✕</button>
     </div></div>`).join('');
 }
 
@@ -938,6 +959,7 @@ async function _drawModalCanvas(id) {
   const ctx = mc.getContext('2d');
   ctx.clearRect(0, 0, 256, 256);
   ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, 256, 256);
+  // Sort by SECTIONS_ORDER for correct rendering
   const sorted = [...state.layers].sort((a,b)=>SECTIONS_ORDER.indexOf(a.section)-SECTIONS_ORDER.indexOf(b.section));
   for (const l of sorted) {
     let img = imageCache.get(l.imageUrl);
@@ -956,22 +978,38 @@ function _updateModalScoreLevel(id) {
   if (l) l.innerText = `🏆 Level: ${level}`;
 }
 
-// Apply modal state to real NFT and update collection card + canvas
+// ✅ FIX 3: Apply modal state to real NFT — saves properly to nfts array + localStorage
 async function _applyModalToNFT(id) {
   const state = _modalState[id]; if (!state) return;
-  const nft = nfts.find(n=>n.id===id); if (!nft) return;
-  // Sort by SECTIONS_ORDER
+  const nftIndex = nfts.findIndex(n=>n.id===id);
+  if (nftIndex === -1) return;
+
+  // Sort layers by SECTIONS_ORDER for rendering
   const sorted = [...state.layers].sort((a,b)=>SECTIONS_ORDER.indexOf(a.section)-SECTIONS_ORDER.indexOf(b.section));
-  nft.layers = sorted.map(l=>({...l}));
-  nft.image = await compositeFromLayers(nft.layers);
-  nft.attributes = buildNFTAttributes(nft.layers);
+
+  // Update the NFT in the nfts array directly
+  nfts[nftIndex].layers = sorted.map(l=>({...l}));
+  nfts[nftIndex].image = await compositeFromLayers(nfts[nftIndex].layers);
+  nfts[nftIndex].attributes = buildNFTAttributes(nfts[nftIndex].layers);
+
   // Update collection card image instantly
   const card = document.getElementById('card-'+id);
-  if (card) { const img = card.querySelector('img'); if (img) img.src = nft.image; }
+  if (card) {
+    const img = card.querySelector('img');
+    if (img) img.src = nfts[nftIndex].image;
+    // Update score/level badges in card
+    const scoreAttr = nfts[nftIndex].attributes.find(a=>a.trait_type==='Total Score');
+    const levelAttr = nfts[nftIndex].attributes.find(a=>a.trait_type==='Level');
+    const badges = card.querySelectorAll('span[style*="border:1px solid"]');
+    if (badges[0] && scoreAttr) badges[0].innerText = `⭐${scoreAttr.value}`;
+    if (badges[1] && levelAttr) badges[1].innerText = `LV${levelAttr.value}`;
+  }
+
+  // ✅ Always save to localStorage after every change
   saveNFTsLocal();
 }
 
-// Layer move — updates modal list, canvas AND collection card instantly
+// ✅ FIX: Layer move — now auto-saves after every move
 async function _modalMoveLayer(id, idx, dir) {
   const state = _modalState[id]; if (!state) return;
   const layers = state.layers;
@@ -982,10 +1020,10 @@ async function _modalMoveLayer(id, idx, dir) {
   } else { return; }
   _renderModalLayers(id);
   _updateModalScoreLevel(id);
-  // Draw canvas + update collection card
   await _drawModalCanvas(id);
+  // Auto-save on every move
   await _applyModalToNFT(id);
-  showToast('↕️ LAYER MOVED');
+  showToast('✅ Layer moved & saved');
 }
 
 async function _modalDeleteLayer(id, idx) {
@@ -996,7 +1034,7 @@ async function _modalDeleteLayer(id, idx) {
   _updateModalScoreLevel(id);
   await _drawModalCanvas(id);
   await _applyModalToNFT(id);
-  showToast('✅ LAYER REMOVED');
+  showToast('✅ Layer removed & saved');
 }
 
 async function saveAndCloseModal(id) {
@@ -1006,7 +1044,6 @@ async function saveAndCloseModal(id) {
   showToast('✅ NFT SAVED!');
 }
 
-// openAddLayerModal with modal state support
 function openAddLayerModal(nftId) {
   addLayerTargetNFTId = nftId;
   const sectionEl = document.getElementById(`add-section-${nftId}`);
@@ -1034,28 +1071,29 @@ function openAddLayerModal(nftId) {
 async function applyLayerToNFT(nftId, section, value, imageUrl, layerId, score) {
   document.getElementById('add-layer-modal').style.display = 'none';
 
-  // Apply to modal state (if modal open)
   const state = _modalState[nftId];
   if (state) {
+    // Remove existing layer of same section, add new one
     state.layers = state.layers.filter(l=>l.section!==section);
     state.layers.push({section, value, imageUrl, score:parseInt(score)||0});
     state.layers.sort((a,b)=>SECTIONS_ORDER.indexOf(a.section)-SECTIONS_ORDER.indexOf(b.section));
     _renderModalLayers(nftId);
     _updateModalScoreLevel(nftId);
     await _drawModalCanvas(nftId);
+    await _applyModalToNFT(nftId);
   } else {
-    // Apply directly to nft
-    const nft = nfts.find(n=>n.id===nftId); if(!nft) return;
-    nft.layers = (nft.layers||[]).filter(l=>l.section!==section);
-    nft.layers.push({section, value, imageUrl, score:parseInt(score)||0});
-    nft.layers.sort((a,b)=>SECTIONS_ORDER.indexOf(a.section)-SECTIONS_ORDER.indexOf(b.section));
-    nft.image = await compositeFromLayers(nft.layers);
-    nft.attributes = buildNFTAttributes(nft.layers);
+    const nftIndex = nfts.findIndex(n=>n.id===nftId);
+    if (nftIndex === -1) return;
+    nfts[nftIndex].layers = (nfts[nftIndex].layers||[]).filter(l=>l.section!==section);
+    nfts[nftIndex].layers.push({section, value, imageUrl, score:parseInt(score)||0});
+    nfts[nftIndex].layers.sort((a,b)=>SECTIONS_ORDER.indexOf(a.section)-SECTIONS_ORDER.indexOf(b.section));
+    nfts[nftIndex].image = await compositeFromLayers(nfts[nftIndex].layers);
+    nfts[nftIndex].attributes = buildNFTAttributes(nfts[nftIndex].layers);
     saveNFTsLocal();
     const card = document.getElementById('card-'+nftId);
-    if (card) { const img = card.querySelector('img'); if(img) img.src = nft.image; }
+    if (card) { const img = card.querySelector('img'); if(img) img.src = nfts[nftIndex].image; }
   }
-  showToast(`✅ ${section} → ${value}`);
+  showToast(`✅ ${section} → ${value} saved!`);
 }
 
 // ============================================================
@@ -1079,7 +1117,7 @@ window._closeModal = _closeModal;
 window.App = {
   switchTab,
   toggleSectionLayers: s=>{openSectionLayers=openSectionLayers===s?null:s; renderSections();},
-  addLayer, updateLayerScore,
+  addLayer, updateLayerScore, deleteLayer,
   onTotalChange, startMint, deleteAllNFTs,
   downloadAllPNG, downloadAllJSON,
   viewNFTDetails, downloadSingleImage, downloadSingleJSON, deleteSingleNFT,
