@@ -88,8 +88,8 @@
                 <option value="Base">Base</option>
                 <option value="Clothing">Clothing</option>
                 <option value="Beard">Beard</option>
-                <option value="Eyes">Eyes</option>
                 <option value="Head">Head</option>
+                <option value="Eyes">Eyes</option>
                 <option value="Accessory">Accessory</option>
               </select>
             </div>
@@ -107,7 +107,7 @@
           </div>
         </div>
         <div style="background:#000080;color:#ffff00;font-family:'Press Start 2P',monospace;font-size:7px;padding:8px 12px;margin-bottom:12px;border:2px inset #808080;">
-          ⚙️ LAYER RENDER ORDER: Background → Base → Clothing → Beard → Eyes → Head → Accessory
+          ⚙️ LAYER RENDER ORDER: Background → Base → Clothing → Beard → Head → Eyes → Accessory
         </div>
         <div id="sections-container" class="space-y-3"></div>
       </div>
@@ -209,7 +209,7 @@
       <select id="add-layer-section" class="win95-select w-full mb-2">
         <option value="Background">Background</option><option value="Base">Base</option>
         <option value="Clothing">Clothing</option><option value="Beard">Beard</option>
-        <option value="Eyes">Eyes</option><option value="Head">Head</option><option value="Accessory">Accessory</option>
+        <option value="Head">Head</option><option value="Eyes">Eyes</option><option value="Accessory">Accessory</option>
       </select>
       <div class="text-pixel" style="font-size:8px;margin-bottom:6px;">SELECT LAYER:</div>
       <div id="add-layer-list" style="max-height:250px;overflow:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:8px;"></div>
@@ -222,9 +222,9 @@
 
 <script>
 // ============================================================
-// LAYER ORDER: Background → Base → Clothing → Beard → Eyes → Head → Accessory
+// LAYER ORDER: Background → Base → Clothing → Beard → Head → Eyes → Accessory
 // ============================================================
-const SECTIONS_ORDER = ["Background","Base","Clothing","Beard","Eyes","Head","Accessory"];
+const SECTIONS_ORDER = ["Background","Base","Clothing","Beard","Head","Eyes","Accessory"];
 const EXCLUDED_FROM_TRAITS = new Set(["Background","Base"]);
 const MAX_NFT_LIMIT = 3000;
 const SCORE_PER_LEVEL = 120;
@@ -385,7 +385,6 @@ async function updateLayerScore(section, id, newScore) {
   renderSections();
 }
 
-// ✅ FIX: Delete Layer from library
 async function deleteLayer(section, id) {
   const layer = (layersBySection[section]||[]).find(l=>String(l.id)===String(id));
   if (!layer) return;
@@ -552,13 +551,13 @@ function generateNFTLayers(gender, existingKeys, maxAttempts=50) {
     pickedLayers.push({section:'Clothing', value:clothing.value, imageUrl:clothing.imageUrl, score:clothing.score||0});
     const head = pickRandom(headLayers);
     pickedLayers.push({section:'Head', value:head.value, imageUrl:head.imageUrl, score:head.score||0});
-    if (eyesLayers.length && Math.random() < 0.88) {
-      const e = pickRandom(eyesLayers);
-      pickedLayers.push({section:'Eyes', value:e.value, imageUrl:e.imageUrl, score:e.score||0});
-    }
     if (beardLayers.length && Math.random() < 0.70) {
       const b = pickRandom(beardLayers);
       pickedLayers.push({section:'Beard', value:b.value, imageUrl:b.imageUrl, score:b.score||0});
+    }
+    if (eyesLayers.length && Math.random() < 0.88) {
+      const e = pickRandom(eyesLayers);
+      pickedLayers.push({section:'Eyes', value:e.value, imageUrl:e.imageUrl, score:e.score||0});
     }
     if (accessoryLayers.length && Math.random() < 0.02) {
       const a = pickRandom(accessoryLayers);
@@ -577,9 +576,7 @@ function generateNFTLayers(gender, existingKeys, maxAttempts=50) {
 }
 
 // ============================================================
-// ✅ FIX 1: MAIN MINT — generate EXACT requested count
-// Instead of splitting male/female upfront, generate one by one
-// alternating gender but always hitting the total
+// MAIN MINT — generate EXACT requested count
 // ============================================================
 async function startMint() {
   const total = Math.min(MAX_NFT_LIMIT, parseInt(document.getElementById('total-nft-count').value)||1);
@@ -605,32 +602,23 @@ async function startMint() {
   };
 
   try {
-    // Phase 1: preload
     progText.innerText = '⚡ PRELOADING...'; progPhase.innerText = 'Phase 1/3: Image cache';
     await preloadAllImages();
 
-    // Phase 2: generate combos
     progText.innerText = '🎲 GENERATING COMBOS...'; progPhase.innerText = 'Phase 2/3: Generating traits';
     const existingKeys = buildExistingKeys();
     const generatedSets = [];
     let skipped = 0;
-
-    // ✅ FIX: Generate EXACTLY `total` NFTs, alternating male/female
-    // If one gender runs out of unique combos, fall back to the other
     let maleGenerated = 0;
     let femaleGenerated = 0;
 
     for (let i = 0; i < total; i++) {
-      // Alternate gender: even index = male, odd = female
       let gender = (i % 2 === 0) ? 'male' : 'female';
       let result = generateNFTLayers(gender, existingKeys);
-
-      // If failed, try opposite gender
       if (!result) {
         gender = gender === 'male' ? 'female' : 'male';
         result = generateNFTLayers(gender, existingKeys);
       }
-
       if (result) {
         generatedSets.push({...result, gender});
         if (gender === 'male') maleGenerated++;
@@ -638,7 +626,6 @@ async function startMint() {
       } else {
         skipped++;
       }
-
       if (i % 200 === 0) {
         setProgress(Math.round(i / total * 50), i, total);
         progPhase.innerText = `Phase 2/3: ${i}/${total} combos | ♂${maleGenerated} ♀${femaleGenerated}`;
@@ -646,7 +633,6 @@ async function startMint() {
       }
     }
 
-    // Shuffle
     for (let i = generatedSets.length-1; i > 0; i--) {
       const j = Math.floor(Math.random()*(i+1));
       [generatedSets[i],generatedSets[j]] = [generatedSets[j],generatedSets[i]];
@@ -657,7 +643,6 @@ async function startMint() {
     if (skipped > 0) showToast(`⚠️ ${skipped} duplicates removed`, 4000);
     await yieldFrame();
 
-    // Phase 3: composite images
     progText.innerText = '🎨 COMPOSITING...'; progPhase.innerText = 'Phase 3/3: Drawing NFTs';
     setProgress(0, 0, generatedSets.length);
     const startTime = Date.now();
@@ -876,9 +861,7 @@ function downloadSingleJSON(id) {
 }
 
 // ============================================================
-// ✅ FIX 2 & 3: NFT EDIT MODAL — Layer reorder SAVES correctly
-// The issue was that _applyModalToNFT was being called with sorted layers
-// but modal state kept unsorted layers. Now we always sort before saving.
+// NFT EDIT MODAL — with manual layer reorder that auto-saves
 // ============================================================
 const _modalState = {};
 
@@ -886,7 +869,6 @@ async function viewNFTDetails(id) {
   const nft = nfts.find(n=>n.id===id); if (!nft) return;
   document.getElementById('nft-modal-'+id)?.remove();
 
-  // Deep copy layers for modal editing — preserve display order (sorted by SECTIONS_ORDER)
   _modalState[id] = {
     layers: [...nft.layers].sort((a,b)=>SECTIONS_ORDER.indexOf(a.section)-SECTIONS_ORDER.indexOf(b.section)).map(l=>({...l}))
   };
@@ -906,7 +888,7 @@ async function viewNFTDetails(id) {
         <div id="modal-score-${id}" style="background:#004400;color:#00ff00;font-family:'Press Start 2P',monospace;font-size:8px;padding:6px 10px;border:1px solid #00aa00;flex:1;text-align:center;">⭐ Total Score: ${scoreAttr?scoreAttr.value:0}</div>
         <div id="modal-level-${id}" style="background:#440044;color:#ff88ff;font-family:'Press Start 2P',monospace;font-size:8px;padding:6px 10px;border:1px solid #aa00aa;flex:1;text-align:center;">🏆 Level: ${levelAttr?levelAttr.value:0}</div>
       </div>
-      <div style="font-family:'Press Start 2P',monospace;font-size:8px;margin-bottom:8px;">LAYERS (↑↓ to reorder render order)</div>
+      <div style="font-family:'Press Start 2P',monospace;font-size:8px;margin-bottom:8px;">LAYERS (↑↓ to reorder render order — auto-saves)</div>
       <div class="layers-list" id="modal-layers-${id}" style="max-height:260px;overflow:auto;"></div>
       <div style="margin-top:10px;background:#d4d0c8;border:2px inset #808080;padding:8px;">
         <div style="font-family:'Press Start 2P',monospace;font-size:7px;margin-bottom:6px;">➕ ADD / REPLACE LAYER:</div>
@@ -916,7 +898,7 @@ async function viewNFTDetails(id) {
         </div>
       </div>
       <div style="display:flex;gap:8px;margin-top:12px;">
-        <button onclick="App.saveAndCloseModal('${id}')" class="win95-btn" style="flex:1;background:#004400;color:#0f0;">💾 SAVE</button>
+        <button onclick="App.saveAndCloseModal('${id}')" class="win95-btn" style="flex:1;background:#004400;color:#0f0;">💾 SAVE & CLOSE</button>
         <button onclick="App.downloadSingleImage('${id}')" class="win95-btn" style="flex:1;">📸 PNG</button>
         <button onclick="App.downloadSingleJSON('${id}')" class="win95-btn" style="flex:1;">📄 JSON</button>
         <button onclick="_closeModal('${id}')" class="win95-btn" style="flex:1;">CANCEL</button>
@@ -950,7 +932,8 @@ function _renderModalLayers(id) {
       <button onclick="App._modalMoveLayer('${id}',${idx},'up')" class="move-btn" title="Move Up" ${idx===0?'disabled':''}>▲</button>
       <button onclick="App._modalMoveLayer('${id}',${idx},'down')" class="move-btn" title="Move Down" ${idx===layers.length-1?'disabled':''}>▼</button>
       <button onclick="App._modalDeleteLayer('${id}',${idx})" class="move-btn" style="border-color:#ff4444;color:#aa0000;" title="Remove">✕</button>
-    </div></div>`).join('');
+    </div>
+  </div>`).join('');
 }
 
 async function _drawModalCanvas(id) {
@@ -959,7 +942,6 @@ async function _drawModalCanvas(id) {
   const ctx = mc.getContext('2d');
   ctx.clearRect(0, 0, 256, 256);
   ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, 256, 256);
-  // Sort by SECTIONS_ORDER for correct rendering
   const sorted = [...state.layers].sort((a,b)=>SECTIONS_ORDER.indexOf(a.section)-SECTIONS_ORDER.indexOf(b.section));
   for (const l of sorted) {
     let img = imageCache.get(l.imageUrl);
@@ -978,26 +960,22 @@ function _updateModalScoreLevel(id) {
   if (l) l.innerText = `🏆 Level: ${level}`;
 }
 
-// ✅ FIX 3: Apply modal state to real NFT — saves properly to nfts array + localStorage
+// ✅ Apply modal state to real NFT — auto-save on every change
 async function _applyModalToNFT(id) {
   const state = _modalState[id]; if (!state) return;
   const nftIndex = nfts.findIndex(n=>n.id===id);
   if (nftIndex === -1) return;
 
-  // Sort layers by SECTIONS_ORDER for rendering
   const sorted = [...state.layers].sort((a,b)=>SECTIONS_ORDER.indexOf(a.section)-SECTIONS_ORDER.indexOf(b.section));
 
-  // Update the NFT in the nfts array directly
   nfts[nftIndex].layers = sorted.map(l=>({...l}));
   nfts[nftIndex].image = await compositeFromLayers(nfts[nftIndex].layers);
   nfts[nftIndex].attributes = buildNFTAttributes(nfts[nftIndex].layers);
 
-  // Update collection card image instantly
   const card = document.getElementById('card-'+id);
   if (card) {
     const img = card.querySelector('img');
     if (img) img.src = nfts[nftIndex].image;
-    // Update score/level badges in card
     const scoreAttr = nfts[nftIndex].attributes.find(a=>a.trait_type==='Total Score');
     const levelAttr = nfts[nftIndex].attributes.find(a=>a.trait_type==='Level');
     const badges = card.querySelectorAll('span[style*="border:1px solid"]');
@@ -1005,11 +983,10 @@ async function _applyModalToNFT(id) {
     if (badges[1] && levelAttr) badges[1].innerText = `LV${levelAttr.value}`;
   }
 
-  // ✅ Always save to localStorage after every change
   saveNFTsLocal();
 }
 
-// ✅ FIX: Layer move — now auto-saves after every move
+// ✅ Layer move — auto-saves after every move
 async function _modalMoveLayer(id, idx, dir) {
   const state = _modalState[id]; if (!state) return;
   const layers = state.layers;
@@ -1021,9 +998,8 @@ async function _modalMoveLayer(id, idx, dir) {
   _renderModalLayers(id);
   _updateModalScoreLevel(id);
   await _drawModalCanvas(id);
-  // Auto-save on every move
   await _applyModalToNFT(id);
-  showToast('✅ Layer moved & saved');
+  showToast('✅ Layer reordered & auto-saved');
 }
 
 async function _modalDeleteLayer(id, idx) {
@@ -1034,7 +1010,7 @@ async function _modalDeleteLayer(id, idx) {
   _updateModalScoreLevel(id);
   await _drawModalCanvas(id);
   await _applyModalToNFT(id);
-  showToast('✅ Layer removed & saved');
+  showToast('✅ Layer removed & auto-saved');
 }
 
 async function saveAndCloseModal(id) {
