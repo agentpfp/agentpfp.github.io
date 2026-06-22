@@ -27,7 +27,7 @@
     .win95-tab.active { border-top-color: #808080; border-left-color: #808080; border-right-color: #ffffff; border-bottom-color: #ffffff; }
     .nft-card { background: #d4d0c8; border: 3px solid; border-top-color: #ffffff; border-left-color: #ffffff; border-right-color: #808080; border-bottom-color: #808080; }
     .progress-bar { background: #ffffff; border: 2px inset #808080; height: 24px; }
-    .progress-fill { background: #000080; height: 100%; width: 0%; transition: width 0.1s; }
+    .progress-fill { background: #000080; height: 100%; width: 0%; transition: width 0.05s linear; }
     .order-tag { background: #d4d0c8; border: 2px solid; border-top-color: #ffffff; border-left-color: #ffffff; border-right-color: #808080; border-bottom-color: #808080; padding: 4px 10px; font-family: 'Press Start 2P', monospace; font-size: 8px; display:inline-block; }
     #toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #c0c0c0; border: 3px solid; border-top-color: #ffffff; border-left-color: #ffffff; border-right-color: #808080; border-bottom-color: #808080; padding: 10px 20px; font-family: 'Press Start 2P', monospace; font-size: 10px; z-index: 10000; }
     .hidden { display: none; }
@@ -37,8 +37,8 @@
     @media(max-width: 768px) { .grid-4cols { grid-template-columns: repeat(2, 1fr); } }
     @media(max-width: 480px) { .grid-4cols { grid-template-columns: 1fr; } }
     .layer-row { background: #d4d0c8; border: 2px outset #808080; padding: 10px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
-    .move-btn { background: #c0c0c0; border: 2px solid; border-top-color: #ffffff; border-left-color: #ffffff; border-right-color: #808080; border-bottom-color: #808080; padding: 5px 10px; cursor: pointer; font-family: monospace; font-size: 14px; margin-left: 5px; }
-    .move-btn:active { border-top-color: #808080; border-left-color: #808080; border-right-color: #ffffff; border-bottom-color: #ffffff; }
+    .move-btn { background: #c0c0c0; border: 2px solid; border-top-color: #ffffff; border-left-color: #ffffff; border-right-color: #808080; border-bottom-color: #808080; padding: 5px 10px; cursor: pointer; font-family: monospace; font-size: 14px; margin-left: 5px; transition: none; }
+    .move-btn:active { border-top-color: #808080; border-left-color: #808080; border-right-color: #ffffff; border-bottom-color: #ffffff; background: #a0a0a0; }
     .search-input { background: #ffffff; border: 2px inset #808080; padding: 8px 12px; font-family: 'VT323', monospace; font-size: 16px; flex: 1; min-width: 0; }
     .zip-progress { background: #000080; color: #00ff00; font-family: 'Press Start 2P', monospace; font-size: 8px; padding: 8px 12px; border: 2px inset #808080; margin-top: 8px; display: none; }
     .big-mint-box { background: #000080; border: 4px solid; border-top-color: #4444ff; border-left-color: #4444ff; border-right-color: #000044; border-bottom-color: #000044; padding: 20px; text-align: center; margin-bottom: 16px; }
@@ -114,11 +114,11 @@
       <div id="panel-create" class="hidden">
         <div class="big-mint-box">
           <div style="font-family:'Press Start 2P',monospace; font-size:12px; color:#ffff00; margin-bottom:12px;">🚀 AI AGENTS NFT GENERATOR</div>
-          <div style="font-family:'Press Start 2P',monospace; font-size:8px; color:#aaaaff; margin-bottom:16px;">Enter count → Hit MINT → Done in 20-30 seconds!</div>
+          <div style="font-family:'Press Start 2P',monospace; font-size:8px; color:#aaaaff; margin-bottom:16px;">Enter count → Hit MINT → Done fast!</div>
           <div style="display:flex; gap:12px; align-items:flex-end; justify-content:center; flex-wrap:wrap;">
             <div>
-              <div style="font-family:'Press Start 2P',monospace; font-size:8px; color:#ccccff; margin-bottom:8px;">TOTAL NFTs (max 2500)</div>
-              <input type="number" id="total-nft-count" min="1" max="2500" value="100" class="big-mint-input" oninput="App.onTotalChange()">
+              <div style="font-family:'Press Start 2P',monospace; font-size:8px; color:#ccccff; margin-bottom:8px;">TOTAL NFTs (max 3000)</div>
+              <input type="number" id="total-nft-count" min="1" max="3000" value="100" class="big-mint-input" oninput="App.onTotalChange()">
             </div>
             <div style="flex:1; min-width:200px;">
               <div style="font-family:'Press Start 2P',monospace; font-size:8px; color:#ccccff; margin-bottom:8px;">NAME PREFIX</div>
@@ -223,12 +223,9 @@
 // LAYER ORDER: Background → Base → Clothing → Beard → Eyes → Head → Accessory
 // ============================================================
 const SECTIONS_ORDER = ["Background","Base","Clothing","Beard","Eyes","Head","Accessory"];
-
-// Sections excluded from JSON metadata traits
 const EXCLUDED_FROM_TRAITS = new Set(["Background","Base"]);
-
-const MAX_NFT_LIMIT = 2500;
-const SCORE_PER_LEVEL = 120; // Every 120 points = 1 level
+const MAX_NFT_LIMIT = 3000;
+const SCORE_PER_LEVEL = 120;
 const STORAGE_KEY = '404punks_nfts_v2';
 
 // Firebase
@@ -255,17 +252,20 @@ const VS_PAGE_SIZE = 40;
 
 SECTIONS_ORDER.forEach(s => { layersBySection[s] = []; });
 
-// Helpers
+// ============================================================
+// HELPERS
+// ============================================================
 function escapeHtml(str) {
   if (!str) return '';
   return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]||m));
 }
 
+let _toastTimer;
 function showToast(m, dur=3000) {
   const t = document.getElementById('toast');
   t.innerText = m; t.classList.remove('hidden');
-  clearTimeout(window._tt);
-  window._tt = setTimeout(() => t.classList.add('hidden'), dur);
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => t.classList.add('hidden'), dur);
 }
 
 function setZipStatus(msg, show) {
@@ -292,13 +292,17 @@ function loadNFTsLocal() {
   return false;
 }
 
+// RAF-based yield — non-blocking, no setTimeout overhead
+function yieldFrame() {
+  return new Promise(r => requestAnimationFrame(() => r()));
+}
+
 // ============================================================
-// SCORE & LEVEL HELPERS
+// SCORE & LEVEL
 // ============================================================
 function calcTotalScore(layers) {
   return (layers || []).reduce((sum, l) => sum + (parseInt(l.score) || 0), 0);
 }
-
 function calcLevel(totalScore) {
   return Math.floor(totalScore / SCORE_PER_LEVEL);
 }
@@ -419,14 +423,14 @@ function listenFirebase() {
 }
 
 // ============================================================
-// IMAGE COMPOSITING
+// IMAGE COMPOSITING — OPTIMIZED
 // ============================================================
 const imageCache = new Map();
 
 function loadImage(url) {
   if (imageCache.has(url)) return Promise.resolve(imageCache.get(url));
   return new Promise(res => {
-    const img = new Image(); img.crossOrigin="Anonymous";
+    const img = new Image(); img.crossOrigin = "Anonymous";
     img.onload = () => { imageCache.set(url,img); res(img); };
     img.onerror = () => { imageCache.set(url,null); res(null); };
     img.src = url;
@@ -435,54 +439,84 @@ function loadImage(url) {
 
 async function preloadAllImages() {
   const allUrls = [];
-  for (const s of SECTIONS_ORDER) for (const l of (layersBySection[s]||[])) if (l.imageUrl&&!imageCache.has(l.imageUrl)) allUrls.push(l.imageUrl);
+  for (const s of SECTIONS_ORDER)
+    for (const l of (layersBySection[s]||[]))
+      if (l.imageUrl && !imageCache.has(l.imageUrl)) allUrls.push(l.imageUrl);
   if (!allUrls.length) return;
   showToast(`⚡ Pre-loading ${allUrls.length} images...`);
-  await Promise.all(allUrls.map(u=>loadImage(u)));
+  // Load in parallel batches of 20 for max speed
+  const BATCH = 20;
+  for (let i = 0; i < allUrls.length; i += BATCH) {
+    await Promise.all(allUrls.slice(i, i + BATCH).map(u => loadImage(u)));
+  }
   showToast(`✅ ${allUrls.length} images cached!`);
 }
 
+// Shared OffscreenCanvas pool for speed
+let _sharedCanvas = null;
+let _sharedCtx = null;
+
+function getSharedCanvas(w, h) {
+  if (typeof OffscreenCanvas !== 'undefined') {
+    if (!_sharedCanvas || _sharedCanvas.width !== w || _sharedCanvas.height !== h) {
+      _sharedCanvas = new OffscreenCanvas(w, h);
+      _sharedCtx = _sharedCanvas.getContext('2d');
+    }
+    return { canvas: _sharedCanvas, ctx: _sharedCtx };
+  }
+  // fallback: reuse DOM canvas
+  if (!_sharedCanvas) {
+    _sharedCanvas = document.createElement('canvas');
+    _sharedCanvas.width = w; _sharedCanvas.height = h;
+    _sharedCtx = _sharedCanvas.getContext('2d');
+  } else if (_sharedCanvas.width !== w || _sharedCanvas.height !== h) {
+    _sharedCanvas.width = w; _sharedCanvas.height = h;
+  }
+  return { canvas: _sharedCanvas, ctx: _sharedCtx };
+}
+
 async function compositeFromLayers(layers, w=512, h=512) {
-  // Always sort by SECTIONS_ORDER before compositing
   const sorted = [...layers].sort((a,b)=>SECTIONS_ORDER.indexOf(a.section)-SECTIONS_ORDER.indexOf(b.section));
-  const canvas = typeof OffscreenCanvas!=='undefined'
-    ? new OffscreenCanvas(w,h)
-    : (()=>{const c=document.createElement('canvas');c.width=w;c.height=h;return c})();
-  const ctx = canvas.getContext('2d');
-  ctx.fillStyle='#ffffff'; ctx.fillRect(0,0,w,h);
-  const images = await Promise.all(sorted.map(l=>loadImage(l.imageUrl)));
-  for (const img of images) if (img) ctx.drawImage(img,0,0,w,h);
+  const { canvas, ctx } = getSharedCanvas(w, h);
+  ctx.clearRect(0, 0, w, h);
+  ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, w, h);
+  // All images should already be cached; draw synchronously
+  for (const l of sorted) {
+    const img = imageCache.get(l.imageUrl);
+    if (img) ctx.drawImage(img, 0, 0, w, h);
+  }
   if (canvas instanceof OffscreenCanvas) {
-    const blob = await canvas.convertToBlob({type:'image/png'});
-    return new Promise(res=>{const r=new FileReader();r.onload=()=>res(r.result);r.readAsDataURL(blob);});
+    const blob = await canvas.convertToBlob({ type: 'image/png' });
+    return new Promise(res => { const r = new FileReader(); r.onload = () => res(r.result); r.readAsDataURL(blob); });
   }
   return canvas.toDataURL('image/png');
 }
 
+// Batch composite: returns array of dataURLs, yields every N items
+async function batchComposite(sets, onProgress, BATCH_SIZE=80) {
+  const results = [];
+  for (let i = 0; i < sets.length; i += BATCH_SIZE) {
+    const batch = sets.slice(i, Math.min(i + BATCH_SIZE, sets.length));
+    for (const g of batch) {
+      results.push(await compositeFromLayers(g.layers));
+    }
+    if (onProgress) onProgress(Math.min(i + BATCH_SIZE, sets.length), sets.length);
+    await yieldFrame();
+  }
+  return results;
+}
+
 // ============================================================
-// BUILD NFT ATTRIBUTES (excludes Background & Base from traits)
-// Adds Total Score + Level as traits
+// NFT ATTRIBUTES
 // ============================================================
 function buildNFTAttributes(layers) {
-  // Only include non-excluded sections as traits
   const attrs = layers
     .filter(l => !EXCLUDED_FROM_TRAITS.has(l.section))
-    .map(l => ({
-      trait_type: l.section,
-      value: l.value
-    }));
-
-  // Attribute count (excluding Background & Base)
+    .map(l => ({ trait_type: l.section, value: l.value }));
   attrs.push({ trait_type: "Attribute Count", value: String(attrs.length) });
-
-  // Total score
   const totalScore = calcTotalScore(layers);
   attrs.push({ trait_type: "Total Score", value: totalScore });
-
-  // Level
-  const level = calcLevel(totalScore);
-  attrs.push({ trait_type: "Level", value: level });
-
+  attrs.push({ trait_type: "Level", value: calcLevel(totalScore) });
   return attrs;
 }
 
@@ -498,29 +532,16 @@ function buildExistingKeys() {
 }
 
 // ============================================================
-// TRAIT PROBABILITIES:
-// Background  = 100% (always)
-// Base        = 100% (always)
-// Clothing    = 100% (always)
-// Head        = 100% (always)
-// Eyes        =  88%
-// Beard       =  70%
-// Accessory   =   2%
+// TRAIT PROBABILITIES
 // ============================================================
-function pickRandom(arr) {
-  return arr[Math.floor(Math.random() * arr.length)];
-}
+function pickRandom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 
 function generateNFTLayers(gender, existingKeys, maxAttempts=50) {
   const bgLayers       = (layersBySection['Background']||[]).filter(l=>l.gender==='both'||l.gender===gender);
   const baseLayers     = (layersBySection['Base']||[]).filter(l=>l.gender==='both'||l.gender===gender);
   const clothingLayers = (layersBySection['Clothing']||[]).filter(l=>l.gender==='both'||l.gender===gender);
   const headLayers     = (layersBySection['Head']||[]).filter(l=>l.gender==='both'||l.gender===gender);
-
-  // These four are required — if any is empty we cannot generate
-  if (!bgLayers.length || !baseLayers.length || !clothingLayers.length || !headLayers.length) {
-    return null;
-  }
+  if (!bgLayers.length || !baseLayers.length || !clothingLayers.length || !headLayers.length) return null;
 
   const eyesLayers      = (layersBySection['Eyes']||[]).filter(l=>l.gender==='both'||l.gender===gender);
   const beardLayers     = (layersBySection['Beard']||[]).filter(l=>l.gender==='both'||l.gender===gender);
@@ -528,50 +549,41 @@ function generateNFTLayers(gender, existingKeys, maxAttempts=50) {
 
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     const pickedLayers = [];
-
-    // ── 100% sections ──────────────────────────────────────
     const bg = pickRandom(bgLayers);
     pickedLayers.push({section:'Background', value:bg.value, imageUrl:bg.imageUrl, score:bg.score||0});
-
     const base = pickRandom(baseLayers);
     pickedLayers.push({section:'Base', value:base.value, imageUrl:base.imageUrl, score:base.score||0});
-
     const clothing = pickRandom(clothingLayers);
     pickedLayers.push({section:'Clothing', value:clothing.value, imageUrl:clothing.imageUrl, score:clothing.score||0});
-
     const head = pickRandom(headLayers);
     pickedLayers.push({section:'Head', value:head.value, imageUrl:head.imageUrl, score:head.score||0});
-
-    // ── 88% — Eyes ─────────────────────────────────────────
     if (eyesLayers.length && Math.random() < 0.88) {
       const e = pickRandom(eyesLayers);
       pickedLayers.push({section:'Eyes', value:e.value, imageUrl:e.imageUrl, score:e.score||0});
     }
-
-    // ── 70% — Beard ────────────────────────────────────────
     if (beardLayers.length && Math.random() < 0.70) {
       const b = pickRandom(beardLayers);
       pickedLayers.push({section:'Beard', value:b.value, imageUrl:b.imageUrl, score:b.score||0});
     }
-
-    // ── 2% — Accessory ─────────────────────────────────────
     if (accessoryLayers.length && Math.random() < 0.02) {
       const a = pickRandom(accessoryLayers);
       pickedLayers.push({section:'Accessory', value:a.value, imageUrl:a.imageUrl, score:a.score||0});
     }
-
-    // Always enforce render order
     pickedLayers.sort((a,b)=>SECTIONS_ORDER.indexOf(a.section)-SECTIONS_ORDER.indexOf(b.section));
-
-    const attrs = buildNFTAttributes(pickedLayers);
     const key = pickedLayers
       .filter(l=>!EXCLUDED_FROM_TRAITS.has(l.section))
       .map(l=>String(l.value).toLowerCase().trim()).sort().join('|');
-    if (!existingKeys.has(key)) { existingKeys.add(key); return {layers:pickedLayers, attributes:attrs}; }
+    if (!existingKeys.has(key)) {
+      existingKeys.add(key);
+      return { layers: pickedLayers, attributes: buildNFTAttributes(pickedLayers) };
+    }
   }
   return null;
 }
 
+// ============================================================
+// MAIN MINT — OPTIMIZED
+// ============================================================
 async function startMint() {
   const total = Math.min(MAX_NFT_LIMIT, parseInt(document.getElementById('total-nft-count').value)||1);
   const prefix = document.getElementById('name-prefix').value.trim()||"AI AGENT#";
@@ -582,50 +594,66 @@ async function startMint() {
 
   const btn = document.getElementById('bulk-mint-btn');
   btn.disabled = true;
-  const progWrap = document.getElementById('progress-wrap'); progWrap.classList.remove('hidden');
-  const progFill = document.getElementById('progress-fill'),
+  const progWrap = document.getElementById('progress-wrap');
+  progWrap.classList.remove('hidden');
+  const progFill    = document.getElementById('progress-fill'),
         progCounter = document.getElementById('progress-counter'),
-        progText = document.getElementById('progress-text'),
-        progEta = document.getElementById('progress-eta'),
-        progPhase = document.getElementById('progress-phase');
+        progText    = document.getElementById('progress-text'),
+        progEta     = document.getElementById('progress-eta'),
+        progPhase   = document.getElementById('progress-phase');
+
+  const setProgress = (pct, done, total) => {
+    progFill.style.width = `${pct}%`;
+    progCounter.innerText = `${done}/${total}`;
+  };
 
   try {
-    progText.innerText='⚡ PRELOADING...'; progPhase.innerText='Phase 1/3: Image cache';
-    await preloadAllImages(); await new Promise(r=>setTimeout(r,10));
+    // Phase 1: preload
+    progText.innerText = '⚡ PRELOADING...'; progPhase.innerText = 'Phase 1/3: Image cache';
+    await preloadAllImages();
 
-    progText.innerText='🎲 GENERATING COMBOS...'; progPhase.innerText='Phase 2/3: Generating traits';
-    const maleCount=Math.ceil(total/2), femaleCount=Math.floor(total/2);
-    const existingKeys=buildExistingKeys();
-    const generatedSets=[]; let skipped=0, startTime=Date.now();
+    // Phase 2: generate combos (pure JS, very fast)
+    progText.innerText = '🎲 GENERATING COMBOS...'; progPhase.innerText = 'Phase 2/3: Generating traits';
+    const maleCount = Math.ceil(total / 2), femaleCount = Math.floor(total / 2);
+    const existingKeys = buildExistingKeys();
+    const generatedSets = []; let skipped = 0;
 
-    for (let i=0;i<maleCount;i++) {
-      const r=generateNFTLayers('male',existingKeys);
-      if (r) generatedSets.push({...r,gender:'male'}); else skipped++;
-      if (i%500===0) { progFill.style.width=`${Math.round(i/total*50)}%`; progCounter.innerText=`${i}/${total}`; await new Promise(r=>setTimeout(r,1)); }
+    // Generate in large chunks, yield every 1000
+    for (let i = 0; i < maleCount; i++) {
+      const r = generateNFTLayers('male', existingKeys);
+      if (r) generatedSets.push({...r, gender:'male'}); else skipped++;
+      if (i % 1000 === 0) { setProgress(Math.round(i/total*50), i, total); await yieldFrame(); }
     }
-    for (let i=0;i<femaleCount;i++) {
-      const r=generateNFTLayers('female',existingKeys);
-      if (r) generatedSets.push({...r,gender:'female'}); else skipped++;
-      if (i%500===0) { progFill.style.width=`${50+Math.round(i/total*50)}%`; progCounter.innerText=`${maleCount+i}/${total}`; await new Promise(r=>setTimeout(r,1)); }
+    for (let i = 0; i < femaleCount; i++) {
+      const r = generateNFTLayers('female', existingKeys);
+      if (r) generatedSets.push({...r, gender:'female'}); else skipped++;
+      if (i % 1000 === 0) { setProgress(50 + Math.round(i/total*50), maleCount+i, total); await yieldFrame(); }
     }
 
     // Shuffle
-    for (let i=generatedSets.length-1;i>0;i--) {
-      const j=Math.floor(Math.random()*(i+1));
-      [generatedSets[i],generatedSets[j]]=[generatedSets[j],generatedSets[i]];
+    for (let i = generatedSets.length-1; i > 0; i--) {
+      const j = Math.floor(Math.random()*(i+1));
+      [generatedSets[i],generatedSets[j]] = [generatedSets[j],generatedSets[i]];
     }
-    progText.innerText=`✅ ${generatedSets.length} COMBOS READY`;
-    if (skipped>0) showToast(`⚠️ ${skipped} duplicates removed`,4000);
-    await new Promise(r=>setTimeout(r,100));
+    progText.innerText = `✅ ${generatedSets.length} COMBOS READY`;
+    if (skipped > 0) showToast(`⚠️ ${skipped} duplicates removed`, 4000);
 
-    progText.innerText='🎨 COMPOSITING...'; progPhase.innerText='Phase 3/3: Drawing NFTs';
-    progFill.style.width='0%'; const BATCH_SIZE=50; const newNFTs=[]; startTime=Date.now();
+    // Phase 3: composite images — bigger batches = faster
+    progText.innerText = '🎨 COMPOSITING...'; progPhase.innerText = 'Phase 3/3: Drawing NFTs';
+    setProgress(0, 0, generatedSets.length);
+    const startTime = Date.now();
+    const BATCH_SIZE = 100; // bigger batch = faster
+    const newNFTs = [];
 
-    for (let i=0;i<generatedSets.length;i+=BATCH_SIZE) {
-      const batch=generatedSets.slice(i,Math.min(i+BATCH_SIZE,generatedSets.length));
-      const images=await Promise.all(batch.map(g=>compositeFromLayers(g.layers)));
-      for (let bi=0;bi<batch.length;bi++) {
-        const g=batch[bi]; const serial=nfts.length+newNFTs.length+bi+1;
+    for (let i = 0; i < generatedSets.length; i += BATCH_SIZE) {
+      const batch = generatedSets.slice(i, Math.min(i + BATCH_SIZE, generatedSets.length));
+      // Composite all in batch synchronously (all cached, very fast)
+      const images = [];
+      for (const g of batch) images.push(await compositeFromLayers(g.layers));
+
+      for (let bi = 0; bi < batch.length; bi++) {
+        const g = batch[bi];
+        const serial = nfts.length + newNFTs.length + bi + 1;
         newNFTs.push({
           id: Date.now()+'_'+Math.random().toString(36).substr(2,8)+'_'+serial,
           name: `${prefix}${serial}`,
@@ -637,21 +665,28 @@ async function startMint() {
           createdAt: new Date().toISOString()
         });
       }
-      const done=Math.min(i+BATCH_SIZE,generatedSets.length), pct=Math.round(done/generatedSets.length*100);
-      progFill.style.width=`${pct}%`; progCounter.innerText=`${done}/${generatedSets.length}`; progText.innerText=`🎨 COMPOSITING... ${pct}%`;
-      const elapsed=(Date.now()-startTime)/1000;
-      if (elapsed>1) { const rate=done/elapsed; progEta.innerText=`⚡ ${Math.round(rate)}/sec | ETA: ${Math.round((generatedSets.length-done)/rate)}s`; }
-      await new Promise(r=>setTimeout(r,0));
+
+      const done = Math.min(i + BATCH_SIZE, generatedSets.length);
+      const pct = Math.round(done / generatedSets.length * 100);
+      setProgress(pct, done, generatedSets.length);
+      progText.innerText = `🎨 COMPOSITING... ${pct}%`;
+      const elapsed = (Date.now() - startTime) / 1000;
+      if (elapsed > 0.5) {
+        const rate = done / elapsed;
+        progEta.innerText = `⚡ ${Math.round(rate)}/sec | ETA: ${Math.round((generatedSets.length - done) / rate)}s`;
+      }
+      await yieldFrame();
     }
 
     nfts.push(...newNFTs);
     saveNFTsLocal();
     renderCollection();
     showToast(`✅ ${newNFTs.length} NFTs generated!`);
-    progText.innerText=`✅ DONE! ${newNFTs.length} NFTs`;
-    progEta.innerText=`Total: ${Math.round((Date.now()-startTime)/1000)}s`;
+    progText.innerText = `✅ DONE! ${newNFTs.length} NFTs`;
+    progEta.innerText = `Total: ${Math.round((Date.now()-startTime)/1000)}s`;
+
   } catch(err) { console.error(err); showToast('❌ '+err.message); }
-  finally { btn.disabled=false; progWrap.classList.add('hidden'); }
+  finally { btn.disabled = false; progWrap.classList.add('hidden'); }
 }
 
 // ============================================================
@@ -661,23 +696,16 @@ function renderCollection() {
   vsPage = 0;
   if (window._vsObserver) { window._vsObserver.disconnect(); window._vsObserver = null; }
 
-  const container = document.getElementById('nft-list');
-  const sentinel = document.getElementById('vs-sentinel');
-  const empty = document.getElementById('nft-empty');
-  const countDiv = document.getElementById('nft-count');
-  const scrollEl = document.getElementById('collection-scroll-container');
-
+  const container  = document.getElementById('nft-list');
+  const sentinel   = document.getElementById('vs-sentinel');
+  const empty      = document.getElementById('nft-empty');
+  const countDiv   = document.getElementById('nft-count');
+  const scrollEl   = document.getElementById('collection-scroll-container');
   if (!container) return;
   container.innerHTML = '';
 
   const displayNFTs = filteredNFTs !== null ? filteredNFTs : nfts;
-
-  if (!displayNFTs.length) {
-    empty.classList.remove('hidden');
-    countDiv.innerHTML = '';
-    return;
-  }
-
+  if (!displayNFTs.length) { empty.classList.remove('hidden'); countDiv.innerHTML = ''; return; }
   empty.classList.add('hidden');
   countDiv.innerHTML = `<div class="order-tag">📊 ${displayNFTs.length} / ${nfts.length} NFTs | 💾 Local Storage</div>`;
 
@@ -685,7 +713,7 @@ function renderCollection() {
 
   window._vsObserver = new IntersectionObserver(entries => {
     if (entries[0].isIntersecting) renderVSPage(container, displayNFTs);
-  }, { root: scrollEl, rootMargin: '300px' });
+  }, { root: scrollEl, rootMargin: '400px' });
 
   if (sentinel) window._vsObserver.observe(sentinel);
 }
@@ -701,13 +729,10 @@ function renderVSPage(container, displayNFTs) {
     div.className = 'nft-card';
     div.id = `card-${nft.id}`;
     div.style.padding = '10px';
-
-    // Find score and level from attributes
     const scoreAttr = (nft.attributes||[]).find(a=>a.trait_type==='Total Score');
     const levelAttr = (nft.attributes||[]).find(a=>a.trait_type==='Level');
     const scoreVal = scoreAttr ? scoreAttr.value : 0;
     const levelVal = levelAttr ? levelAttr.value : 0;
-
     div.innerHTML = `
       <div style="aspect-ratio:1;background:#fff;margin-bottom:8px;border:2px inset #808080;">
         <img src="${nft.image}" style="width:100%;height:100%;object-fit:contain;" loading="lazy">
@@ -731,32 +756,25 @@ function renderVSPage(container, displayNFTs) {
 }
 
 // ============================================================
-// SEARCH - supports range (1-80), single number (500), or trait name
+// SEARCH
 // ============================================================
 function searchNFTs() {
   const val = document.getElementById('search-range').value.trim();
   if (!val) { filteredNFTs=null; renderCollection(); return; }
-
-  // Range: 1-80
   if (/^\d+-\d+$/.test(val)) {
     const [s,e] = val.split('-').map(Number);
     filteredNFTs = nfts.filter((_,i)=>(i+1)>=s&&(i+1)<=e);
-  }
-  // Single number
-  else if (/^\d+$/.test(val)) {
+  } else if (/^\d+$/.test(val)) {
     const n = parseInt(val);
     filteredNFTs = nfts.filter((_,i)=>(i+1)===n);
-  }
-  // Trait name search
-  else {
+  } else {
     const query = val.toLowerCase().trim();
     filteredNFTs = nfts.filter(nft =>
       (nft.attributes||[]).some(a=>String(a.value).toLowerCase().includes(query))
       || (nft.layers||[]).some(l=>l.value.toLowerCase().includes(query))
-      || escapeHtml(nft.name||'').toLowerCase().includes(query)
+      || (nft.name||'').toLowerCase().includes(query)
     );
   }
-
   if (!filteredNFTs.length) showToast('⚠️ No NFTs found for that search');
   renderCollection();
 }
@@ -767,6 +785,9 @@ function clearSearch() {
   renderCollection();
 }
 
+// ============================================================
+// DELETE
+// ============================================================
 async function deleteAllNFTs() {
   const count = nfts.length;
   if (count === 0) { showToast('⚠️ No NFTs to delete!'); return; }
@@ -784,74 +805,119 @@ async function deleteSingleNFT(id) {
   saveNFTsLocal(); renderCollection(); showToast('🗑️ NFT DELETED');
 }
 
+// ============================================================
+// DOWNLOAD
+// ============================================================
 function dataURLtoUint8Array(dataURL) {
-  const b=atob(dataURL.split(',')[1]); const arr=new Uint8Array(b.length);
-  for (let i=0;i<b.length;i++) arr[i]=b.charCodeAt(i); return arr;
+  const b = atob(dataURL.split(',')[1]); const arr = new Uint8Array(b.length);
+  for (let i = 0; i < b.length; i++) arr[i] = b.charCodeAt(i); return arr;
 }
 
 async function downloadAllPNG() {
-  const list=filteredNFTs||nfts; if (!list.length) { showToast('No NFTs!'); return; }
-  setZipStatus(`⏳ Building ZIP (${list.length} PNGs)...`,true);
-  const zip=new JSZip();
-  for (let i=0;i<list.length;i++) {
-    zip.file(`${i+1}.png`,dataURLtoUint8Array(list[i].image));
-    if (i%100===0) { setZipStatus(`⏳ Packing ${i+1}/${list.length}...`,true); await new Promise(r=>setTimeout(r,1)); }
+  const list = filteredNFTs||nfts; if (!list.length) { showToast('No NFTs!'); return; }
+  setZipStatus(`⏳ Building ZIP (${list.length} PNGs)...`, true);
+  const zip = new JSZip();
+  for (let i = 0; i < list.length; i++) {
+    zip.file(`${i+1}.png`, dataURLtoUint8Array(list[i].image));
+    if (i % 100 === 0) { setZipStatus(`⏳ Packing ${i+1}/${list.length}...`, true); await yieldFrame(); }
   }
-  setZipStatus('⚙️ Compressing...',true);
-  const blob=await zip.generateAsync({type:'blob',compression:'STORE'});
-  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='nfts_images.zip'; a.click();
-  URL.revokeObjectURL(a.href); setZipStatus('',false); showToast(`✅ nfts_images.zip (${list.length} PNGs)`);
+  setZipStatus('⚙️ Compressing...', true);
+  const blob = await zip.generateAsync({type:'blob', compression:'STORE'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'nfts_images.zip'; a.click();
+  URL.revokeObjectURL(a.href); setZipStatus('', false); showToast(`✅ nfts_images.zip (${list.length} PNGs)`);
 }
 
 async function downloadAllJSON() {
-  const list=filteredNFTs||nfts; if (!list.length) { showToast('No NFTs!'); return; }
-  setZipStatus(`⏳ Building JSON ZIP...`,true);
-  const zip=new JSZip();
-  for (let i=0;i<list.length;i++) {
-    const n=list[i];
-    // attributes already excludes Background/Base and includes Total Score + Level
+  const list = filteredNFTs||nfts; if (!list.length) { showToast('No NFTs!'); return; }
+  setZipStatus(`⏳ Building JSON ZIP...`, true);
+  const zip = new JSZip();
+  for (let i = 0; i < list.length; i++) {
+    const n = list[i];
     zip.file(`${i+1}.json`, JSON.stringify({
-      name: n.name,
-      description: n.description,
-      image: `${i+1}.png`,
-      attributes: n.attributes
-    },null,2));
-    if (i%500===0) { setZipStatus(`⏳ JSON ${i+1}/${list.length}...`,true); await new Promise(r=>setTimeout(r,1)); }
+      name: n.name, description: n.description,
+      image: `${i+1}.png`, attributes: n.attributes
+    }, null, 2));
+    if (i % 500 === 0) { setZipStatus(`⏳ JSON ${i+1}/${list.length}...`, true); await yieldFrame(); }
   }
-  setZipStatus('⚙️ Compressing...',true);
-  const blob=await zip.generateAsync({type:'blob',compression:'DEFLATE',compressionOptions:{level:6}});
-  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='nfts_metadata.zip'; a.click();
-  URL.revokeObjectURL(a.href); setZipStatus('',false); showToast(`✅ nfts_metadata.zip (${list.length} JSONs)`);
+  setZipStatus('⚙️ Compressing...', true);
+  const blob = await zip.generateAsync({type:'blob', compression:'DEFLATE', compressionOptions:{level:6}});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'nfts_metadata.zip'; a.click();
+  URL.revokeObjectURL(a.href); setZipStatus('', false); showToast(`✅ nfts_metadata.zip (${list.length} JSONs)`);
 }
 
 function downloadSingleImage(id) {
-  const n=nfts.find(x=>x.id===id); if (!n) return;
-  const a=document.createElement('a'); a.href=n.image; a.download=`${nfts.indexOf(n)+1}.png`; a.click(); showToast('PNG SAVED');
+  const n = nfts.find(x=>x.id===id); if (!n) return;
+  const a = document.createElement('a'); a.href = n.image; a.download = `${nfts.indexOf(n)+1}.png`; a.click(); showToast('PNG SAVED');
 }
 
 function downloadSingleJSON(id) {
-  const n=nfts.find(x=>x.id===id); if (!n) return;
-  const idx=nfts.indexOf(n)+1;
-  const blob=new Blob([JSON.stringify({name:n.name,description:n.description,image:`${idx}.png`,attributes:n.attributes},null,2)],{type:'application/json'});
-  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`${idx}.json`; a.click(); showToast('JSON SAVED');
+  const n = nfts.find(x=>x.id===id); if (!n) return;
+  const idx = nfts.indexOf(n)+1;
+  const blob = new Blob([JSON.stringify({name:n.name,description:n.description,image:`${idx}.png`,attributes:n.attributes},null,2)],{type:'application/json'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `${idx}.json`; a.click(); showToast('JSON SAVED');
 }
 
 // ============================================================
-// NFT EDIT MODAL
+// NFT EDIT MODAL — INSTANT LAYER REORDER
 // ============================================================
+// We keep a per-NFT in-memory layer array for the modal
+// Reorder is instant (no re-composite on every move, only on close/save)
+const _modalState = {}; // nftId → { layers: [...] }
+
 async function viewNFTDetails(id) {
-  const nft=nfts.find(n=>n.id===id); if (!nft) return;
+  const nft = nfts.find(n=>n.id===id); if (!nft) return;
   document.getElementById('nft-modal-'+id)?.remove();
-  const modal=document.createElement('div');
-  modal.id='nft-modal-'+id;
-  modal.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;z-index:10000;overflow:auto;';
 
-  const scoreAttr=(nft.attributes||[]).find(a=>a.trait_type==='Total Score');
-  const levelAttr=(nft.attributes||[]).find(a=>a.trait_type==='Level');
-  const scoreVal=scoreAttr?scoreAttr.value:0;
-  const levelVal=levelAttr?levelAttr.value:0;
+  // Deep copy layers for modal editing
+  _modalState[id] = { layers: nft.layers.map(l=>({...l})) };
 
-  const layersHtml=(nft.layers||[]).map((l,idx)=>`<div class="layer-row">
+  const modal = document.createElement('div');
+  modal.id = 'nft-modal-'+id;
+  modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;z-index:10000;overflow:auto;';
+
+  const scoreAttr = (nft.attributes||[]).find(a=>a.trait_type==='Total Score');
+  const levelAttr = (nft.attributes||[]).find(a=>a.trait_type==='Level');
+
+  modal.innerHTML = `<div class="win95-window" style="width:95%;max-width:520px;max-height:95vh;overflow:auto;">
+    <div class="win95-titlebar"><span>✏️ EDIT: ${escapeHtml(nft.name)} (${nft.gender})</span><button onclick="_closeModal('${id}')">✕</button></div>
+    <div class="win95-content">
+      <canvas id="modal-canvas-${id}" width="256" height="256" style="width:100%;margin-bottom:10px;border:3px outset #808080;display:block;"></canvas>
+      <div style="display:flex;gap:8px;margin-bottom:10px;">
+        <div id="modal-score-${id}" style="background:#004400;color:#00ff00;font-family:'Press Start 2P',monospace;font-size:8px;padding:6px 10px;border:1px solid #00aa00;flex:1;text-align:center;">⭐ Total Score: ${scoreAttr?scoreAttr.value:0}</div>
+        <div id="modal-level-${id}" style="background:#440044;color:#ff88ff;font-family:'Press Start 2P',monospace;font-size:8px;padding:6px 10px;border:1px solid #aa00aa;flex:1;text-align:center;">🏆 Level: ${levelAttr?levelAttr.value:0}</div>
+      </div>
+      <div style="font-family:'Press Start 2P',monospace;font-size:8px;margin-bottom:8px;">LAYERS (render order: Bg → Base → Clothing → Beard → Eyes → Head → Accessory)</div>
+      <div class="layers-list" id="modal-layers-${id}" style="max-height:220px;overflow:auto;"></div>
+      <div style="margin-top:10px;background:#d4d0c8;border:2px inset #808080;padding:8px;">
+        <div style="font-family:'Press Start 2P',monospace;font-size:7px;margin-bottom:6px;">➕ ADD LAYER:</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <select id="add-section-${id}" class="win95-select" style="flex:1;font-size:11px;">${SECTIONS_ORDER.map(s=>`<option value="${s}">${s}</option>`).join('')}</select>
+          <button onclick="App.openAddLayerModal('${id}')" class="win95-btn" style="font-size:7px;padding:4px 8px;">CHOOSE</button>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:12px;">
+        <button onclick="App.saveAndCloseModal('${id}')" class="win95-btn" style="flex:1;background:#004400;color:#0f0;">💾 SAVE</button>
+        <button onclick="App.downloadSingleImage('${id}');_closeModal('${id}')" class="win95-btn" style="flex:1;">📸 PNG</button>
+        <button onclick="App.downloadSingleJSON('${id}');_closeModal('${id}')" class="win95-btn" style="flex:1;">📄 JSON</button>
+        <button onclick="_closeModal('${id}')" class="win95-btn" style="flex:1;">CANCEL</button>
+      </div>
+    </div></div>`;
+  document.body.appendChild(modal);
+
+  _renderModalLayers(id);
+  await _drawModalCanvas(id);
+}
+
+function _closeModal(id) {
+  document.getElementById('nft-modal-'+id)?.remove();
+  delete _modalState[id];
+}
+
+function _renderModalLayers(id) {
+  const state = _modalState[id]; if (!state) return;
+  const layers = state.layers;
+  const container = document.getElementById(`modal-layers-${id}`); if (!container) return;
+  container.innerHTML = layers.map((l, idx) => `<div class="layer-row" id="mlr-${id}-${idx}">
     <div style="display:flex;align-items:center;gap:6px;">
       <img src="${l.imageUrl}" style="width:32px;height:32px;object-fit:contain;border:1px solid #808080;">
       <div>
@@ -860,56 +926,94 @@ async function viewNFTDetails(id) {
       </div>
     </div>
     <div style="display:flex;gap:4px;">
-      <button onclick="App.editNFTLayer('${nft.id}',${idx},'up')" class="move-btn">▲</button>
-      <button onclick="App.editNFTLayer('${nft.id}',${idx},'down')" class="move-btn">▼</button>
-      <button onclick="App.deleteNFTLayer('${nft.id}',${idx})" class="move-btn" style="border-color:#ff4444;color:#aa0000;">✕</button>
+      <button onclick="App._modalMoveLayer('${id}',${idx},'up')" class="move-btn" title="Move Up">▲</button>
+      <button onclick="App._modalMoveLayer('${id}',${idx},'down')" class="move-btn" title="Move Down">▼</button>
+      <button onclick="App._modalDeleteLayer('${id}',${idx})" class="move-btn" style="border-color:#ff4444;color:#aa0000;">✕</button>
     </div></div>`).join('');
+}
 
-  const sectionOpts=SECTIONS_ORDER.map(s=>`<option value="${s}">${s}</option>`).join('');
-  modal.innerHTML=`<div class="win95-window" style="width:95%;max-width:520px;max-height:95vh;overflow:auto;">
-    <div class="win95-titlebar"><span>✏️ EDIT: ${escapeHtml(nft.name)} (${nft.gender})</span><button onclick="document.getElementById('nft-modal-${id}').remove()">✕</button></div>
-    <div class="win95-content">
-      <canvas id="modal-canvas-${id}" width="256" height="256" style="width:100%;margin-bottom:10px;border:3px outset #808080;display:block;"></canvas>
-      <div style="display:flex;gap:8px;margin-bottom:10px;">
-        <div style="background:#004400;color:#00ff00;font-family:'Press Start 2P',monospace;font-size:8px;padding:6px 10px;border:1px solid #00aa00;flex:1;text-align:center;">⭐ Total Score: ${scoreVal}</div>
-        <div style="background:#440044;color:#ff88ff;font-family:'Press Start 2P',monospace;font-size:8px;padding:6px 10px;border:1px solid #aa00aa;flex:1;text-align:center;">🏆 Level: ${levelVal}</div>
-      </div>
-      <div style="font-family:'Press Start 2P',monospace;font-size:8px;margin-bottom:8px;">LAYERS (render order: Bg → Base → Clothing → Beard → Eyes → Head → Accessory)</div>
-      <div class="layers-list" style="max-height:220px;overflow:auto;">${layersHtml}</div>
-      <div style="margin-top:10px;background:#d4d0c8;border:2px inset #808080;padding:8px;">
-        <div style="font-family:'Press Start 2P',monospace;font-size:7px;margin-bottom:6px;">➕ ADD LAYER:</div>
-        <div style="display:flex;gap:6px;flex-wrap:wrap;">
-          <select id="add-section-${id}" class="win95-select" style="flex:1;font-size:11px;">${sectionOpts}</select>
-          <button onclick="App.openAddLayerModal('${id}')" class="win95-btn" style="font-size:7px;padding:4px 8px;">CHOOSE</button>
-        </div>
-      </div>
-      <div style="display:flex;gap:8px;margin-top:12px;">
-        <button onclick="App.downloadSingleImage('${id}');document.getElementById('nft-modal-${id}').remove()" class="win95-btn" style="flex:1;">📸 PNG</button>
-        <button onclick="App.downloadSingleJSON('${id}');document.getElementById('nft-modal-${id}').remove()" class="win95-btn" style="flex:1;">📄 JSON</button>
-        <button onclick="document.getElementById('nft-modal-${id}').remove()" class="win95-btn" style="flex:1;">CLOSE</button>
-      </div>
-    </div></div>`;
-  document.body.appendChild(modal);
-  const mc=document.getElementById('modal-canvas-'+id);
-  if (mc) {
-    const ctx=mc.getContext('2d'); ctx.fillStyle='#fff'; ctx.fillRect(0,0,256,256);
-    const sorted=[...nft.layers].sort((a,b)=>SECTIONS_ORDER.indexOf(a.section)-SECTIONS_ORDER.indexOf(b.section));
-    for (const l of sorted) { const img=await loadImage(l.imageUrl); if(img) ctx.drawImage(img,0,0,256,256); }
+async function _drawModalCanvas(id) {
+  const state = _modalState[id]; if (!state) return;
+  const mc = document.getElementById('modal-canvas-'+id); if (!mc) return;
+  const ctx = mc.getContext('2d');
+  ctx.clearRect(0, 0, 256, 256);
+  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, 256, 256);
+  const sorted = [...state.layers].sort((a,b)=>SECTIONS_ORDER.indexOf(a.section)-SECTIONS_ORDER.indexOf(b.section));
+  for (const l of sorted) {
+    let img = imageCache.get(l.imageUrl);
+    if (!img) img = await loadImage(l.imageUrl);
+    if (img) ctx.drawImage(img, 0, 0, 256, 256);
   }
 }
 
+function _updateModalScoreLevel(id) {
+  const state = _modalState[id]; if (!state) return;
+  const totalScore = calcTotalScore(state.layers);
+  const level = calcLevel(totalScore);
+  const s = document.getElementById(`modal-score-${id}`);
+  const l = document.getElementById(`modal-level-${id}`);
+  if (s) s.innerText = `⭐ Total Score: ${totalScore}`;
+  if (l) l.innerText = `🏆 Level: ${level}`;
+}
+
+// INSTANT layer move — no canvas redraw on every click, just DOM swap
+function _modalMoveLayer(id, idx, dir) {
+  const state = _modalState[id]; if (!state) return;
+  const layers = state.layers;
+  if (dir === 'up' && idx > 0) {
+    [layers[idx], layers[idx-1]] = [layers[idx-1], layers[idx]];
+  } else if (dir === 'down' && idx < layers.length-1) {
+    [layers[idx], layers[idx+1]] = [layers[idx+1], layers[idx]];
+  } else { return; }
+  _renderModalLayers(id);
+  _updateModalScoreLevel(id);
+  // Canvas redraws asynchronously — non-blocking
+  _drawModalCanvas(id);
+  showToast('↕️ LAYER MOVED');
+}
+
+function _modalDeleteLayer(id, idx) {
+  const state = _modalState[id]; if (!state) return;
+  if (!confirm(`DELETE "${state.layers[idx].section}: ${state.layers[idx].value}"?`)) return;
+  state.layers.splice(idx, 1);
+  _renderModalLayers(id);
+  _updateModalScoreLevel(id);
+  _drawModalCanvas(id);
+  showToast('✅ LAYER REMOVED');
+}
+
+async function saveAndCloseModal(id) {
+  const state = _modalState[id]; if (!state) return;
+  const nft = nfts.find(n=>n.id===id); if (!nft) return;
+
+  // Sort by SECTIONS_ORDER before saving
+  state.layers.sort((a,b)=>SECTIONS_ORDER.indexOf(a.section)-SECTIONS_ORDER.indexOf(b.section));
+  nft.layers = state.layers;
+  nft.image = await compositeFromLayers(nft.layers);
+  nft.attributes = buildNFTAttributes(nft.layers);
+  saveNFTsLocal();
+
+  // Update card in collection
+  const card = document.getElementById('card-'+id);
+  if (card) { const img = card.querySelector('img'); if (img) img.src = nft.image; }
+
+  _closeModal(id);
+  showToast('✅ NFT SAVED!');
+}
+
+// openAddLayerModal with modal state support
 function openAddLayerModal(nftId) {
-  addLayerTargetNFTId=nftId;
-  const sectionEl=document.getElementById(`add-section-${nftId}`);
-  const section=sectionEl?sectionEl.value:SECTIONS_ORDER[0];
-  const nft=nfts.find(n=>n.id===nftId);
-  const gender=nft?nft.gender:'both';
-  const listEl=document.getElementById('add-layer-list');
-  document.getElementById('add-layer-section').value=section;
+  addLayerTargetNFTId = nftId;
+  const sectionEl = document.getElementById(`add-section-${nftId}`);
+  const section = sectionEl ? sectionEl.value : SECTIONS_ORDER[0];
+  const nft = nfts.find(n=>n.id===nftId);
+  const gender = nft ? nft.gender : 'both';
+  const listEl = document.getElementById('add-layer-list');
+  document.getElementById('add-layer-section').value = section;
 
   function renderList(sec) {
-    const layers=(layersBySection[sec]||[]).filter(l=>l.gender==='both'||l.gender===gender);
-    listEl.innerHTML=layers.length
+    const layers = (layersBySection[sec]||[]).filter(l=>l.gender==='both'||l.gender===gender);
+    listEl.innerHTML = layers.length
       ? layers.map(l=>`<div onclick="App.applyLayerToNFT('${nftId}','${sec}','${escapeHtml(l.value).replace(/'/g,"\\'")}','${l.imageUrl.replace(/'/g,"\\'")}','${l.id}',${l.score||0})" style="border:2px outset #808080;padding:6px;background:#d4d0c8;cursor:pointer;text-align:center;">
           <div style="aspect-ratio:1;background:#fff;"><img src="${l.imageUrl}" style="width:100%;height:100%;object-fit:contain;" loading="lazy"></div>
           <div style="font-family:'Press Start 2P',monospace;font-size:6px;margin-top:4px;">${escapeHtml(l.value)}</div>
@@ -918,71 +1022,40 @@ function openAddLayerModal(nftId) {
       : '<div style="font-family:\'Press Start 2P\',monospace;font-size:8px;grid-column:1/-1;text-align:center;padding:20px;">[ NO LAYERS ]</div>';
   }
   renderList(section);
-  document.getElementById('add-layer-section').onchange=function(){renderList(this.value);};
-  document.getElementById('add-layer-modal').style.display='flex';
-}
-
-async function recomposeAndRefresh(nft) {
-  // Ensure layers are sorted by SECTIONS_ORDER
-  nft.layers.sort((a,b)=>SECTIONS_ORDER.indexOf(a.section)-SECTIONS_ORDER.indexOf(b.section));
-  nft.image=await compositeFromLayers(nft.layers);
-  nft.attributes=buildNFTAttributes(nft.layers);
-  saveNFTsLocal();
-
-  const card=document.getElementById('card-'+nft.id);
-  if (card) { const img=card.querySelector('img'); if(img) img.src=nft.image; }
-
-  const mc=document.getElementById('modal-canvas-'+nft.id);
-  if (mc) {
-    const ctx=mc.getContext('2d'); ctx.clearRect(0,0,mc.width,mc.height); ctx.fillStyle='#fff'; ctx.fillRect(0,0,mc.width,mc.height);
-    for (const l of nft.layers) { const img=await loadImage(l.imageUrl); if(img) ctx.drawImage(img,0,0,mc.width,mc.height); }
-  }
-
-  const modal=document.getElementById('nft-modal-'+nft.id);
-  if (modal) {
-    const lc=modal.querySelector('.layers-list');
-    if (lc) lc.innerHTML=(nft.layers||[]).map((l,idx)=>`<div class="layer-row">
-      <div style="display:flex;align-items:center;gap:6px;">
-        <img src="${l.imageUrl}" style="width:32px;height:32px;object-fit:contain;border:1px solid #808080;">
-        <div>
-          <span style="font-family:'Press Start 2P',monospace;font-size:7px;">${idx+1}. ${l.section}: ${escapeHtml(l.value)}</span>
-          <div class="score-badge">⭐ ${l.score||0} pts</div>
-        </div>
-      </div>
-      <div style="display:flex;gap:4px;">
-        <button onclick="App.editNFTLayer('${nft.id}',${idx},'up')" class="move-btn">▲</button>
-        <button onclick="App.editNFTLayer('${nft.id}',${idx},'down')" class="move-btn">▼</button>
-        <button onclick="App.deleteNFTLayer('${nft.id}',${idx})" class="move-btn" style="border-color:#ff4444;color:#aa0000;">✕</button>
-      </div></div>`).join('');
-  }
+  document.getElementById('add-layer-section').onchange = function() { renderList(this.value); };
+  document.getElementById('add-layer-modal').style.display = 'flex';
 }
 
 async function applyLayerToNFT(nftId, section, value, imageUrl, layerId, score) {
-  document.getElementById('add-layer-modal').style.display='none';
-  const nft=nfts.find(n=>n.id===nftId); if(!nft) return;
-  nft.layers=(nft.layers||[]).filter(l=>l.section!==section);
-  nft.layers.push({section, value, imageUrl, score:parseInt(score)||0});
-  nft.layers.sort((a,b)=>SECTIONS_ORDER.indexOf(a.section)-SECTIONS_ORDER.indexOf(b.section));
-  await recomposeAndRefresh(nft);
+  document.getElementById('add-layer-modal').style.display = 'none';
+
+  // Apply to modal state (if modal open)
+  const state = _modalState[nftId];
+  if (state) {
+    state.layers = state.layers.filter(l=>l.section!==section);
+    state.layers.push({section, value, imageUrl, score:parseInt(score)||0});
+    state.layers.sort((a,b)=>SECTIONS_ORDER.indexOf(a.section)-SECTIONS_ORDER.indexOf(b.section));
+    _renderModalLayers(nftId);
+    _updateModalScoreLevel(nftId);
+    await _drawModalCanvas(nftId);
+  } else {
+    // Apply directly to nft
+    const nft = nfts.find(n=>n.id===nftId); if(!nft) return;
+    nft.layers = (nft.layers||[]).filter(l=>l.section!==section);
+    nft.layers.push({section, value, imageUrl, score:parseInt(score)||0});
+    nft.layers.sort((a,b)=>SECTIONS_ORDER.indexOf(a.section)-SECTIONS_ORDER.indexOf(b.section));
+    nft.image = await compositeFromLayers(nft.layers);
+    nft.attributes = buildNFTAttributes(nft.layers);
+    saveNFTsLocal();
+    const card = document.getElementById('card-'+nftId);
+    if (card) { const img = card.querySelector('img'); if(img) img.src = nft.image; }
+  }
   showToast(`✅ ${section} → ${value}`);
 }
 
-async function editNFTLayer(nftId, idx, dir) {
-  const nft=nfts.find(n=>n.id===nftId); if(!nft||!nft.layers) return;
-  const layers=[...nft.layers];
-  if (dir==='up'&&idx>0) [layers[idx],layers[idx-1]]=[layers[idx-1],layers[idx]];
-  else if (dir==='down'&&idx<layers.length-1) [layers[idx],layers[idx+1]]=[layers[idx+1],layers[idx]];
-  else return;
-  nft.layers=layers; await recomposeAndRefresh(nft); showToast('LAYER MOVED');
-}
-
-async function deleteNFTLayer(nftId, idx) {
-  const nft=nfts.find(n=>n.id===nftId); if(!nft||!nft.layers) return;
-  if (confirm(`DELETE "${nft.layers[idx].section}: ${nft.layers[idx].value}"?`)) {
-    nft.layers.splice(idx,1); await recomposeAndRefresh(nft); showToast('✅ LAYER REMOVED');
-  }
-}
-
+// ============================================================
+// TAB / NAV
+// ============================================================
 function switchTab(tab) {
   ['layers','create','collection'].forEach(t=>{
     document.getElementById('panel-'+t).classList.toggle('hidden',t!==tab);
@@ -994,15 +1067,19 @@ function switchTab(tab) {
 
 function onTotalChange() { updateStats(); }
 
+// ============================================================
+// EXPOSE
+// ============================================================
+window._closeModal = _closeModal;
 window.App = {
   switchTab,
-  toggleSectionLayers: s=>{openSectionLayers=openSectionLayers===s?null:s;renderSections();},
+  toggleSectionLayers: s=>{openSectionLayers=openSectionLayers===s?null:s; renderSections();},
   addLayer, updateLayerScore,
   onTotalChange, startMint, deleteAllNFTs,
   downloadAllPNG, downloadAllJSON,
   viewNFTDetails, downloadSingleImage, downloadSingleJSON, deleteSingleNFT,
   searchNFTs, clearSearch,
-  editNFTLayer, deleteNFTLayer,
+  _modalMoveLayer, _modalDeleteLayer, saveAndCloseModal,
   openAddLayerModal, applyLayerToNFT
 };
 
