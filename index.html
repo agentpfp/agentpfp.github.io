@@ -956,8 +956,23 @@ function _updateModalScoreLevel(id) {
   if (l) l.innerText = `🏆 Level: ${level}`;
 }
 
-// INSTANT layer move — no canvas redraw on every click, just DOM swap
-function _modalMoveLayer(id, idx, dir) {
+// Apply modal state to real NFT and update collection card + canvas
+async function _applyModalToNFT(id) {
+  const state = _modalState[id]; if (!state) return;
+  const nft = nfts.find(n=>n.id===id); if (!nft) return;
+  // Sort by SECTIONS_ORDER
+  const sorted = [...state.layers].sort((a,b)=>SECTIONS_ORDER.indexOf(a.section)-SECTIONS_ORDER.indexOf(b.section));
+  nft.layers = sorted.map(l=>({...l}));
+  nft.image = await compositeFromLayers(nft.layers);
+  nft.attributes = buildNFTAttributes(nft.layers);
+  // Update collection card image instantly
+  const card = document.getElementById('card-'+id);
+  if (card) { const img = card.querySelector('img'); if (img) img.src = nft.image; }
+  saveNFTsLocal();
+}
+
+// Layer move — updates modal list, canvas AND collection card instantly
+async function _modalMoveLayer(id, idx, dir) {
   const state = _modalState[id]; if (!state) return;
   const layers = state.layers;
   if (dir === 'up' && idx > 0) {
@@ -967,36 +982,26 @@ function _modalMoveLayer(id, idx, dir) {
   } else { return; }
   _renderModalLayers(id);
   _updateModalScoreLevel(id);
-  // Canvas redraws asynchronously — non-blocking
-  _drawModalCanvas(id);
+  // Draw canvas + update collection card
+  await _drawModalCanvas(id);
+  await _applyModalToNFT(id);
   showToast('↕️ LAYER MOVED');
 }
 
-function _modalDeleteLayer(id, idx) {
+async function _modalDeleteLayer(id, idx) {
   const state = _modalState[id]; if (!state) return;
   if (!confirm(`DELETE "${state.layers[idx].section}: ${state.layers[idx].value}"?`)) return;
   state.layers.splice(idx, 1);
   _renderModalLayers(id);
   _updateModalScoreLevel(id);
-  _drawModalCanvas(id);
+  await _drawModalCanvas(id);
+  await _applyModalToNFT(id);
   showToast('✅ LAYER REMOVED');
 }
 
 async function saveAndCloseModal(id) {
   const state = _modalState[id]; if (!state) return;
-  const nft = nfts.find(n=>n.id===id); if (!nft) return;
-
-  // Sort by SECTIONS_ORDER before saving
-  state.layers.sort((a,b)=>SECTIONS_ORDER.indexOf(a.section)-SECTIONS_ORDER.indexOf(b.section));
-  nft.layers = state.layers;
-  nft.image = await compositeFromLayers(nft.layers);
-  nft.attributes = buildNFTAttributes(nft.layers);
-  saveNFTsLocal();
-
-  // Update card in collection
-  const card = document.getElementById('card-'+id);
-  if (card) { const img = card.querySelector('img'); if (img) img.src = nft.image; }
-
+  await _applyModalToNFT(id);
   _closeModal(id);
   showToast('✅ NFT SAVED!');
 }
