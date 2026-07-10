@@ -373,14 +373,22 @@ function toCleanArray(section) {
 async function addLayerToFirebase(section, layer) {
   layersBySection[section] = [...(layersBySection[section]||[]), layer];
   renderSections(); showToast(`✅ ADDED: ${layer.value}`);
-  database.ref(`layers/${section}`).set(toCleanArray(section)).catch(e=>console.warn(e));
+  // Save to Firebase with proper structure
+  try {
+    await database.ref(`layers/${section}`).set(toCleanArray(section));
+  } catch(e) { 
+    console.warn("Firebase save error:", e); 
+    showToast("⚠️ Layer saved locally, Firebase sync issue");
+  }
 }
 
 async function updateLayerScore(section, id, newScore) {
   const layer = (layersBySection[section]||[]).find(l=>String(l.id)===String(id));
   if (!layer) return;
   layer.score = parseInt(newScore)||0;
-  database.ref(`layers/${section}`).set(toCleanArray(section)).catch(e=>console.warn(e));
+  try {
+    await database.ref(`layers/${section}`).set(toCleanArray(section));
+  } catch(e) { console.warn(e); }
   showToast(`✅ Score updated: ${layer.value} → ${layer.score} pts`);
   renderSections();
 }
@@ -390,7 +398,9 @@ async function deleteLayer(section, id) {
   if (!layer) return;
   if (!confirm(`🗑️ DELETE "${layer.value}" from ${section}?\nThis cannot be undone!`)) return;
   layersBySection[section] = (layersBySection[section]||[]).filter(l=>String(l.id)!==String(id));
-  database.ref(`layers/${section}`).set(toCleanArray(section)).catch(e=>console.warn(e));
+  try {
+    await database.ref(`layers/${section}`).set(toCleanArray(section));
+  } catch(e) { console.warn(e); }
   showToast(`🗑️ DELETED: ${layer.value}`);
   renderSections();
 }
@@ -428,7 +438,7 @@ function listenFirebase() {
         else layersBySection[s]=[];
         totalFound+=layersBySection[s].length;
       }
-      showToast(`✅ ${totalFound} layers loaded!`);
+      showToast(`✅ ${totalFound} layers loaded from Firebase!`);
     } else { for (const s of SECTIONS_ORDER) layersBySection[s]=[]; showToast('⚠️ No layers in Firebase'); }
     renderSections(); updateStats();
   }, err=>showToast('❌ Firebase error: '+err.message));
