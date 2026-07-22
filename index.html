@@ -1,373 +1,158 @@
 <!DOCTYPE html>
-<html lang="bn">
+<html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NFT Holder Exporter - কন্ট্রাক্ট অ্যাড্রেস দিয়ে</title>
+    <title>Robinhood NFT Holder Exporter (GoldRush)</title>
     <style>
-        * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
-        body { 
-            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e); 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            min-height: 100vh; 
-            padding: 20px; 
-            margin: 0; 
-        }
-        .container { 
-            max-width: 1000px; 
-            width: 100%; 
-            background: rgba(255,255,255,0.95); 
-            padding: 35px; 
-            border-radius: 25px; 
-            box-shadow: 0 20px 60px rgba(0,0,0,0.5); 
-            backdrop-filter: blur(10px);
-        }
-        h1 { 
-            color: #1a1a2e; 
-            display: flex; 
-            align-items: center; 
-            gap: 12px; 
-            font-size: 28px;
-            margin-bottom: 5px;
-        }
-        .subtitle { color: #6c757d; margin-top: -5px; margin-bottom: 25px; font-size: 15px; }
-        .input-group { 
-            display: flex; 
-            flex-direction: column; 
-            gap: 12px; 
-            margin-bottom: 20px;
-        }
-        .input-group textarea { 
-            width: 100%; 
-            padding: 15px; 
-            border: 2px solid #dee2e6; 
-            border-radius: 12px; 
-            font-size: 15px; 
-            font-family: monospace;
-            resize: vertical; 
-            min-height: 80px;
-            transition: 0.3s;
-        }
-        .input-group textarea:focus { 
-            border-color: #0d6efd; 
-            outline: none; 
-            box-shadow: 0 0 0 3px rgba(13,110,253,0.2);
-        }
-        .input-group label { 
-            font-weight: 600; 
-            color: #1a1a2e; 
-            font-size: 16px;
-        }
-        .input-group .hint { 
-            font-size: 13px; 
-            color: #6c757d; 
-            background: #f8f9fa; 
-            padding: 10px; 
-            border-radius: 8px;
-            border-left: 4px solid #0d6efd;
-        }
-        .flex-row { 
-            display: flex; 
-            flex-wrap: wrap; 
-            gap: 12px; 
-            align-items: center; 
-            margin-top: 5px;
-        }
-        button { 
-            background: #0d6efd; 
-            color: white; 
-            border: none; 
-            padding: 12px 30px; 
-            border-radius: 30px; 
-            font-size: 16px; 
-            font-weight: 600; 
-            cursor: pointer; 
-            transition: 0.3s; 
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-        button:hover { 
-            background: #0b5ed7; 
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(13,110,253,0.3);
-        }
-        button:disabled { 
-            background: #6c757d; 
-            cursor: not-allowed; 
-            transform: none;
-            box-shadow: none;
-        }
+        body { font-family: system-ui; max-width: 900px; margin: 40px auto; padding: 20px; background: #f8f9fa; }
+        .container { background: white; padding: 30px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+        textarea { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-family: monospace; min-height: 120px; }
+        button { background: #0d6efd; color: white; border: none; padding: 12px 30px; border-radius: 30px; font-size: 16px; cursor: pointer; margin: 10px 5px 10px 0; }
+        button:disabled { background: #6c757d; cursor: not-allowed; }
         .download-btn { background: #198754; }
-        .download-btn:hover { background: #157347; box-shadow: 0 8px 20px rgba(25,135,84,0.3); }
-        .clear-btn { background: #dc3545; }
-        .clear-btn:hover { background: #bb2d3b; box-shadow: 0 8px 20px rgba(220,53,69,0.3); }
-        .badge { 
-            background: #ffc107; 
-            padding: 6px 16px; 
-            border-radius: 30px; 
-            font-size: 14px; 
-            font-weight: 600;
-            color: #1a1a2e;
-        }
-        .status { 
-            background: #1a1a2e; 
-            color: #e0e0e0; 
-            padding: 18px; 
-            border-radius: 12px; 
-            font-family: 'Courier New', monospace; 
-            font-size: 13px;
-            white-space: pre-wrap; 
-            max-height: 350px; 
-            overflow-y: auto; 
-            margin: 20px 0;
-            line-height: 1.6;
-        }
-        .status .success { color: #7dffb3; }
-        .status .error { color: #ff7d7d; }
-        .status .info { color: #7dc8ff; }
-        .footer { 
-            margin-top: 25px; 
-            font-size: 13px; 
-            color: #6c757d; 
-            border-top: 1px solid #dee2e6; 
-            padding-top: 18px;
-            text-align: center;
-        }
-        .collection-tag {
-            display: inline-block;
-            background: #e9ecef;
-            padding: 2px 12px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 600;
-            color: #1a1a2e;
-            margin: 2px;
-        }
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #1a1a2e; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb { background: #0d6efd; border-radius: 10px; }
+        .log { background: #1a1a2e; color: #7dc8ff; padding: 15px; border-radius: 8px; max-height: 300px; overflow-y: auto; font-family: monospace; font-size: 13px; line-height: 1.8; }
+        .success { color: #7dffb3; }
+        .error { color: #ff7d7d; }
+        .badge { background: #ffc107; padding: 5px 15px; border-radius: 20px; font-weight: bold; }
+        .note { background: #fff3cd; padding: 12px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #ffc107; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🏴‍☠️ NFT Holder Exporter</h1>
-        <p class="subtitle">যেকোনো কন্ট্রাক্ট অ্যাড্রেসের NFT কালেকশনের টপ ৫০০ হোল্ডার ডাউনলোড করুন</p>
-        
-        <div class="input-group">
-            <label>📝 কন্ট্রাক্ট অ্যাড্রেস(সমূহ):</label>
-            <textarea id="contractInput" placeholder="যেমন: 0xbc4ca0eda7647a8ab7c2061c2e118a18a936f13d&#10;অথবা একাধিক: 0xbc4ca0eda7647a8ab7c2061c2e118a18a936f13d, 0x60e4d786628fea6478f785a6d7e704777c86a7c6"></textarea>
-            <div class="hint">
-                💡 Robinhood Chain, Ethereum, Polygon - যেকোনো ইথেরিয়াম-কম্প্যাটিবল NFT কন্ট্রাক্ট অ্যাড্রেস দিন। 
-                একাধিক অ্যাড্রেস কমা (,) বা স্পেস দিয়ে আলাদা করুন।
-            </div>
-        </div>
+<div class="container">
+    <h1>🏴‍☠️ Robinhood NFT Holder Exporter</h1>
+    <p>Robinhood Chain-এর NFT কন্ট্রাক্টগুলো থেকে টপ ৫০০ হোল্ডার বের করুন</p>
 
-        <div class="flex-row">
-            <button id="fetchBtn">🚀 হোল্ডার সংগ্রহ করুন</button>
-            <button id="downloadBtn" class="download-btn" disabled>⬇️ CSV ডাউনলোড</button>
-            <button id="clearBtn" class="clear-btn">🗑️ ক্লিয়ার</button>
-            <span id="counter" class="badge">📊 ০টি অ্যাড্রেস</span>
-        </div>
-
-        <h3 style="margin-top: 20px; color: #1a1a2e;">📋 লাইভ লগ:</h3>
-        <div id="log" class="status">⏳ প্রস্তুত... কন্ট্রাক্ট অ্যাড্রেস দিন এবং 'হোল্ডার সংগ্রহ করুন' বাটনে ক্লিক করুন।</div>
-        
-        <div class="footer">
-            ⚡ OpenSea পাবলিক API ব্যবহার করে ডেটা আনা হয়। প্রতিটি কন্ট্রাক্টের জন্য সর্বোচ্চ ৫০০ হোল্ডার সংগ্রহ করা হয়।
-        </div>
+    <div class="note">
+        ⚠️ <strong>GoldRush API Key প্রয়োজন:</strong> <a href="https://www.covalenthq.com/platform/" target="_blank">Covalent এ ফ্রি API Key নিন</a> এবং নিচে বসান।
     </div>
 
-    <script>
-        (function() {
-            // ---- DOM refs ----
-            const logEl = document.getElementById('log');
-            const fetchBtn = document.getElementById('fetchBtn');
-            const downloadBtn = document.getElementById('downloadBtn');
-            const clearBtn = document.getElementById('clearBtn');
-            const counterEl = document.getElementById('counter');
-            const contractInput = document.getElementById('contractInput');
+    <label><strong>🔑 GoldRush API Key:</strong></label>
+    <input id="apiKey" type="text" placeholder="cqt_rQ... আপনার API Key দিন" style="width:100%; padding:10px; border:2px solid #ddd; border-radius:8px; margin:8px 0;">
 
-            // ---- State ----
-            let allData = []; // [{ collection: 'contract_address', address: '0x...' }, ...]
-            let isFetching = false;
+    <label><strong>📝 কন্ট্রাক্ট অ্যাড্রেসসমূহ:</strong></label>
+    <textarea id="contractInput">0xf08c65564eb07d880021105489552080b08e4319
+0x12449B9a29865621be166AAff04dC14A640b4119
+0x603D1a631DA50034dB1e04E9E2308951e70af714
+0x9Ec6C5b9f572A9B02138E553BC5F5882Da735F45
+0xe3b34C4bb0f12C82143745EEe6A6Cf4E3154b1fa
+0x539cdd042c2f3d93ebc5be7dfff0c79f3b4fabf0
+0x2a70813bb118dfd28f1477ce03cf7c4399d8c826
+0x68e5a6aaf2503940f0337243063ab8f4da6bedec
+0x982fa5108a0861988627584afaf5a9f8f78d6d14
+0x08dc7cb3f4ccc8eea782e2924d151e2130f22b28
+0x745c261680aebabe4a0e0ab9e0a2e8a7aa756871</textarea>
 
-            // ---- Helper: log ----
-            function logMessage(msg, type = 'info') {
-                const timestamp = new Date().toLocaleTimeString();
-                const emoji = type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️';
-                const cls = type === 'success' ? 'success' : type === 'error' ? 'error' : 'info';
-                logEl.innerHTML += `<div class="${cls}">[${timestamp}] ${emoji} ${msg}</div>`;
-                logEl.scrollTop = logEl.scrollHeight;
-            }
+    <button id="fetchBtn">🚀 হোল্ডার সংগ্রহ করুন</button>
+    <button id="downloadBtn" class="download-btn" disabled>⬇️ CSV ডাউনলোড</button>
+    <span id="counter" class="badge">📊 ০টি অ্যাড্রেস</span>
 
-            function clearLog() {
-                logEl.innerHTML = '';
-            }
+    <h3>📋 লাইভ লগ:</h3>
+    <div id="log" class="log">⏳ প্রস্তুত... API Key এবং কন্ট্রাক্ট অ্যাড্রেস দিন।</div>
+</div>
 
-            // ---- Helper: sleep ----
-            function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
+<script>
+const logEl = document.getElementById('log');
+const fetchBtn = document.getElementById('fetchBtn');
+const downloadBtn = document.getElementById('downloadBtn');
+const counterEl = document.getElementById('counter');
+const contractInput = document.getElementById('contractInput');
+const apiKeyInput = document.getElementById('apiKey');
 
-            // ---- Validate Ethereum address ----
-            function isValidAddress(address) {
-                return /^0x[a-fA-F0-9]{40}$/.test(address.trim());
-            }
+let allData = [];
+let isFetching = false;
 
-            // ---- Fetch holders for a single contract ----
-            async function fetchHoldersForContract(contractAddress, limit = 500) {
-                // OpenSea API v2 uses the contract address directly
-                const url = `https://api.opensea.io/api/v2/chain/ethereum/contract/${contractAddress}/holders?limit=${limit}`;
-                try {
-                    const response = await fetch(url);
-                    if (!response.ok) {
-                        if (response.status === 404) {
-                            throw new Error('কন্ট্রাক্টটি OpenSea-তে পাওয়া যায়নি বা NFT নয়।');
-                        }
-                        throw new Error(`HTTP ${response.status} - ${response.statusText}`);
-                    }
-                    const data = await response.json();
-                    if (data && data.holders && Array.isArray(data.holders)) {
-                        return data.holders.map(h => h.address).filter(addr => addr && addr.startsWith('0x'));
-                    }
-                    return [];
-                } catch (error) {
-                    logMessage(`'${contractAddress.slice(0,10)}...' এর জন্য ডেটা আনতে ব্যর্থ: ${error.message}`, 'error');
-                    return [];
-                }
-            }
+function log(msg, type='info') {
+    const cls = type === 'success' ? 'success' : type === 'error' ? 'error' : '';
+    logEl.innerHTML += `<div class="${cls}">[${new Date().toLocaleTimeString()}] ${msg}</div>`;
+    logEl.scrollTop = logEl.scrollHeight;
+}
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-            // ---- Main fetch function ----
-            async function fetchAllHolders() {
-                if (isFetching) return;
-                
-                // Get and parse input
-                const rawInput = contractInput.value.trim();
-                if (!rawInput) {
-                    logMessage('⚠️ দয়া করে কমপক্ষে একটি কন্ট্রাক্ট অ্যাড্রেস দিন।', 'error');
-                    return;
-                }
+// GoldRush (Covalent) NFT Holders API
+async function fetchHolders(contract, limit=500, apiKey) {
+    // GoldRush NFT holders endpoint for Robinhood Chain
+    const url = `https://api.covalenthq.com/v1/robinhood-mainnet/nft/${contract}/holders/?key=${apiKey}&limit=${Math.min(limit, 100)}`;
+    
+    try {
+        const response = await fetch(url);
+        if (!response.ok) {
+            if (response.status === 401) throw new Error('API Key ইনভ্যালিড বা এক্সপায়ার্ড।');
+            if (response.status === 429) throw new Error('রেট লিমিট! ২ সেকেন্ড অপেক্ষা করুন।');
+            throw new Error(`HTTP ${response.status}`);
+        }
+        const data = await response.json();
+        
+        if (data.error) throw new Error(data.error_message || data.error);
+        
+        // Covalent রেসপন্স ফরম্যাট: data.items[].address
+        if (data.data && data.data.items) {
+            return data.data.items.map(item => item.address).filter(a => a && a.startsWith('0x'));
+        }
+        return [];
+    } catch (e) {
+        log(`❌ ${contract.slice(0,10)}...: ${e.message}`, 'error');
+        return [];
+    }
+}
 
-                // Split by comma or newline or space
-                const addresses = rawInput.split(/[,\s\n]+/).filter(addr => addr.trim() !== '');
-                
-                // Validate each address
-                const validAddresses = [];
-                const invalidAddresses = [];
-                for (const addr of addresses) {
-                    const clean = addr.trim();
-                    if (isValidAddress(clean)) {
-                        validAddresses.push(clean);
-                    } else if (clean) {
-                        invalidAddresses.push(clean);
-                    }
-                }
+async function fetchAll() {
+    if (isFetching) return;
+    
+    const apiKey = apiKeyInput.value.trim();
+    if (!apiKey) { log('⚠️ দয়া করে GoldRush API Key দিন।', 'error'); return; }
+    
+    const raw = contractInput.value.trim();
+    if (!raw) { log('⚠️ কন্ট্রাক্ট অ্যাড্রেস দিন।', 'error'); return; }
+    
+    const contracts = raw.split(/[\s,]+/).filter(a => /^0x[a-fA-F0-9]{40}$/i.test(a.trim()));
+    if (contracts.length === 0) { log('⚠️ কোনো বৈধ অ্যাড্রেস পাওয়া যায়নি।', 'error'); return; }
+    
+    isFetching = true;
+    fetchBtn.disabled = true;
+    downloadBtn.disabled = true;
+    allData = [];
+    logEl.innerHTML = '';
+    log(`🎯 ${contracts.length}টি কন্ট্রাক্ট প্রসেস করা হবে...`);
+    
+    let total = 0;
+    for (let i=0; i<contracts.length; i++) {
+        const c = contracts[i].trim();
+        log(`⏳ [${i+1}/${contracts.length}] ${c.slice(0,10)}... থেকে সংগ্রহ...`);
+        
+        const holders = await fetchHolders(c, 500, apiKey);
+        
+        if (holders.length > 0) {
+            holders.forEach(addr => allData.push({ contract: c, address: addr }));
+            total += holders.length;
+            log(`✅ ${holders.length}টি অ্যাড্রেস পাওয়া গেছে।`, 'success');
+        } else {
+            log(`⚠️ কোনো অ্যাড্রেস পাওয়া যায়নি।`, 'error');
+        }
+        
+        if (i < contracts.length-1) await sleep(1500);
+    }
+    
+    counterEl.textContent = `📊 ${total}টি অ্যাড্রেস`;
+    log(`🎉 সম্পূর্ণ! মোট ${total}টি অ্যাড্রেস।`, 'success');
+    if (total > 0) downloadBtn.disabled = false;
+    isFetching = false;
+    fetchBtn.disabled = false;
+}
 
-                if (invalidAddresses.length > 0) {
-                    logMessage(`⚠️ ${invalidAddresses.length}টি ইনভ্যালিড অ্যাড্রেস বাদ দেওয়া হয়েছে: ${invalidAddresses.join(', ')}`, 'error');
-                }
+function downloadCSV() {
+    if (allData.length === 0) return;
+    let csv = 'Contract,Address\n';
+    allData.forEach(d => csv += `"${d.contract}","${d.address}"\n`);
+    const blob = new Blob([csv], {type: 'text/csv'});
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `robinhood_holders_${new Date().toISOString().slice(0,10)}.csv`;
+    link.click();
+    log(`⬇️ CSV ডাউনলোড শুরু! (${allData.length}টি রো)`, 'success');
+}
 
-                if (validAddresses.length === 0) {
-                    logMessage('⚠️ কোনো বৈধ কন্ট্রাক্ট অ্যাড্রেস পাওয়া যায়নি।', 'error');
-                    return;
-                }
-
-                logMessage(`🎯 ${validAddresses.length}টি কন্ট্রাক্ট অ্যাড্রেস প্রসেস করা হবে।`, 'info');
-
-                // Reset state
-                isFetching = true;
-                fetchBtn.disabled = true;
-                downloadBtn.disabled = true;
-                allData = [];
-                clearLog();
-                logMessage('⏳ ডেটা সংগ্রহ শুরু হচ্ছে...', 'info');
-
-                let total = 0;
-                for (let i = 0; i < validAddresses.length; i++) {
-                    const contract = validAddresses[i];
-                    const short = contract.slice(0, 10) + '...' + contract.slice(-6);
-                    logMessage(`⏳ [${i+1}/${validAddresses.length}] ${short} থেকে হোল্ডার সংগ্রহ করা হচ্ছে...`, 'info');
-                    
-                    const addresses = await fetchHoldersForContract(contract, 500);
-                    
-                    if (addresses.length > 0) {
-                        const entries = addresses.map(addr => ({
-                            collection: contract, // contract address as collection identifier
-                            address: addr
-                        }));
-                        allData.push(...entries);
-                        total += addresses.length;
-                        logMessage(`✅ ${short} থেকে ${addresses.length}টি অ্যাড্রেস পাওয়া গেছে।`, 'success');
-                    } else {
-                        logMessage(`⚠️ ${short} থেকে কোনো অ্যাড্রেস পাওয়া যায়নি।`, 'error');
-                    }
-
-                    // Rate limiting: 1.5 second delay between requests
-                    if (i < validAddresses.length - 1) {
-                        await sleep(1500);
-                    }
-                }
-
-                // Update UI
-                counterEl.textContent = `📊 ${total}টি অ্যাড্রেস`;
-                logMessage(`🎉 সম্পূর্ণ! মোট ${total}টি ইউনিক অ্যাড্রেস সংগ্রহ করা হয়েছে।`, 'success');
-                if (total > 0) {
-                    downloadBtn.disabled = false;
-                }
-                isFetching = false;
-                fetchBtn.disabled = false;
-            }
-
-            // ---- Generate CSV and download ----
-            function downloadCSV() {
-                if (allData.length === 0) {
-                    logMessage('⚠️ কোনো ডেটা নেই। আগে ডেটা সংগ্রহ করুন।', 'error');
-                    return;
-                }
-
-                // CSV header
-                let csv = 'Contract,Address\n';
-                for (const entry of allData) {
-                    const contract = entry.collection.replace(/"/g, '""');
-                    const address = entry.address.replace(/"/g, '""');
-                    csv += `"${contract}","${address}"\n`;
-                }
-
-                // Create blob and download
-                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-                const link = document.createElement('a');
-                const url = URL.createObjectURL(blob);
-                link.setAttribute('href', url);
-                const dateStr = new Date().toISOString().slice(0,10);
-                link.setAttribute('download', `nft_holders_${dateStr}.csv`);
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                URL.revokeObjectURL(url);
-
-                logMessage(`⬇️ CSV ডাউনলোড শুরু! (${allData.length}টি রো)`, 'success');
-            }
-
-            // ---- Clear everything ----
-            function clearAll() {
-                contractInput.value = '';
-                allData = [];
-                counterEl.textContent = '📊 ০টি অ্যাড্রেস';
-                downloadBtn.disabled = true;
-                clearLog();
-                logMessage('🗑️ সবকিছু ক্লিয়ার করা হয়েছে।', 'info');
-            }
-
-            // ---- Event listeners ----
-            fetchBtn.addEventListener('click', fetchAllHolders);
-            downloadBtn.addEventListener('click', downloadCSV);
-            clearBtn.addEventListener('click', clearAll);
-
-            // ---- Initial log ----
-            logMessage('🚀 টুল প্রস্তুত। যেকোনো NFT কন্ট্রাক্ট অ্যাড্রেস দিয়ে শুরু করুন।', 'info');
-            logMessage('💡 উদাহরণ: 0xbc4ca0eda7647a8ab7c2061c2e118a18a936f13d (Bored Ape Yacht Club)', 'info');
-        })();
-    </script>
+fetchBtn.addEventListener('click', fetchAll);
+downloadBtn.addEventListener('click', downloadCSV);
+</script>
 </body>
 </html>
