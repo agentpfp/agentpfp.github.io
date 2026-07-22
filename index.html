@@ -1,310 +1,386 @@
 <!DOCTYPE html>
-<html lang="bn">
+<html lang="en" class="h-full">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Robinhood NFT Holders - Alchemy API</title>
-    <style>
-        * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
-        body { background: #0a0a1a; display: flex; justify-content: center; padding: 20px; margin: 0; min-height: 100vh; }
-        .container { max-width: 1000px; width: 100%; background: #1a1a2e; padding: 30px; border-radius: 20px; color: #e0e0e0; }
-        h1 { color: #fff; display: flex; align-items: center; gap: 10px; }
-        .note { background: #1a2a1a; border-left: 4px solid #198754; padding: 12px; border-radius: 8px; margin: 15px 0; }
-        .note.error { background: #2a1a1a; border-left-color: #dc3545; }
-        label { display: block; margin: 10px 0 5px; font-weight: 600; }
-        input, textarea { width: 100%; padding: 12px; background: #0a0a1a; color: #7dc8ff; border: 2px solid #2a2a4a; border-radius: 10px; font-family: monospace; font-size: 14px; }
-        textarea { min-height: 150px; resize: vertical; }
-        input:focus, textarea:focus { border-color: #0d6efd; outline: none; }
-        .flex-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 15px 0; }
-        button { background: #0d6efd; color: white; border: none; padding: 12px 30px; border-radius: 30px; font-size: 16px; cursor: pointer; transition: 0.3s; }
-        button:hover { transform: scale(1.02); }
-        button:disabled { background: #444; cursor: not-allowed; transform: none; }
-        .download-btn { background: #198754; }
-        .clear-btn { background: #dc3545; }
-        .badge { background: #ffc107; color: #1a1a2e; padding: 5px 15px; border-radius: 20px; font-weight: bold; }
-        .log { background: #0a0a1a; padding: 15px; border-radius: 10px; max-height: 400px; overflow-y: auto; font-family: monospace; font-size: 13px; line-height: 1.8; margin: 15px 0; }
-        .success { color: #7dffb3; }
-        .error { color: #ff7d7d; }
-        .info { color: #7dc8ff; }
-        .progress { background: #2a2a4a; border-radius: 10px; height: 6px; margin: 10px 0; overflow: hidden; }
-        .progress-bar { background: #0d6efd; height: 100%; width: 0%; transition: width 0.3s; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NFT Holder Snapshot — Robinhood</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            heading: ['Sora', 'sans-serif'],
+            mono: ['Space Mono', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @keyframes gradientShift {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+    }
+    .gradient-bg {
+      background: linear-gradient(135deg, #0a0a0f 0%, #1a0a2e 30%, #0f1a2e 60%, #0a0a0f 100%);
+      background-size: 300% 300%;
+      animation: gradientShift 12s ease infinite;
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+    .float { animation: float 4s ease-in-out infinite; }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .fade-up { animation: fadeUp 0.6s ease forwards; }
+    .fade-up-d1 { animation-delay: 0.1s; opacity: 0; }
+    .fade-up-d2 { animation-delay: 0.2s; opacity: 0; }
+    .fade-up-d3 { animation-delay: 0.3s; opacity: 0; }
+    .glow-border {
+      border: 1px solid rgba(139, 92, 246, 0.3);
+      box-shadow: 0 0 20px rgba(139, 92, 246, 0.08), inset 0 0 20px rgba(139, 92, 246, 0.03);
+    }
+    .input-glow:focus {
+      box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.4), 0 0 30px rgba(139, 92, 246, 0.1);
+    }
+    .btn-glow {
+      background: linear-gradient(135deg, #7c3aed, #6d28d9);
+      box-shadow: 0 4px 20px rgba(124, 58, 237, 0.4);
+      transition: all 0.3s ease;
+    }
+    .btn-glow:hover:not(:disabled) {
+      box-shadow: 0 6px 30px rgba(124, 58, 237, 0.6);
+      transform: translateY(-1px);
+    }
+    .btn-glow:disabled { opacity: 0.5; cursor: not-allowed; }
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.15;
+      pointer-events: none;
+    }
+    .scrollbar-thin::-webkit-scrollbar { width: 6px; }
+    .scrollbar-thin::-webkit-scrollbar-track { background: rgba(255,255,255,0.03); border-radius: 3px; }
+    .scrollbar-thin::-webkit-scrollbar-thumb { background: rgba(139,92,246,0.3); border-radius: 3px; }
+    .toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(100px);
+      transition: transform 0.4s cubic-bezier(0.16,1,0.3,1);
+      z-index: 100;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+    /* multi-collection card */
+    .collection-card {
+      border: 1px solid rgba(139, 92, 246, 0.2);
+      border-radius: 16px;
+      background: rgba(255,255,255,0.02);
+      transition: background 0.2s;
+    }
+    .collection-card:hover { background: rgba(255,255,255,0.04); }
+    .badge-robinhood {
+      background: rgba(139, 92, 246, 0.2);
+      color: #a78bfa;
+      font-size: 0.6rem;
+      font-weight: 600;
+      padding: 0.15rem 0.6rem;
+      border-radius: 20px;
+      letter-spacing: 0.02em;
+    }
+  </style>
 </head>
-<body>
-<div class="container">
-    <h1>⛓️ Robinhood NFT Holders</h1>
-    <p style="color: #aaa;">Alchemy NFT API ব্যবহার করে Robinhood Chain-এর NFT হোল্ডার সংগ্রহ করুন</p>
+<body class="h-full">
+  <div id="app" class="gradient-bg h-full w-full overflow-auto relative font-heading">
+    <!-- Orbs -->
+    <div class="orb" style="width:400px;height:400px;background:#7c3aed;top:-100px;right:-100px;"></div>
+    <div class="orb" style="width:300px;height:300px;background:#3b82f6;bottom:10%;left:-80px;"></div>
+    <div class="max-w-2xl mx-auto px-4 py-10 sm:py-16 relative z-10">
+      <!-- Header -->
+      <header class="text-center mb-10 fade-up">
+        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-300 text-xs font-medium mb-5 tracking-wide">
+          <i data-lucide="hexagon" style="width:14px;height:14px;"></i> ROBINHOOD ON-CHAIN
+        </div>
+        <h1 id="siteTitle" class="text-3xl sm:text-5xl font-bold text-white mb-3 tracking-tight">NFT Holder Snapshot</h1>
+        <p id="subtitleText" class="text-gray-400 text-sm sm:text-base max-w-md mx-auto">Export holders from any Robinhood NFT collection — top 1000 addresses per contract.</p>
+      </header>
 
-    <div class="note">
-        ✅ <strong>Alchemy API ব্যবহার:</strong> Robinhood Chain-এর জন্য Alchemy-র <code>getOwnersForContract</code> এন্ডপয়েন্ট ব্যবহার করা হচ্ছে[citation:1][citation:2][citation:11]।
+      <!-- Main Card -->
+      <div class="glow-border rounded-2xl bg-white/[0.03] backdrop-blur-sm p-5 sm:p-8 fade-up fade-up-d1">
+        <!-- Network : Robinhood fixed -->
+        <div class="mb-5 flex items-center justify-between">
+          <span class="text-gray-300 text-sm font-medium">Network</span>
+          <span class="badge-robinhood flex items-center gap-1.5">
+            <span class="inline-block w-2 h-2 rounded-full bg-violet-400"></span> Robinhood
+          </span>
+        </div>
+
+        <!-- Contract Address -->
+        <div class="mb-5">
+          <label for="contractInput" class="block text-gray-300 text-sm font-medium mb-2">Contract Address</label>
+          <input id="contractInput" type="text" placeholder="0x..." spellcheck="false" class="w-full bg-white/[0.05] border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder-gray-600 focus:outline-none input-glow transition font-mono">
+          <p class="text-gray-600 text-xs mt-1.5">Enter a Robinhood NFT contract address.</p>
+        </div>
+
+        <!-- API Key -->
+        <div class="mb-6">
+          <label for="apiKeyInput" class="block text-gray-300 text-sm font-medium mb-2">
+            Alchemy API Key <a href="https://dashboard.alchemy.com/signup" target="_blank" rel="noopener noreferrer" class="text-violet-400 hover:text-violet-300 ml-1 font-normal">(Get free key →)</a>
+          </label>
+          <input id="apiKeyInput" type="password" placeholder="Your Alchemy API key" class="w-full bg-white/[0.05] border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder-gray-600 focus:outline-none input-glow transition font-mono">
+          <p class="text-gray-600 text-xs mt-1.5">Your key stays in your browser and is never stored.</p>
+        </div>
+
+        <!-- Fetch Button -->
+        <button id="fetchBtn" onclick="fetchHolders()" class="btn-glow w-full rounded-xl px-6 py-3.5 text-white font-semibold text-sm flex items-center justify-center gap-2">
+          <i data-lucide="download-cloud" style="width:18px;height:18px;"></i>
+          <span id="fetchBtnText">Fetch Holders</span>
+        </button>
+      </div>
+
+      <!-- Progress -->
+      <div id="progressSection" class="hidden mt-6 fade-up fade-up-d2">
+        <div class="glow-border rounded-2xl bg-white/[0.03] p-5">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-gray-300 text-sm font-medium">Fetching holders…</span>
+            <span id="progressCount" class="text-violet-400 text-sm font-mono">0</span>
+          </div>
+          <div class="w-full h-2 bg-white/5 rounded-full overflow-hidden">
+            <div id="progressBar" class="h-full bg-gradient-to-r from-violet-600 to-blue-500 rounded-full transition-all duration-300" style="width:10%"></div>
+          </div>
+          <p id="progressMsg" class="text-gray-500 text-xs mt-2">Please wait, paginating through all holders…</p>
+        </div>
+      </div>
+
+      <!-- Results -->
+      <div id="resultsSection" class="hidden mt-6 fade-up fade-up-d3">
+        <div class="glow-border rounded-2xl bg-white/[0.03] p-5">
+          <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
+            <h2 class="text-white font-semibold text-lg flex items-center gap-2">
+              <i data-lucide="users" style="width:20px;height:20px;" class="text-violet-400"></i>
+              <span id="resultTitle">Holders Found</span>
+            </h2>
+            <div class="flex gap-2">
+              <button id="downloadBtn" onclick="downloadCSV()" class="flex items-center gap-1.5 bg-violet-600 hover:bg-violet-500 text-white text-xs font-semibold px-4 py-2 rounded-lg transition">
+                <i data-lucide="file-down" style="width:14px;height:14px;"></i> Download CSV
+              </button>
+            </div>
+          </div>
+
+          <!-- Stats -->
+          <div class="grid grid-cols-2 gap-3 mb-4">
+            <div class="bg-white/[0.04] rounded-xl p-3 text-center">
+              <p class="text-gray-500 text-xs mb-1">Unique Holders</p>
+              <p id="statHolders" class="text-white font-bold text-xl font-mono">0</p>
+            </div>
+            <div class="bg-white/[0.04] rounded-xl p-3 text-center">
+              <p class="text-gray-500 text-xs mb-1">Total Supply</p>
+              <p id="statSupply" class="text-white font-bold text-xl font-mono">0</p>
+            </div>
+          </div>
+
+          <!-- Preview -->
+          <div class="bg-black/30 rounded-xl p-3 max-h-48 overflow-auto scrollbar-thin">
+            <table class="w-full text-xs">
+              <thead>
+                <tr class="text-gray-500 border-b border-white/5">
+                  <th class="text-left py-2 px-2">#</th>
+                  <th class="text-left py-2 px-2">Address</th>
+                  <th class="text-right py-2 px-2">Balance</th>
+                </tr>
+              </thead>
+              <tbody id="previewTable" class="text-gray-300 font-mono"></tbody>
+            </table>
+          </div>
+          <p class="text-gray-600 text-xs mt-2 text-center">Showing first 50 holders — download CSV for the full list (top 1000).</p>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <footer class="text-center mt-10 text-gray-600 text-xs">
+        Uses <a href="https://docs.alchemy.com/reference/getownersforcollection" target="_blank" rel="noopener noreferrer" class="text-violet-500 hover:text-violet-400">Alchemy API</a> · Robinhood network only · Top 1000 addresses
+      </footer>
     </div>
 
-    <label>🔑 <strong>Alchemy API Key:</strong></label>
-    <input id="apiKey" type="text" placeholder="আপনার Alchemy API Key দিন (Dashboard থেকে নিন)" value="">
+    <!-- Toast -->
+    <div id="toast" class="toast px-5 py-3 rounded-xl text-sm font-medium max-w-sm text-center"></div>
+  </div>
 
-    <label>📝 <strong>Robinhood Chain কন্ট্রাক্ট অ্যাড্রেসসমূহ:</strong></label>
-    <textarea id="contractInput">0xf08c65564eb07d880021105489552080b08e4319
-0x12449B9a29865621be166AAff04dC14A640b4119
-0x603D1a631DA50034dB1e04E9E2308951e70af714
-0x9Ec6C5b9f572A9B02138E553BC5F5882Da735F45
-0xe3b34C4bb0f12C82143745EEe6A6Cf4E3154b1fa
-0x539cdd042c2f3d93ebc5be7dfff0c79f3b4fabf0
-0x2a70813bb118dfd28f1477ce03cf7c4399d8c826
-0x68e5a6aaf2503940f0337243063ab8f4da6bedec
-0x982fa5108a0861988627584afaf5a9f8f78d6d14
-0x08dc7cb3f4ccc8eea782e2924d151e2130f22b28
-0x745c261680aebabe4a0e0ab9e0a2e8a7aa756871</textarea>
+  <script>
+    // --------------------- STATE ---------------------------
+    let holdersData = [];
 
-    <div class="flex-row">
-        <button id="fetchBtn">🚀 হোল্ডার সংগ্রহ করুন</button>
-        <button id="downloadBtn" class="download-btn" disabled>⬇️ CSV ডাউনলোড</button>
-        <button id="clearBtn" class="clear-btn">🗑️ ক্লিয়ার</button>
-        <span id="counter" class="badge">📊 ০টি অ্যাড্রেস</span>
-    </div>
+    // --------------------- TOAST ---------------------------
+    function showToast(msg, type = 'error') {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = `toast px-5 py-3 rounded-xl text-sm font-medium max-w-sm text-center show ${type === 'error' ? 'bg-red-600/90 text-white' : 'bg-emerald-600/90 text-white'}`;
+      setTimeout(() => t.classList.remove('show'), 3500);
+    }
 
-    <div class="progress"><div id="progressBar" class="progress-bar"></div></div>
+    // --------------- FETCH HOLDERS (Robinhood, top 1000) ------------
+    async function fetchHolders() {
+      const contract = document.getElementById('contractInput').value.trim();
+      const apiKey = document.getElementById('apiKeyInput').value.trim();
 
-    <h3>📋 লাইভ লগ:</h3>
-    <div id="log" class="log">⏳ প্রস্তুত... API Key এবং কন্ট্রাক্ট অ্যাড্রেস দিন।</div>
+      if (!contract || !apiKey) { showToast('Please enter both contract address and API key.'); return; }
+      if (!/^0x[a-fA-F0-9]{40}$/.test(contract)) { showToast('Invalid contract address format.'); return; }
 
-    <p style="color: #666; font-size: 12px; margin-top: 15px;">
-        ⚡ <a href="https://dashboard.alchemy.com/signup" target="_blank" style="color:#0d6efd;">Alchemy-তে ফ্রি সাইন আপ</a> করে API Key নিন। Robinhood Chain-এর জন্য Alchemy-র NFT API Endpoints ব্যবহার করা হচ্ছে[citation:2][citation:11]।
-    </p>
-</div>
+      const btn = document.getElementById('fetchBtn');
+      const btnText = document.getElementById('fetchBtnText');
+      btn.disabled = true;
+      btnText.textContent = 'Fetching…';
 
-<script>
-// ===== DOM REFS =====
-const logEl = document.getElementById('log');
-const fetchBtn = document.getElementById('fetchBtn');
-const downloadBtn = document.getElementById('downloadBtn');
-const clearBtn = document.getElementById('clearBtn');
-const counterEl = document.getElementById('counter');
-const contractInput = document.getElementById('contractInput');
-const apiKeyInput = document.getElementById('apiKey');
-const progressBar = document.getElementById('progressBar');
+      document.getElementById('progressSection').classList.remove('hidden');
+      document.getElementById('resultsSection').classList.add('hidden');
+      holdersData = [];
 
-// ===== STATE =====
-let allData = [];
-let isFetching = false;
+      // ROBINHOOD mainnet base URL
+      const baseUrl = `https://robinhood-mainnet.g.alchemy.com/v2/${apiKey}/getOwnersForCollection`;
+      let pageKey = '';
+      let totalFetched = 0;
+      const MAX_HOLDERS = 1000;  // top 1000 only
 
-// ===== HELPERS =====
-function log(msg, type='info') {
-    const cls = type === 'success' ? 'success' : type === 'error' ? 'error' : 'info';
-    const time = new Date().toLocaleTimeString();
-    logEl.innerHTML += `<div class="${cls}">[${time}] ${msg}</div>`;
-    logEl.scrollTop = logEl.scrollHeight;
-}
+      try {
+        do {
+          const url = pageKey 
+            ? `${baseUrl}?contractAddress=${contract}&withTokenBalances=true&pageKey=${pageKey}` 
+            : `${baseUrl}?contractAddress=${contract}&withTokenBalances=true`;
 
-function clearLog() { logEl.innerHTML = ''; }
-function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
-function updateProgress(pct) { progressBar.style.width = Math.min(pct, 100) + '%'; }
+          const res = await fetch(url);
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err.error?.message || `API error ${res.status}`);
+          }
+          const data = await res.json();
 
-function isValidAddress(addr) {
-    return /^0x[a-fA-F0-9]{40}$/i.test(addr.trim());
-}
+          if (data.ownerAddresses) {
+            data.ownerAddresses.forEach(o => {
+              const balance = o.tokenBalances 
+                ? o.tokenBalances.reduce((s, t) => s + parseInt(t.balance, 10), 0) 
+                : 1;
+              holdersData.push({ address: o.ownerAddress, balance });
+            });
+            totalFetched = holdersData.length;
+            document.getElementById('progressCount').textContent = totalFetched.toLocaleString();
+            document.getElementById('progressBar').style.width = pageKey ? '60%' : '30%';
+          }
 
-// ===== ALCHEMY NFT API =====
-async function fetchHoldersFromAlchemy(contractAddress, apiKey) {
-    // Alchemy NFT API v3 - getOwnersForContract (Robinhood Chain সমর্থিত)[citation:1][citation:11]
-    // Robinhood Chain-এর জন্য Alchemy base URL[citation:1]
-    const baseURL = `https://robinhood-mainnet.g.alchemy.com/nft/v3/${apiKey}`;
-    const url = `${baseURL}/getOwnersForContract?contractAddress=${contractAddress}`;
-    
-    try {
-        log(`⏳ Alchemy API-তে রিকোয়েস্ট পাঠানো হচ্ছে...`, 'info');
-        const response = await fetch(url, {
-            headers: { 'Accept': 'application/json' }
+          pageKey = data.pageKey || '';
+          // stop if we have enough or no more pages
+          if (holdersData.length >= MAX_HOLDERS || !pageKey) break;
+        } while (pageKey);
+
+        // trim to top 1000
+        if (holdersData.length > MAX_HOLDERS) {
+          holdersData = holdersData.slice(0, MAX_HOLDERS);
+        }
+
+        document.getElementById('progressBar').style.width = '100%';
+        document.getElementById('progressMsg').textContent = `Done! (top ${holdersData.length} holders)`;
+
+        // Sort by balance desc
+        holdersData.sort((a, b) => b.balance - a.balance);
+        renderResults();
+        showToast(`Found ${holdersData.length.toLocaleString()} unique holders (top 1000)!`, 'success');
+
+      } catch (e) {
+        showToast(e.message || 'Failed to fetch holders.');
+        document.getElementById('progressSection').classList.add('hidden');
+      } finally {
+        btn.disabled = false;
+        btnText.textContent = 'Fetch Holders';
+      }
+    }
+
+    // ------------------- RENDER RESULTS --------------------
+    function renderResults() {
+      document.getElementById('resultsSection').classList.remove('hidden');
+      document.getElementById('statHolders').textContent = holdersData.length.toLocaleString();
+      const totalSupply = holdersData.reduce((s, h) => s + h.balance, 0);
+      document.getElementById('statSupply').textContent = totalSupply.toLocaleString();
+      document.getElementById('resultTitle').textContent = `${holdersData.length.toLocaleString()} Holders Found`;
+
+      const tbody = document.getElementById('previewTable');
+      tbody.innerHTML = holdersData.slice(0, 50).map((h, i) =>
+        `<tr class="border-b border-white/5 hover:bg-white/[0.02]">
+          <td class="py-1.5 px-2 text-gray-500">${i + 1}</td>
+          <td class="py-1.5 px-2 truncate max-w-[200px]">${h.address}</td>
+          <td class="py-1.5 px-2 text-right text-violet-300">${h.balance}</td>
+        </tr>`
+      ).join('');
+    }
+
+    // ------------------- DOWNLOAD CSV ----------------------
+    function downloadCSV() {
+      if (!holdersData.length) return;
+      const contract = document.getElementById('contractInput').value.trim();
+      let csv = 'rank,address,balance\n';
+      holdersData.forEach((h, i) => { csv += `${i + 1},${h.address},${h.balance}\n`; });
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `robinhood_holders_${contract.slice(0, 8)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('CSV downloaded!', 'success');
+    }
+
+    // --------------- ELEMENT SDK CONFIG (unchanged) ----------
+    const defaultConfig = {
+      site_title: 'NFT Holder Snapshot',
+      subtitle_text: "Export any Robinhood NFT collection's top 1000 holders — powered by Alchemy.",
+      background_color: '#0a0a0f',
+      surface_color: '#1a0a2e',
+      text_color: '#e5e7eb',
+      primary_action_color: '#7c3aed',
+      secondary_action_color: '#8b5cf6',
+      font_family: 'Sora',
+      font_size: 16
+    };
+
+    function applyConfig(config) {
+      const c = { ...defaultConfig, ...config };
+      document.getElementById('siteTitle').textContent = c.site_title;
+      document.getElementById('subtitleText').textContent = c.subtitle_text;
+      const font = c.font_family || defaultConfig.font_family;
+      document.getElementById('siteTitle').style.fontFamily = `${font}, sans-serif`;
+      document.getElementById('subtitleText').style.fontFamily = `${font}, sans-serif`;
+      const base = c.font_size || defaultConfig.font_size;
+      document.getElementById('subtitleText').style.fontSize = `${base}px`;
+    }
+
+    window.elementSdk?.init({
+      defaultConfig,
+      onConfigChange: async (config) => applyConfig(config),
+      mapToCapabilities: (config) => {
+        const c = { ...defaultConfig, ...config };
+        const mk = (key) => ({
+          get: () => c[key] || defaultConfig[key],
+          set: (v) => { c[key] = v; window.elementSdk?.setConfig({ [key]: v }); }
         });
-
-        if (!response.ok) {
-            if (response.status === 401) throw new Error('API Key ইনভ্যালিড বা এক্সপায়ার্ড।');
-            if (response.status === 429) throw new Error('রেট লিমিট! ২ সেকেন্ড অপেক্ষা করুন।');
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-
-        const data = await response.json();
-        
-        // Alchemy রেসপন্স ফরম্যাট: { owners: [{ address, ... }] }[citation:11]
-        if (data.owners && Array.isArray(data.owners)) {
-            const addresses = data.owners.map(o => o.address).filter(a => a && a.startsWith('0x'));
-            log(`✅ ${contractAddress.slice(0,10)}... থেকে ${addresses.length}টি অ্যাড্রেস পাওয়া গেছে।`, 'success');
-            return addresses;
-        }
-        
-        // যদি ডেটা না থাকে
-        if (data.error) throw new Error(data.error.message || data.error);
-        return [];
-        
-    } catch (error) {
-        log(`❌ ${contractAddress.slice(0,10)}...: ${error.message}`, 'error');
-        return [];
-    }
-}
-
-// পেজিনেশন সহ সব হোল্ডার আনা (যদি ৫০,০০০-এর বেশি হয়)[citation:11]
-async function fetchAllHoldersWithPagination(contractAddress, apiKey, targetLimit = 500) {
-    const allHolders = [];
-    let pageKey = '';
-    let pageCount = 0;
-    const maxPages = 10; // সুরক্ষার জন্য
-    
-    try {
-        while (allHolders.length < targetLimit && pageCount < maxPages) {
-            const baseURL = `https://robinhood-mainnet.g.alchemy.com/nft/v3/${apiKey}`;
-            let url = `${baseURL}/getOwnersForContract?contractAddress=${contractAddress}&limit=${Math.min(100, targetLimit - allHolders.length)}`;
-            if (pageKey) url += `&pageKey=${pageKey}`;
-            
-            const response = await fetch(url, {
-                headers: { 'Accept': 'application/json' }
-            });
-            
-            if (!response.ok) {
-                if (response.status === 429) {
-                    log(`⏳ রেট লিমিট। ২ সেকেন্ড অপেক্ষা করছি...`, 'info');
-                    await sleep(2000);
-                    continue;
-                }
-                throw new Error(`HTTP ${response.status}`);
-            }
-            
-            const data = await response.json();
-            if (data.owners && data.owners.length > 0) {
-                const addresses = data.owners.map(o => o.address).filter(a => a && a.startsWith('0x'));
-                allHolders.push(...addresses);
-                log(`📥 ${allHolders.length}টি অ্যাড্রেস সংগ্রহ করা হয়েছে...`, 'info');
-            }
-            
-            pageKey = data.pageKey || '';
-            pageCount++;
-            if (!pageKey || allHolders.length >= targetLimit) break;
-            
-            await sleep(500);
-        }
-    } catch (error) {
-        log(`⚠️ পেজিনেশন ত্রুটি: ${error.message}`, 'error');
-    }
-    
-    return allHolders.slice(0, targetLimit);
-}
-
-// ===== MAIN FETCH FUNCTION =====
-async function fetchAllHolders() {
-    if (isFetching) return;
-    
-    const apiKey = apiKeyInput.value.trim();
-    if (!apiKey) {
-        log('⚠️ দয়া করে Alchemy API Key দিন।', 'error');
-        return;
-    }
-    
-    const raw = contractInput.value.trim();
-    if (!raw) {
-        log('⚠️ দয়া করে কমপক্ষে একটি কন্ট্রাক্ট অ্যাড্রেস দিন।', 'error');
-        return;
-    }
-    
-    const addresses = raw.split(/[\s,\n]+/).filter(a => isValidAddress(a.trim()));
-    if (addresses.length === 0) {
-        log('⚠️ কোনো বৈধ Robinhood কন্ট্রাক্ট অ্যাড্রেস পাওয়া যায়নি।', 'error');
-        return;
-    }
-    
-    isFetching = true;
-    fetchBtn.disabled = true;
-    downloadBtn.disabled = true;
-    allData = [];
-    clearLog();
-    updateProgress(0);
-    
-    log(`🎯 ${addresses.length}টি কন্ট্রাক্ট প্রসেস করা হবে।`);
-    log(`🔗 Alchemy Robinhood Chain API ব্যবহার করা হচ্ছে[citation:1]`);
-    
-    let total = 0;
-    let successCount = 0;
-    
-    for (let i = 0; i < addresses.length; i++) {
-        const contract = addresses[i].trim();
-        const progress = ((i + 1) / addresses.length) * 100;
-        updateProgress(progress);
-        
-        log(`⏳ [${i+1}/${addresses.length}] ${contract.slice(0,10)}... প্রসেসিং...`);
-        
-        const holders = await fetchAllHoldersWithPagination(contract, apiKey, 500);
-        
-        if (holders.length > 0) {
-            holders.forEach(addr => {
-                allData.push({ contract, address: addr });
-            });
-            total += holders.length;
-            successCount++;
-        }
-        
-        if (i < addresses.length - 1) {
-            await sleep(1500);
-        }
-    }
-    
-    updateProgress(100);
-    counterEl.textContent = `📊 ${total}টি অ্যাড্রেস`;
-    log(`🎉 সম্পূর্ণ! ${successCount}/${addresses.length}টি কন্ট্রাক্ট থেকে মোট ${total}টি অ্যাড্রেস সংগ্রহ করা হয়েছে।`, 'success');
-    
-    if (total > 0) {
-        downloadBtn.disabled = false;
-        log('💾 CSV ডাউনলোড করতে প্রস্তুত।', 'success');
-    } else {
-        log('⚠️ কোনো অ্যাড্রেস পাওয়া যায়নি। কন্ট্রাক্টগুলো Robinhood Chain-এ সঠিক কিনা যাচাই করুন।', 'error');
-    }
-    
-    isFetching = false;
-    fetchBtn.disabled = false;
-}
-
-// ===== CSV DOWNLOAD =====
-function downloadCSV() {
-    if (allData.length === 0) {
-        log('⚠️ কোনো ডেটা নেই।', 'error');
-        return;
-    }
-    
-    let csv = 'Contract,Address\n';
-    allData.forEach(d => {
-        csv += `"${d.contract}","${d.address}"\n`;
+        return {
+          recolorables: [mk('background_color'), mk('surface_color'), mk('text_color'), mk('primary_action_color'), mk('secondary_action_color')],
+          borderables: [],
+          fontEditable: mk('font_family'),
+          fontSizeable: mk('font_size')
+        };
+      },
+      mapToEditPanelValues: (config) => {
+        const c = { ...defaultConfig, ...config };
+        return new Map([
+          ['site_title', c.site_title],
+          ['subtitle_text', c.subtitle_text]
+        ]);
+      }
     });
-    
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    const dateStr = new Date().toISOString().slice(0,10);
-    link.download = `robinhood_nft_holders_alchemy_${dateStr}.csv`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(link.href);
-    
-    log(`⬇️ CSV ডাউনলোড শুরু! (${allData.length}টি রো)`, 'success');
-}
 
-// ===== CLEAR =====
-function clearAll() {
-    contractInput.value = '';
-    apiKeyInput.value = '';
-    allData = [];
-    counterEl.textContent = '📊 ০টি অ্যাড্রেস';
-    downloadBtn.disabled = true;
-    clearLog();
-    updateProgress(0);
-    log('🗑️ সবকিছু ক্লিয়ার করা হয়েছে।', 'info');
-}
-
-// ===== EVENT LISTENERS =====
-fetchBtn.addEventListener('click', fetchAllHolders);
-downloadBtn.addEventListener('click', downloadCSV);
-clearBtn.addEventListener('click', clearAll);
-
-// Initial log
-log('🚀 Alchemy NFT API-ভিত্তিক Robinhood Holder Exporter প্রস্তুত।');
-log('💡 Alchemy Dashboard থেকে ফ্রি API Key নিন: https://dashboard.alchemy.com/signup[citation:10]');
-log('📖 Robinhood Chain-এর জন্য Alchemy NFT API Endpoints ব্যবহার করা হচ্ছে[citation:2][citation:11]');
-</script>
+    lucide.createIcons();
+  </script>
 </body>
 </html>
