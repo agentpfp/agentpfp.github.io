@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SVG → 4444 জেনারেটর ও জিপ ডাউনলোড</title>
+  <title>SVG → 4444 PNG জেনারেটর ও জিপ ডাউনলোড</title>
   <!-- JSZip cdn -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <!-- FileSaver cdn -->
@@ -24,7 +24,7 @@
       padding: 20px;
     }
     .card {
-      max-width: 880px;
+      max-width: 920px;
       width: 100%;
       background: rgba(255, 255, 255, 0.07);
       backdrop-filter: blur(12px);
@@ -33,7 +33,6 @@
       padding: 30px 30px 40px;
       box-shadow: 0 25px 50px -8px rgba(0,0,0,0.8), inset 0 1px 2px rgba(255,255,255,0.08);
       border: 1px solid rgba(255, 255, 255, 0.03);
-      transition: all 0.2s;
     }
     h1 {
       font-weight: 500;
@@ -267,9 +266,8 @@
       border-top: 1px solid #1d3245;
       padding-top: 16px;
     }
-    .footer a {
-      color: #7a9bbd;
-      text-decoration: none;
+    .footer strong {
+      color: #ffd966;
     }
     @media (max-width: 640px) {
       .card { padding: 20px; }
@@ -282,10 +280,10 @@
 <body>
 <div class="card">
   <h1>
-    🧩 SVG → ৪৪৪৪
-    <small>বulk gen</small>
+    🖼️ SVG → ৪৪৪৪ PNG
+    <small>জিপ ডাউনলোড</small>
   </h1>
-  <div class="sub">একটি SVG কোড দিয়ে ৪৪৪৪টি ইউনিক নাম্বার্ড ছবি তৈরি করুন &amp; জিপে ডাউনলোড করুন</div>
+  <div class="sub">একটি SVG কোড দিয়ে ৪৪৪৪টি PNG ছবি তৈরি করুন (১.png থেকে ৪৪৪৪.png) &amp; জিপে ডাউনলোড করুন</div>
 
   <!-- preview + info -->
   <div class="preview-box">
@@ -300,7 +298,7 @@
     <div class="info-panel">
       <p><span class="label-badge">📋 ইনপুট SVG</span> <code id="svgCodeDisplay">&lt;svg&gt;...&lt;/svg&gt;</code></p>
       <p><span class="label-badge">🖼️ মোট ছবি</span> <strong style="color:#f7b731;font-size:1.3rem;">৪,৪৪৪</strong> <span class="text-muted">(সংখ্যা ১–৪৪৪৪)</span></p>
-      <p><span class="label-badge">📦 আউটপুট</span> <span style="color:#b3d9ff;">zip আর্কাইভ</span> <span class="text-muted">| ফাইলনেম: 1.svg ... 4444.svg</span></p>
+      <p><span class="label-badge">📦 আউটপুট</span> <span style="color:#b3d9ff;">PNG + ZIP</span> <span class="text-muted">| ফাইলনেম: 1.png ... 4444.png</span></p>
     </div>
   </div>
 
@@ -312,7 +310,7 @@
     </div>
 
     <div class="btn-group">
-      <button class="btn btn-primary" id="generateBtn">⚡ জেনারেট &amp; জিপ ডাউনলোড</button>
+      <button class="btn btn-primary" id="generateBtn">⚡ জেনারেট &amp; জিপ ডাউনলোড (PNG)</button>
       <button class="btn btn-secondary" id="previewBtn">👁️ প্রিভিউ আপডেট</button>
       <button class="btn btn-secondary" id="resetBtn">↺ রিসেট (ডিফল্ট)</button>
     </div>
@@ -321,11 +319,11 @@
   <!-- status -->
   <div class="status-box" id="statusBox">
     <span>📌 স্ট্যাটাস</span>
-    <span id="statusMessage">প্রস্তুত · ৪৪৪৪টি ছবি তৈরি হবে</span>
+    <span id="statusMessage">প্রস্তুত · ৪৪৪৪টি PNG ছবি তৈরি হবে</span>
     <span class="counter" id="counterDisplay">০ / ৪৪৪৪</span>
     <div id="spinnerContainer" class="hide progress-indicator"><span class="spinner"></span> <span>জিপ তৈরি...</span></div>
   </div>
-  <div class="footer">⏳ প্রতিটি SVG-তে <strong>#</strong> প্রতিস্থাপিত হবে ১ থেকে ৪৪৪৪ পর্যন্ত সংখ্যা দিয়ে</div>
+  <div class="footer">🖼️ <strong>PNG</strong> ফরম্যাটে · প্রতিটি SVG-তে <strong>#</strong> প্রতিস্থাপিত হবে ১ থেকে ৪৪৪৪ পর্যন্ত সংখ্যা দিয়ে</div>
 </div>
 
 <script>
@@ -346,38 +344,32 @@
     // default svg (with # placeholder)
     const DEFAULT_SVG = `<svg width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg"><rect width="120" height="120" rx="20" fill="#1e3b5a" /><circle cx="60" cy="60" r="36" fill="#f7b731" opacity="0.9" /><text x="60" y="72" font-size="36" text-anchor="middle" fill="#0b1a2e" font-family="sans-serif" font-weight="bold">#</text></svg>`;
 
-    // total count
     const TOTAL = 4444;
 
-    // ---------- helper ----------
+    // ---------- helper: update preview ----------
     function updatePreview(svgText) {
       try {
-        // try to parse and render
         const wrapper = document.createElement('div');
         wrapper.innerHTML = svgText.trim();
         const svgEl = wrapper.querySelector('svg');
         if (!svgEl) throw new Error('No <svg> element found');
-        // copy attributes and content
         const clone = svgEl.cloneNode(true);
-        // set width/height for preview (responsive)
         clone.setAttribute('width', '160');
         clone.setAttribute('height', 'auto');
         clone.style.maxWidth = '160px';
         clone.style.height = 'auto';
         previewContainer.innerHTML = '';
         previewContainer.appendChild(clone);
-        // update code display (truncated)
         let short = svgText.trim();
         if (short.length > 60) short = short.slice(0, 56) + '…';
         svgCodeDisplay.textContent = short;
       } catch (e) {
-        // fallback: show error but keep last valid preview
         previewContainer.innerHTML = `<div style="color:#f7b731;background:#1f2f3f;padding:12px;border-radius:12px;">⚠️ SVG ত্রুটি: ${e.message}</div>`;
         svgCodeDisplay.textContent = 'ত্রুটি!';
       }
     }
 
-    // reset to default
+    // reset
     function resetToDefault() {
       svgInput.value = DEFAULT_SVG;
       updatePreview(DEFAULT_SVG);
@@ -387,95 +379,108 @@
       generateBtn.disabled = false;
     }
 
-    // ---------- replace # with number ----------
-    function replaceNumberInSvg(svgTemplate, num) {
-      // replace all '#' with the number (string)
-      return svgTemplate.replace(/#/g, String(num));
+    // ---------- SVG to PNG via canvas ----------
+    function svgToPngDataUrl(svgString, width = 400, height = 400) {
+      return new Promise((resolve, reject) => {
+        const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+        const url = URL.createObjectURL(svgBlob);
+        const img = new Image();
+        img.onload = function() {
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          // white bg for transparency support (optional, but we keep transparent bg)
+          ctx.clearRect(0, 0, width, height);
+          ctx.drawImage(img, 0, 0, width, height);
+          const dataUrl = canvas.toDataURL('image/png');
+          URL.revokeObjectURL(url);
+          resolve(dataUrl);
+        };
+        img.onerror = function(err) {
+          URL.revokeObjectURL(url);
+          reject(new Error('SVG রেন্ডার করতে ব্যর্থ: ' + err.message));
+        };
+        img.src = url;
+      });
     }
 
-    // ---------- generate zip ----------
-    function generateZip() {
+    // ---------- generate zip with PNG files ----------
+    async function generateZip() {
       const rawSvg = svgInput.value.trim();
       if (!rawSvg) {
         statusMessage.textContent = '❌ SVG কোড দিন!';
         return;
       }
-      // basic validation: contains <svg
       if (!rawSvg.includes('<svg')) {
         statusMessage.textContent = '❌ বৈধ SVG নয় (দয়া করে <svg> ট্যাগ দিন)';
         return;
       }
 
-      // disable button during process
       generateBtn.disabled = true;
-      statusMessage.textContent = '⏳ জিপ তৈরি শুরু...';
+      statusMessage.textContent = '⏳ PNG তৈরি শুরু...';
       counterDisplay.textContent = '০ / ৪৪৪৪';
       spinnerContainer.classList.remove('hide');
 
-      // Use setTimeout to free UI
-      setTimeout(() => {
-        try {
-          const zip = new JSZip();
-          // add files in batch to avoid blocking
-          let count = 0;
-          // chunk size for progress update
-          const chunkSize = 200;
+      try {
+        const zip = new JSZip();
+        const chunkSize = 50; // process 50 at a time to avoid memory overload
+        let processed = 0;
 
-          // We'll use a loop with incremental progress
-          function addChunk(start, end) {
-            for (let i = start; i <= end && i <= TOTAL; i++) {
-              const num = i;
-              const svgContent = replaceNumberInSvg(rawSvg, num);
-              // filename: number.svg
-              zip.file(`${num}.svg`, svgContent);
-              count = i;
-            }
-            // update counter
-            counterDisplay.textContent = `${count} / ${TOTAL}`;
-            statusMessage.textContent = `⏳ যোগ করা হচ্ছে... ${count}টি`;
-
-            if (count < TOTAL) {
-              // schedule next chunk
-              const nextStart = count + 1;
-              const nextEnd = Math.min(count + chunkSize, TOTAL);
-              setTimeout(() => addChunk(nextStart, nextEnd), 0);
-            } else {
-              // all added, generate zip
-              statusMessage.textContent = '📦 জিপ কম্প্রেস করা হচ্ছে...';
-              zip.generateAsync({ type: 'blob' })
-                .then((blob) => {
-                  // save using FileSaver
-                  saveAs(blob, 'svg_4444_images.zip');
-                  statusMessage.textContent = '✅ সম্পূর্ণ! ৪৪৪৪টি ছবি জিপ ডাউনলোড হয়েছে।';
-                  counterDisplay.textContent = `৪৪৪৪ / ৪৪৪৪`;
-                  spinnerContainer.classList.add('hide');
-                  generateBtn.disabled = false;
-                })
-                .catch((err) => {
-                  statusMessage.textContent = `❌ জিপ তৈরি ব্যর্থ: ${err.message}`;
-                  spinnerContainer.classList.add('hide');
-                  generateBtn.disabled = false;
-                });
-            }
+        // function to process a chunk
+        async function processChunk(start, end) {
+          const promises = [];
+          for (let i = start; i <= end && i <= TOTAL; i++) {
+            const num = i;
+            const svgWithNumber = rawSvg.replace(/#/g, String(num));
+            // create PNG dataUrl
+            const pngPromise = svgToPngDataUrl(svgWithNumber, 400, 400)
+              .then(dataUrl => {
+                // remove data:image/png;base64, prefix
+                const base64 = dataUrl.split(',')[1];
+                zip.file(`${num}.png`, base64, { base64: true });
+              })
+              .catch(err => {
+                console.warn(`Failed for ${num}:`, err);
+                // fallback: add a placeholder? we skip or add error
+                // but we will still continue
+              });
+            promises.push(pngPromise);
           }
-
-          // start with first chunk
-          const firstEnd = Math.min(chunkSize, TOTAL);
-          addChunk(1, firstEnd);
-
-        } catch (err) {
-          statusMessage.textContent = `❌ ত্রুটি: ${err.message}`;
-          spinnerContainer.classList.add('hide');
-          generateBtn.disabled = false;
+          await Promise.all(promises);
+          processed = end;
+          counterDisplay.textContent = `${processed} / ${TOTAL}`;
+          statusMessage.textContent = `⏳ প্রক্রিয়াকরণ... ${processed}টি`;
         }
-      }, 80);
+
+        // process in chunks
+        for (let start = 1; start <= TOTAL; start += chunkSize) {
+          const end = Math.min(start + chunkSize - 1, TOTAL);
+          await processChunk(start, end);
+          // small yield to UI
+          await new Promise(r => setTimeout(r, 0));
+        }
+
+        // all done
+        statusMessage.textContent = '📦 জিপ কম্প্রেস করা হচ্ছে...';
+        const blob = await zip.generateAsync({ type: 'blob' });
+        saveAs(blob, 'svg_4444_png_images.zip');
+        statusMessage.textContent = '✅ সম্পূর্ণ! ৪৪৪৪টি PNG ছবি জিপ ডাউনলোড হয়েছে।';
+        counterDisplay.textContent = `৪৪৪৪ / ৪৪৪৪`;
+        spinnerContainer.classList.add('hide');
+        generateBtn.disabled = false;
+
+      } catch (err) {
+        statusMessage.textContent = `❌ ত্রুটি: ${err.message}`;
+        spinnerContainer.classList.add('hide');
+        generateBtn.disabled = false;
+        console.error(err);
+      }
     }
 
     // ---------- event listeners ----------
-    // generate
     generateBtn.addEventListener('click', generateZip);
 
-    // preview update
     previewBtn.addEventListener('click', function() {
       const val = svgInput.value.trim();
       if (!val) {
@@ -486,10 +491,8 @@
       statusMessage.textContent = '✅ প্রিভিউ আপডেট করা হয়েছে';
     });
 
-    // reset
     resetBtn.addEventListener('click', resetToDefault);
 
-    // live preview on input change (optional but nice) — we do it on blur or manual
     svgInput.addEventListener('blur', function() {
       const val = svgInput.value.trim();
       if (val && val.includes('<svg')) {
@@ -501,15 +504,11 @@
     // initial load
     resetToDefault();
 
-    // Extra: if user types, we keep preview but only on explicit update.
-    // also handle default
     window.addEventListener('load', function() {
-      // ensure preview shows default
       updatePreview(DEFAULT_SVG);
     });
 
-    // handle case of empty input after reset
-    console.log('SVG Bulk Generator 4444 ready');
+    console.log('SVG → PNG 4444 Generator ready');
   })();
 </script>
 </body>
