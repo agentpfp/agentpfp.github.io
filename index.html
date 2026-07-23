@@ -75,7 +75,6 @@
       z-index: 100;
     }
     .toast.show { transform: translateX(-50%) translateY(0); }
-    /* multi-collection card */
     .collection-card {
       border: 1px solid rgba(139, 92, 246, 0.2);
       border-radius: 16px;
@@ -106,7 +105,7 @@
           <i data-lucide="hexagon" style="width:14px;height:14px;"></i> ROBINHOOD ON-CHAIN
         </div>
         <h1 id="siteTitle" class="text-3xl sm:text-5xl font-bold text-white mb-3 tracking-tight">NFT Holder Snapshot</h1>
-        <p id="subtitleText" class="text-gray-400 text-sm sm:text-base max-w-md mx-auto">Export holders from any Robinhood NFT collection — top 1000 addresses per contract.</p>
+        <p id="subtitleText" class="text-gray-400 text-sm sm:text-base max-w-md mx-auto">Export all holders from any Robinhood NFT collection — complete list with balances.</p>
       </header>
 
       <!-- Main Card -->
@@ -138,7 +137,7 @@
         <!-- Fetch Button -->
         <button id="fetchBtn" onclick="fetchHolders()" class="btn-glow w-full rounded-xl px-6 py-3.5 text-white font-semibold text-sm flex items-center justify-center gap-2">
           <i data-lucide="download-cloud" style="width:18px;height:18px;"></i>
-          <span id="fetchBtnText">Fetch Holders</span>
+          <span id="fetchBtnText">Fetch All Holders</span>
         </button>
       </div>
 
@@ -150,9 +149,9 @@
             <span id="progressCount" class="text-violet-400 text-sm font-mono">0</span>
           </div>
           <div class="w-full h-2 bg-white/5 rounded-full overflow-hidden">
-            <div id="progressBar" class="h-full bg-gradient-to-r from-violet-600 to-blue-500 rounded-full transition-all duration-300" style="width:10%"></div>
+            <div id="progressBar" class="h-full bg-gradient-to-r from-violet-600 to-blue-500 rounded-full transition-all duration-300" style="width:5%"></div>
           </div>
-          <p id="progressMsg" class="text-gray-500 text-xs mt-2">Please wait, paginating through all holders…</p>
+          <p id="progressMsg" class="text-gray-500 text-xs mt-2">Paginating through all holders…</p>
         </div>
       </div>
 
@@ -162,11 +161,11 @@
           <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
             <h2 class="text-white font-semibold text-lg flex items-center gap-2">
               <i data-lucide="users" style="width:20px;height:20px;" class="text-violet-400"></i>
-              <span id="resultTitle">Holders Found</span>
+              <span id="resultTitle">All Holders</span>
             </h2>
             <div class="flex gap-2">
               <button id="downloadBtn" onclick="downloadCSV()" class="flex items-center gap-1.5 bg-violet-600 hover:bg-violet-500 text-white text-xs font-semibold px-4 py-2 rounded-lg transition">
-                <i data-lucide="file-down" style="width:14px;height:14px;"></i> Download CSV
+                <i data-lucide="file-down" style="width:14px;height:14px;"></i> Download Full CSV
               </button>
             </div>
           </div>
@@ -174,7 +173,7 @@
           <!-- Stats -->
           <div class="grid grid-cols-2 gap-3 mb-4">
             <div class="bg-white/[0.04] rounded-xl p-3 text-center">
-              <p class="text-gray-500 text-xs mb-1">Unique Holders</p>
+              <p class="text-gray-500 text-xs mb-1">Total Holders</p>
               <p id="statHolders" class="text-white font-bold text-xl font-mono">0</p>
             </div>
             <div class="bg-white/[0.04] rounded-xl p-3 text-center">
@@ -196,13 +195,13 @@
               <tbody id="previewTable" class="text-gray-300 font-mono"></tbody>
             </table>
           </div>
-          <p class="text-gray-600 text-xs mt-2 text-center">Showing first 50 holders — download CSV for the full list (top 1000).</p>
+          <p class="text-gray-600 text-xs mt-2 text-center">Showing first 50 holders — download CSV for the complete list.</p>
         </div>
       </div>
 
       <!-- Footer -->
       <footer class="text-center mt-10 text-gray-600 text-xs">
-        Uses <a href="https://docs.alchemy.com/reference/getownersforcollection" target="_blank" rel="noopener noreferrer" class="text-violet-500 hover:text-violet-400">Alchemy API</a> · Robinhood network only · Top 1000 addresses
+        Uses <a href="https://docs.alchemy.com/reference/getownersforcollection" target="_blank" rel="noopener noreferrer" class="text-violet-500 hover:text-violet-400">Alchemy API</a> · Robinhood network only · All holders included
       </footer>
     </div>
 
@@ -213,16 +212,17 @@
   <script>
     // --------------------- STATE ---------------------------
     let holdersData = [];
+    let totalFetchedAll = 0;
 
     // --------------------- TOAST ---------------------------
     function showToast(msg, type = 'error') {
       const t = document.getElementById('toast');
       t.textContent = msg;
       t.className = `toast px-5 py-3 rounded-xl text-sm font-medium max-w-sm text-center show ${type === 'error' ? 'bg-red-600/90 text-white' : 'bg-emerald-600/90 text-white'}`;
-      setTimeout(() => t.classList.remove('show'), 3500);
+      setTimeout(() => t.classList.remove('show'), 4000);
     }
 
-    // --------------- FETCH HOLDERS (Robinhood, top 1000) ------------
+    // --------------- FETCH ALL HOLDERS (unlimited pagination) ------------
     async function fetchHolders() {
       const contract = document.getElementById('contractInput').value.trim();
       const apiKey = document.getElementById('apiKeyInput').value.trim();
@@ -238,12 +238,11 @@
       document.getElementById('progressSection').classList.remove('hidden');
       document.getElementById('resultsSection').classList.add('hidden');
       holdersData = [];
+      totalFetchedAll = 0;
 
-      // ROBINHOOD mainnet base URL
       const baseUrl = `https://robinhood-mainnet.g.alchemy.com/v2/${apiKey}/getOwnersForCollection`;
       let pageKey = '';
-      let totalFetched = 0;
-      const MAX_HOLDERS = 1000;  // top 1000 only
+      let pageCount = 0;
 
       try {
         do {
@@ -258,42 +257,41 @@
           }
           const data = await res.json();
 
-          if (data.ownerAddresses) {
+          if (data.ownerAddresses && data.ownerAddresses.length > 0) {
             data.ownerAddresses.forEach(o => {
               const balance = o.tokenBalances 
                 ? o.tokenBalances.reduce((s, t) => s + parseInt(t.balance, 10), 0) 
                 : 1;
               holdersData.push({ address: o.ownerAddress, balance });
             });
-            totalFetched = holdersData.length;
-            document.getElementById('progressCount').textContent = totalFetched.toLocaleString();
-            document.getElementById('progressBar').style.width = pageKey ? '60%' : '30%';
+            totalFetchedAll = holdersData.length;
+            document.getElementById('progressCount').textContent = totalFetchedAll.toLocaleString();
+            // Update progress bar based on page count (approximate)
+            const progress = Math.min((pageCount + 1) * 15, 95);
+            document.getElementById('progressBar').style.width = `${progress}%`;
+            document.getElementById('progressMsg').textContent = `Fetched ${totalFetchedAll.toLocaleString()} holders so far...`;
           }
 
           pageKey = data.pageKey || '';
-          // stop if we have enough or no more pages
-          if (holdersData.length >= MAX_HOLDERS || !pageKey) break;
+          pageCount++;
+          
+          // Continue until no more pages
         } while (pageKey);
 
-        // trim to top 1000
-        if (holdersData.length > MAX_HOLDERS) {
-          holdersData = holdersData.slice(0, MAX_HOLDERS);
-        }
-
         document.getElementById('progressBar').style.width = '100%';
-        document.getElementById('progressMsg').textContent = `Done! (top ${holdersData.length} holders)`;
+        document.getElementById('progressMsg').textContent = `Complete! Total ${holdersData.length.toLocaleString()} holders found.`;
 
         // Sort by balance desc
         holdersData.sort((a, b) => b.balance - a.balance);
         renderResults();
-        showToast(`Found ${holdersData.length.toLocaleString()} unique holders (top 1000)!`, 'success');
+        showToast(`✅ Found ${holdersData.length.toLocaleString()} unique holders!`, 'success');
 
       } catch (e) {
         showToast(e.message || 'Failed to fetch holders.');
         document.getElementById('progressSection').classList.add('hidden');
       } finally {
         btn.disabled = false;
-        btnText.textContent = 'Fetch Holders';
+        btnText.textContent = 'Fetch All Holders';
       }
     }
 
@@ -315,9 +313,12 @@
       ).join('');
     }
 
-    // ------------------- DOWNLOAD CSV ----------------------
+    // ------------------- DOWNLOAD CSV (ALL HOLDERS) ----------------------
     function downloadCSV() {
-      if (!holdersData.length) return;
+      if (!holdersData.length) {
+        showToast('No data to download. Fetch holders first.', 'error');
+        return;
+      }
       const contract = document.getElementById('contractInput').value.trim();
       let csv = 'rank,address,balance\n';
       holdersData.forEach((h, i) => { csv += `${i + 1},${h.address},${h.balance}\n`; });
@@ -325,16 +326,16 @@
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `robinhood_holders_${contract.slice(0, 8)}.csv`;
+      a.download = `robinhood_holders_${contract.slice(0, 8)}_all.csv`;
       a.click();
       URL.revokeObjectURL(url);
-      showToast('CSV downloaded!', 'success');
+      showToast(`✅ Downloaded ${holdersData.length.toLocaleString()} holders!`, 'success');
     }
 
-    // --------------- ELEMENT SDK CONFIG (unchanged) ----------
+    // --------------- ELEMENT SDK CONFIG ----------
     const defaultConfig = {
       site_title: 'NFT Holder Snapshot',
-      subtitle_text: "Export any Robinhood NFT collection's top 1000 holders — powered by Alchemy.",
+      subtitle_text: "Export all holders from any Robinhood NFT collection — complete list with balances.",
       background_color: '#0a0a0f',
       surface_color: '#1a0a2e',
       text_color: '#e5e7eb',
