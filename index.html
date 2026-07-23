@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>NFT Holder Snapshot — Robinhood</title>
+  <title>NFT Holder Snapshot — ETH & Robinhood</title>
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -59,6 +59,16 @@
       transform: translateY(-1px);
     }
     .btn-glow:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-eth {
+      background: linear-gradient(135deg, #627eea, #4a6ad8);
+      box-shadow: 0 4px 20px rgba(98, 126, 234, 0.4);
+      transition: all 0.3s ease;
+    }
+    .btn-eth:hover:not(:disabled) {
+      box-shadow: 0 6px 30px rgba(98, 126, 234, 0.6);
+      transform: translateY(-1px);
+    }
+    .btn-eth:disabled { opacity: 0.5; cursor: not-allowed; }
     .orb {
       position: absolute;
       border-radius: 50%;
@@ -75,13 +85,6 @@
       z-index: 100;
     }
     .toast.show { transform: translateX(-50%) translateY(0); }
-    .collection-card {
-      border: 1px solid rgba(139, 92, 246, 0.2);
-      border-radius: 16px;
-      background: rgba(255,255,255,0.02);
-      transition: background 0.2s;
-    }
-    .collection-card:hover { background: rgba(255,255,255,0.04); }
     .badge-robinhood {
       background: rgba(139, 92, 246, 0.2);
       color: #a78bfa;
@@ -90,6 +93,30 @@
       padding: 0.15rem 0.6rem;
       border-radius: 20px;
       letter-spacing: 0.02em;
+    }
+    .badge-eth {
+      background: rgba(98, 126, 234, 0.2);
+      color: #8ba4f0;
+      font-size: 0.6rem;
+      font-weight: 600;
+      padding: 0.15rem 0.6rem;
+      border-radius: 20px;
+      letter-spacing: 0.02em;
+    }
+    .network-tab {
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border-bottom: 2px solid transparent;
+    }
+    .network-tab.active {
+      border-bottom-color: #7c3aed;
+      color: white;
+    }
+    .network-tab:not(.active) {
+      color: #6b7280;
+    }
+    .network-tab:not(.active):hover {
+      color: #9ca3af;
     }
   </style>
 </head>
@@ -102,27 +129,32 @@
       <!-- Header -->
       <header class="text-center mb-10 fade-up">
         <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-300 text-xs font-medium mb-5 tracking-wide">
-          <i data-lucide="hexagon" style="width:14px;height:14px;"></i> ROBINHOOD ON-CHAIN
+          <i data-lucide="hexagon" style="width:14px;height:14px;"></i> MULTI-CHAIN NFT SNAPSHOT
         </div>
         <h1 id="siteTitle" class="text-3xl sm:text-5xl font-bold text-white mb-3 tracking-tight">NFT Holder Snapshot</h1>
-        <p id="subtitleText" class="text-gray-400 text-sm sm:text-base max-w-md mx-auto">Export all holders from any Robinhood NFT collection — complete list with balances.</p>
+        <p id="subtitleText" class="text-gray-400 text-sm sm:text-base max-w-md mx-auto">Export all holders from ETH or Robinhood NFT collections — complete list with balances.</p>
       </header>
 
       <!-- Main Card -->
       <div class="glow-border rounded-2xl bg-white/[0.03] backdrop-blur-sm p-5 sm:p-8 fade-up fade-up-d1">
-        <!-- Network : Robinhood fixed -->
-        <div class="mb-5 flex items-center justify-between">
-          <span class="text-gray-300 text-sm font-medium">Network</span>
-          <span class="badge-robinhood flex items-center gap-1.5">
-            <span class="inline-block w-2 h-2 rounded-full bg-violet-400"></span> Robinhood
-          </span>
+        <!-- Network Selection -->
+        <div class="mb-5">
+          <div class="flex gap-4 border-b border-white/10 pb-3">
+            <button onclick="setNetwork('ethereum')" id="ethTab" class="network-tab active flex items-center gap-2 text-sm font-medium px-2 py-1">
+              <span class="inline-block w-2 h-2 rounded-full bg-blue-400"></span> Ethereum
+            </button>
+            <button onclick="setNetwork('robinhood')" id="robinhoodTab" class="network-tab flex items-center gap-2 text-sm font-medium px-2 py-1">
+              <span class="inline-block w-2 h-2 rounded-full bg-violet-400"></span> Robinhood
+            </button>
+          </div>
+          <p id="networkDesc" class="text-gray-500 text-xs mt-2">Ethereum Mainnet — use Alchemy API for NFT holder data.</p>
         </div>
 
         <!-- Contract Address -->
         <div class="mb-5">
           <label for="contractInput" class="block text-gray-300 text-sm font-medium mb-2">Contract Address</label>
           <input id="contractInput" type="text" placeholder="0x..." spellcheck="false" class="w-full bg-white/[0.05] border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder-gray-600 focus:outline-none input-glow transition font-mono">
-          <p class="text-gray-600 text-xs mt-1.5">Enter a Robinhood NFT contract address.</p>
+          <p class="text-gray-600 text-xs mt-1.5">Enter an NFT contract address on the selected network.</p>
         </div>
 
         <!-- API Key -->
@@ -134,11 +166,17 @@
           <p class="text-gray-600 text-xs mt-1.5">Your key stays in your browser and is never stored.</p>
         </div>
 
-        <!-- Fetch Button -->
-        <button id="fetchBtn" onclick="fetchHolders()" class="btn-glow w-full rounded-xl px-6 py-3.5 text-white font-semibold text-sm flex items-center justify-center gap-2">
-          <i data-lucide="download-cloud" style="width:18px;height:18px;"></i>
-          <span id="fetchBtnText">Fetch All Holders</span>
-        </button>
+        <!-- Fetch Buttons -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <button id="fetchEthBtn" onclick="fetchHolders('ethereum')" class="btn-eth w-full rounded-xl px-6 py-3.5 text-white font-semibold text-sm flex items-center justify-center gap-2">
+            <i data-lucide="download-cloud" style="width:18px;height:18px;"></i>
+            <span id="fetchEthBtnText">Fetch ETH Holders</span>
+          </button>
+          <button id="fetchRobinhoodBtn" onclick="fetchHolders('robinhood')" class="btn-glow w-full rounded-xl px-6 py-3.5 text-white font-semibold text-sm flex items-center justify-center gap-2">
+            <i data-lucide="download-cloud" style="width:18px;height:18px;"></i>
+            <span id="fetchRobinhoodBtnText">Fetch Robinhood Holders</span>
+          </button>
+        </div>
       </div>
 
       <!-- Progress -->
@@ -201,7 +239,7 @@
 
       <!-- Footer -->
       <footer class="text-center mt-10 text-gray-600 text-xs">
-        Uses <a href="https://docs.alchemy.com/reference/getownersforcollection" target="_blank" rel="noopener noreferrer" class="text-violet-500 hover:text-violet-400">Alchemy API</a> · Robinhood network only · All holders included
+        Uses <a href="https://docs.alchemy.com/reference/getownersforcollection" target="_blank" rel="noopener noreferrer" class="text-violet-500 hover:text-violet-400">Alchemy API</a> · Supports ETH + Robinhood · All holders included
       </footer>
     </div>
 
@@ -212,7 +250,7 @@
   <script>
     // --------------------- STATE ---------------------------
     let holdersData = [];
-    let totalFetchedAll = 0;
+    let currentNetwork = 'ethereum';
 
     // --------------------- TOAST ---------------------------
     function showToast(msg, type = 'error') {
@@ -222,25 +260,51 @@
       setTimeout(() => t.classList.remove('show'), 4000);
     }
 
+    // --------------------- NETWORK SWITCH ---------------------------
+    function setNetwork(network) {
+      currentNetwork = network;
+      document.getElementById('ethTab').classList.toggle('active', network === 'ethereum');
+      document.getElementById('robinhoodTab').classList.toggle('active', network === 'robinhood');
+      
+      const desc = document.getElementById('networkDesc');
+      if (network === 'ethereum') {
+        desc.textContent = 'Ethereum Mainnet — use Alchemy API for NFT holder data.';
+      } else {
+        desc.textContent = 'Robinhood Mainnet — use Alchemy API for NFT holder data.';
+      }
+      
+      // Clear results when switching
+      document.getElementById('resultsSection').classList.add('hidden');
+      holdersData = [];
+    }
+
     // --------------- FETCH ALL HOLDERS (unlimited pagination) ------------
-    async function fetchHolders() {
+    async function fetchHolders(network) {
       const contract = document.getElementById('contractInput').value.trim();
       const apiKey = document.getElementById('apiKeyInput').value.trim();
 
       if (!contract || !apiKey) { showToast('Please enter both contract address and API key.'); return; }
       if (!/^0x[a-fA-F0-9]{40}$/.test(contract)) { showToast('Invalid contract address format.'); return; }
 
-      const btn = document.getElementById('fetchBtn');
-      const btnText = document.getElementById('fetchBtnText');
+      // Set button states
+      const isEth = network === 'ethereum';
+      const btn = document.getElementById(isEth ? 'fetchEthBtn' : 'fetchRobinhoodBtn');
+      const btnText = document.getElementById(isEth ? 'fetchEthBtnText' : 'fetchRobinhoodBtnText');
+      const otherBtn = document.getElementById(isEth ? 'fetchRobinhoodBtn' : 'fetchEthBtn');
+      
       btn.disabled = true;
       btnText.textContent = 'Fetching…';
+      otherBtn.disabled = true;
 
       document.getElementById('progressSection').classList.remove('hidden');
       document.getElementById('resultsSection').classList.add('hidden');
       holdersData = [];
-      totalFetchedAll = 0;
 
-      const baseUrl = `https://robinhood-mainnet.g.alchemy.com/v2/${apiKey}/getOwnersForCollection`;
+      // Set base URL based on network
+      const baseUrl = network === 'ethereum' 
+        ? `https://eth-mainnet.g.alchemy.com/v2/${apiKey}/getOwnersForCollection`
+        : `https://robinhood-mainnet.g.alchemy.com/v2/${apiKey}/getOwnersForCollection`;
+      
       let pageKey = '';
       let pageCount = 0;
 
@@ -264,18 +328,15 @@
                 : 1;
               holdersData.push({ address: o.ownerAddress, balance });
             });
-            totalFetchedAll = holdersData.length;
-            document.getElementById('progressCount').textContent = totalFetchedAll.toLocaleString();
-            // Update progress bar based on page count (approximate)
+            document.getElementById('progressCount').textContent = holdersData.length.toLocaleString();
             const progress = Math.min((pageCount + 1) * 15, 95);
             document.getElementById('progressBar').style.width = `${progress}%`;
-            document.getElementById('progressMsg').textContent = `Fetched ${totalFetchedAll.toLocaleString()} holders so far...`;
+            document.getElementById('progressMsg').textContent = `Fetched ${holdersData.length.toLocaleString()} holders so far...`;
           }
 
           pageKey = data.pageKey || '';
           pageCount++;
           
-          // Continue until no more pages
         } while (pageKey);
 
         document.getElementById('progressBar').style.width = '100%';
@@ -284,14 +345,15 @@
         // Sort by balance desc
         holdersData.sort((a, b) => b.balance - a.balance);
         renderResults();
-        showToast(`✅ Found ${holdersData.length.toLocaleString()} unique holders!`, 'success');
+        showToast(`✅ Found ${holdersData.length.toLocaleString()} unique holders on ${network}!`, 'success');
 
       } catch (e) {
         showToast(e.message || 'Failed to fetch holders.');
         document.getElementById('progressSection').classList.add('hidden');
       } finally {
         btn.disabled = false;
-        btnText.textContent = 'Fetch All Holders';
+        btnText.textContent = isEth ? 'Fetch ETH Holders' : 'Fetch Robinhood Holders';
+        otherBtn.disabled = false;
       }
     }
 
@@ -320,13 +382,14 @@
         return;
       }
       const contract = document.getElementById('contractInput').value.trim();
+      const networkLabel = currentNetwork === 'ethereum' ? 'eth' : 'robinhood';
       let csv = 'rank,address,balance\n';
       holdersData.forEach((h, i) => { csv += `${i + 1},${h.address},${h.balance}\n`; });
       const blob = new Blob([csv], { type: 'text/csv' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `robinhood_holders_${contract.slice(0, 8)}_all.csv`;
+      a.download = `${networkLabel}_holders_${contract.slice(0, 8)}_all.csv`;
       a.click();
       URL.revokeObjectURL(url);
       showToast(`✅ Downloaded ${holdersData.length.toLocaleString()} holders!`, 'success');
@@ -335,7 +398,7 @@
     // --------------- ELEMENT SDK CONFIG ----------
     const defaultConfig = {
       site_title: 'NFT Holder Snapshot',
-      subtitle_text: "Export all holders from any Robinhood NFT collection — complete list with balances.",
+      subtitle_text: "Export all holders from ETH or Robinhood NFT collections — complete list with balances.",
       background_color: '#0a0a0f',
       surface_color: '#1a0a2e',
       text_color: '#e5e7eb',
