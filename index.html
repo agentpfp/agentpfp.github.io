@@ -1,450 +1,727 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full">
+<html lang="bn">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>NFT Holder Snapshot — ETH & Robinhood</title>
-  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
-  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: {
-            heading: ['Sora', 'sans-serif'],
-            mono: ['Space Mono', 'monospace']
-          }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NFT ব্যাকগ্রাউন্ড চেঞ্জার #d4ff00</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-      }
-    }
-  </script>
-  <style>
-    @keyframes gradientShift {
-      0%, 100% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-    }
-    .gradient-bg {
-      background: linear-gradient(135deg, #0a0a0f 0%, #1a0a2e 30%, #0f1a2e 60%, #0a0a0f 100%);
-      background-size: 300% 300%;
-      animation: gradientShift 12s ease infinite;
-    }
-    @keyframes float {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-8px); }
-    }
-    .float { animation: float 4s ease-in-out infinite; }
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    .fade-up { animation: fadeUp 0.6s ease forwards; }
-    .fade-up-d1 { animation-delay: 0.1s; opacity: 0; }
-    .fade-up-d2 { animation-delay: 0.2s; opacity: 0; }
-    .fade-up-d3 { animation-delay: 0.3s; opacity: 0; }
-    .glow-border {
-      border: 1px solid rgba(139, 92, 246, 0.3);
-      box-shadow: 0 0 20px rgba(139, 92, 246, 0.08), inset 0 0 20px rgba(139, 92, 246, 0.03);
-    }
-    .input-glow:focus {
-      box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.4), 0 0 30px rgba(139, 92, 246, 0.1);
-    }
-    .btn-glow {
-      background: linear-gradient(135deg, #7c3aed, #6d28d9);
-      box-shadow: 0 4px 20px rgba(124, 58, 237, 0.4);
-      transition: all 0.3s ease;
-    }
-    .btn-glow:hover:not(:disabled) {
-      box-shadow: 0 6px 30px rgba(124, 58, 237, 0.6);
-      transform: translateY(-1px);
-    }
-    .btn-glow:disabled { opacity: 0.5; cursor: not-allowed; }
-    .btn-eth {
-      background: linear-gradient(135deg, #627eea, #4a6ad8);
-      box-shadow: 0 4px 20px rgba(98, 126, 234, 0.4);
-      transition: all 0.3s ease;
-    }
-    .btn-eth:hover:not(:disabled) {
-      box-shadow: 0 6px 30px rgba(98, 126, 234, 0.6);
-      transform: translateY(-1px);
-    }
-    .btn-eth:disabled { opacity: 0.5; cursor: not-allowed; }
-    .orb {
-      position: absolute;
-      border-radius: 50%;
-      filter: blur(80px);
-      opacity: 0.15;
-      pointer-events: none;
-    }
-    .scrollbar-thin::-webkit-scrollbar { width: 6px; }
-    .scrollbar-thin::-webkit-scrollbar-track { background: rgba(255,255,255,0.03); border-radius: 3px; }
-    .scrollbar-thin::-webkit-scrollbar-thumb { background: rgba(139,92,246,0.3); border-radius: 3px; }
-    .toast {
-      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(100px);
-      transition: transform 0.4s cubic-bezier(0.16,1,0.3,1);
-      z-index: 100;
-    }
-    .toast.show { transform: translateX(-50%) translateY(0); }
-    .badge-robinhood {
-      background: rgba(139, 92, 246, 0.2);
-      color: #a78bfa;
-      font-size: 0.6rem;
-      font-weight: 600;
-      padding: 0.15rem 0.6rem;
-      border-radius: 20px;
-      letter-spacing: 0.02em;
-    }
-    .badge-eth {
-      background: rgba(98, 126, 234, 0.2);
-      color: #8ba4f0;
-      font-size: 0.6rem;
-      font-weight: 600;
-      padding: 0.15rem 0.6rem;
-      border-radius: 20px;
-      letter-spacing: 0.02em;
-    }
-    .network-tab {
-      cursor: pointer;
-      transition: all 0.3s ease;
-      border-bottom: 2px solid transparent;
-    }
-    .network-tab.active {
-      border-bottom-color: #7c3aed;
-      color: white;
-    }
-    .network-tab:not(.active) {
-      color: #6b7280;
-    }
-    .network-tab:not(.active):hover {
-      color: #9ca3af;
-    }
-  </style>
+        body {
+            background: #0a0a1a;
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #d4ff00 0%, #a0cc00 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .subtitle {
+            text-align: center;
+            color: #aaa;
+            margin-bottom: 30px;
+            font-size: 1.1rem;
+        }
+        .color-preview {
+            display: inline-block;
+            background: #d4ff00;
+            padding: 2px 15px;
+            border-radius: 4px;
+            color: #000;
+            font-weight: bold;
+        }
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+        }
+        .btn {
+            padding: 14px 40px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #2a2a4a;
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.5);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #d4ff00 0%, #a0cc00 100%);
+            color: #000;
+        }
+        .btn-success {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: #000;
+        }
+        .btn-danger {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        .btn-warning {
+            background: linear-gradient(135deg, #f7971e 0%, #ffd200 100%);
+            color: #000;
+        }
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .progress-container {
+            width: 100%;
+            background: #1a1a2e;
+            border-radius: 10px;
+            height: 30px;
+            margin: 20px 0;
+            overflow: hidden;
+            position: relative;
+            display: none;
+        }
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #d4ff00 0%, #a0cc00 100%);
+            border-radius: 10px;
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.9rem;
+            color: #000;
+        }
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .nft-item {
+            background: #1a1a2e;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            cursor: pointer;
+        }
+        .nft-item:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.7);
+            z-index: 2;
+        }
+        .nft-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+        }
+        .nft-item .placeholder {
+            color: #555;
+            font-size: 0.9rem;
+            text-align: center;
+            padding: 10px;
+        }
+        .nft-item .index-badge {
+            position: absolute;
+            bottom: 8px;
+            right: 8px;
+            background: rgba(0,0,0,0.7);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            color: #fff;
+            backdrop-filter: blur(4px);
+        }
+        .nft-item .retry-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(255, 200, 0, 0.9);
+            border: none;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            font-size: 16px;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            color: #000;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            z-index: 3;
+        }
+        .nft-item .retry-btn:hover {
+            transform: scale(1.2);
+            background: #ffd700;
+        }
+        .nft-item.failed .retry-btn {
+            display: flex;
+        }
+        .nft-item.failed .placeholder {
+            color: #ff6b6b;
+        }
+        .status-msg {
+            text-align: center;
+            padding: 15px;
+            color: #aaa;
+            font-size: 1rem;
+        }
+
+        /* মোডাল */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s ease;
+        }
+        .modal.active {
+            display: flex;
+        }
+        .modal-content {
+            max-width: 90%;
+            max-height: 90%;
+            position: relative;
+            background: #1a1a2e;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+        }
+        .modal-content img {
+            max-width: 100%;
+            max-height: 80vh;
+            border-radius: 8px;
+            display: block;
+        }
+        .modal-close {
+            position: absolute;
+            top: -15px;
+            right: -15px;
+            background: #ff6b6b;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            font-size: 24px;
+            cursor: pointer;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255,0,0,0.3);
+        }
+        .modal-close:hover {
+            transform: scale(1.1);
+            background: #ff0000;
+        }
+        .modal-index {
+            text-align: center;
+            color: #d4ff00;
+            font-size: 1.2rem;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        @media (max-width: 600px) {
+            h1 { font-size: 1.8rem; }
+            .gallery { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+            .btn { padding: 10px 25px; font-size: 0.9rem; }
+            .modal-content { padding: 10px; }
+            .modal-close { top: -10px; right: -10px; width: 32px; height: 32px; font-size: 18px; }
+        }
+    </style>
 </head>
-<body class="h-full">
-  <div id="app" class="gradient-bg h-full w-full overflow-auto relative font-heading">
-    <!-- Orbs -->
-    <div class="orb" style="width:400px;height:400px;background:#7c3aed;top:-100px;right:-100px;"></div>
-    <div class="orb" style="width:300px;height:300px;background:#3b82f6;bottom:10%;left:-80px;"></div>
-    <div class="max-w-2xl mx-auto px-4 py-10 sm:py-16 relative z-10">
-      <!-- Header -->
-      <header class="text-center mb-10 fade-up">
-        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-300 text-xs font-medium mb-5 tracking-wide">
-          <i data-lucide="hexagon" style="width:14px;height:14px;"></i> MULTI-CHAIN NFT SNAPSHOT
-        </div>
-        <h1 id="siteTitle" class="text-3xl sm:text-5xl font-bold text-white mb-3 tracking-tight">NFT Holder Snapshot</h1>
-        <p id="subtitleText" class="text-gray-400 text-sm sm:text-base max-w-md mx-auto">Export all holders from ETH or Robinhood NFT collections — complete list with balances.</p>
-      </header>
+<body>
+    <div class="container">
+        <h1>🎨 NFT ব্যাকগ্রাউন্ড চেঞ্জার</h1>
+        <p class="subtitle">
+            প্রতিটি NFT এর ব্যাকগ্রাউন্ড হবে <span class="color-preview">#d4ff00</span>
+            <br><small>শুধু যে লোড হয়নি সেটা রিফ্রেশ করুন | কার্ডে ক্লিক করে বড় করে দেখুন</small>
+        </p>
 
-      <!-- Main Card -->
-      <div class="glow-border rounded-2xl bg-white/[0.03] backdrop-blur-sm p-5 sm:p-8 fade-up fade-up-d1">
-        <!-- Network Selection -->
-        <div class="mb-5">
-          <div class="flex gap-4 border-b border-white/10 pb-3">
-            <button onclick="setNetwork('ethereum')" id="ethTab" class="network-tab active flex items-center gap-2 text-sm font-medium px-2 py-1">
-              <span class="inline-block w-2 h-2 rounded-full bg-blue-400"></span> Ethereum
-            </button>
-            <button onclick="setNetwork('robinhood')" id="robinhoodTab" class="network-tab flex items-center gap-2 text-sm font-medium px-2 py-1">
-              <span class="inline-block w-2 h-2 rounded-full bg-violet-400"></span> Robinhood
-            </button>
-          </div>
-          <p id="networkDesc" class="text-gray-500 text-xs mt-2">Ethereum Mainnet — use Alchemy API for NFT holder data.</p>
+        <div class="controls">
+            <button id="loadBtn" class="btn btn-primary">📥 NFT লোড করুন</button>
+            <button id="downloadBtn" class="btn btn-success" disabled>📦 জিপ ডাউনলোড</button>
+            <button id="clearBtn" class="btn btn-danger">🗑️ ক্লিয়ার করুন</button>
         </div>
 
-        <!-- Contract Address -->
-        <div class="mb-5">
-          <label for="contractInput" class="block text-gray-300 text-sm font-medium mb-2">Contract Address</label>
-          <input id="contractInput" type="text" placeholder="0x..." spellcheck="false" class="w-full bg-white/[0.05] border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder-gray-600 focus:outline-none input-glow transition font-mono">
-          <p class="text-gray-600 text-xs mt-1.5">Enter an NFT contract address on the selected network.</p>
+        <div class="progress-container" id="progressContainer">
+            <div class="progress-bar" id="progressBar">০%</div>
         </div>
 
-        <!-- API Key -->
-        <div class="mb-6">
-          <label for="apiKeyInput" class="block text-gray-300 text-sm font-medium mb-2">
-            Alchemy API Key <a href="https://dashboard.alchemy.com/signup" target="_blank" rel="noopener noreferrer" class="text-violet-400 hover:text-violet-300 ml-1 font-normal">(Get free key →)</a>
-          </label>
-          <input id="apiKeyInput" type="password" placeholder="Your Alchemy API key" class="w-full bg-white/[0.05] border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder-gray-600 focus:outline-none input-glow transition font-mono">
-          <p class="text-gray-600 text-xs mt-1.5">Your key stays in your browser and is never stored.</p>
-        </div>
+        <div id="statusMsg" class="status-msg">লোড করতে "NFT লোড করুন" বাটনে ক্লিক করুন</div>
 
-        <!-- Fetch Buttons -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <button id="fetchEthBtn" onclick="fetchHolders('ethereum')" class="btn-eth w-full rounded-xl px-6 py-3.5 text-white font-semibold text-sm flex items-center justify-center gap-2">
-            <i data-lucide="download-cloud" style="width:18px;height:18px;"></i>
-            <span id="fetchEthBtnText">Fetch ETH Holders</span>
-          </button>
-          <button id="fetchRobinhoodBtn" onclick="fetchHolders('robinhood')" class="btn-glow w-full rounded-xl px-6 py-3.5 text-white font-semibold text-sm flex items-center justify-center gap-2">
-            <i data-lucide="download-cloud" style="width:18px;height:18px;"></i>
-            <span id="fetchRobinhoodBtnText">Fetch Robinhood Holders</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- Progress -->
-      <div id="progressSection" class="hidden mt-6 fade-up fade-up-d2">
-        <div class="glow-border rounded-2xl bg-white/[0.03] p-5">
-          <div class="flex items-center justify-between mb-3">
-            <span class="text-gray-300 text-sm font-medium">Fetching holders…</span>
-            <span id="progressCount" class="text-violet-400 text-sm font-mono">0</span>
-          </div>
-          <div class="w-full h-2 bg-white/5 rounded-full overflow-hidden">
-            <div id="progressBar" class="h-full bg-gradient-to-r from-violet-600 to-blue-500 rounded-full transition-all duration-300" style="width:5%"></div>
-          </div>
-          <p id="progressMsg" class="text-gray-500 text-xs mt-2">Paginating through all holders…</p>
-        </div>
-      </div>
-
-      <!-- Results -->
-      <div id="resultsSection" class="hidden mt-6 fade-up fade-up-d3">
-        <div class="glow-border rounded-2xl bg-white/[0.03] p-5">
-          <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
-            <h2 class="text-white font-semibold text-lg flex items-center gap-2">
-              <i data-lucide="users" style="width:20px;height:20px;" class="text-violet-400"></i>
-              <span id="resultTitle">All Holders</span>
-            </h2>
-            <div class="flex gap-2">
-              <button id="downloadBtn" onclick="downloadCSV()" class="flex items-center gap-1.5 bg-violet-600 hover:bg-violet-500 text-white text-xs font-semibold px-4 py-2 rounded-lg transition">
-                <i data-lucide="file-down" style="width:14px;height:14px;"></i> Download Full CSV
-              </button>
-            </div>
-          </div>
-
-          <!-- Stats -->
-          <div class="grid grid-cols-2 gap-3 mb-4">
-            <div class="bg-white/[0.04] rounded-xl p-3 text-center">
-              <p class="text-gray-500 text-xs mb-1">Total Holders</p>
-              <p id="statHolders" class="text-white font-bold text-xl font-mono">0</p>
-            </div>
-            <div class="bg-white/[0.04] rounded-xl p-3 text-center">
-              <p class="text-gray-500 text-xs mb-1">Total Supply</p>
-              <p id="statSupply" class="text-white font-bold text-xl font-mono">0</p>
-            </div>
-          </div>
-
-          <!-- Preview -->
-          <div class="bg-black/30 rounded-xl p-3 max-h-48 overflow-auto scrollbar-thin">
-            <table class="w-full text-xs">
-              <thead>
-                <tr class="text-gray-500 border-b border-white/5">
-                  <th class="text-left py-2 px-2">#</th>
-                  <th class="text-left py-2 px-2">Address</th>
-                  <th class="text-right py-2 px-2">Balance</th>
-                </tr>
-              </thead>
-              <tbody id="previewTable" class="text-gray-300 font-mono"></tbody>
-            </table>
-          </div>
-          <p class="text-gray-600 text-xs mt-2 text-center">Showing first 50 holders — download CSV for the complete list.</p>
-        </div>
-      </div>
-
-      <!-- Footer -->
-      <footer class="text-center mt-10 text-gray-600 text-xs">
-        Uses <a href="https://docs.alchemy.com/reference/getownersforcollection" target="_blank" rel="noopener noreferrer" class="text-violet-500 hover:text-violet-400">Alchemy API</a> · Supports ETH + Robinhood · All holders included
-      </footer>
+        <div class="gallery" id="gallery"></div>
     </div>
 
-    <!-- Toast -->
-    <div id="toast" class="toast px-5 py-3 rounded-xl text-sm font-medium max-w-sm text-center"></div>
-  </div>
+    <!-- মোডাল -->
+    <div class="modal" id="imageModal">
+        <div class="modal-content">
+            <button class="modal-close" id="modalClose">✕</button>
+            <img id="modalImage" src="" alt="NFT">
+            <div class="modal-index" id="modalIndex">#0</div>
+        </div>
+    </div>
 
-  <script>
-    // --------------------- STATE ---------------------------
-    let holdersData = [];
-    let currentNetwork = 'ethereum';
+    <script>
+        (function() {
+            const BASE_URL = 'https://ipfs.io/ipfs/QmTxBwjcBuhLvfrVp7bsbw6KXiTxZkPso3kpHfzw3kxGnU/';
+            const TOTAL_IMAGES = 6969;
+            const IMAGE_EXT = '.png';
+            const BG_COLOR = '#d4ff00';
 
-    // --------------------- TOAST ---------------------------
-    function showToast(msg, type = 'error') {
-      const t = document.getElementById('toast');
-      t.textContent = msg;
-      t.className = `toast px-5 py-3 rounded-xl text-sm font-medium max-w-sm text-center show ${type === 'error' ? 'bg-red-600/90 text-white' : 'bg-emerald-600/90 text-white'}`;
-      setTimeout(() => t.classList.remove('show'), 4000);
-    }
+            const gallery = document.getElementById('gallery');
+            const loadBtn = document.getElementById('loadBtn');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const clearBtn = document.getElementById('clearBtn');
+            const progressContainer = document.getElementById('progressContainer');
+            const progressBar = document.getElementById('progressBar');
+            const statusMsg = document.getElementById('statusMsg');
 
-    // --------------------- NETWORK SWITCH ---------------------------
-    function setNetwork(network) {
-      currentNetwork = network;
-      document.getElementById('ethTab').classList.toggle('active', network === 'ethereum');
-      document.getElementById('robinhoodTab').classList.toggle('active', network === 'robinhood');
-      
-      const desc = document.getElementById('networkDesc');
-      if (network === 'ethereum') {
-        desc.textContent = 'Ethereum Mainnet — use Alchemy API for NFT holder data.';
-      } else {
-        desc.textContent = 'Robinhood Mainnet — use Alchemy API for NFT holder data.';
-      }
-      
-      // Clear results when switching
-      document.getElementById('resultsSection').classList.add('hidden');
-      holdersData = [];
-    }
+            // মোডাল এলিমেন্ট
+            const modal = document.getElementById('imageModal');
+            const modalImage = document.getElementById('modalImage');
+            const modalIndex = document.getElementById('modalIndex');
+            const modalClose = document.getElementById('modalClose');
 
-    // --------------- FETCH ALL HOLDERS (unlimited pagination) ------------
-    async function fetchHolders(network) {
-      const contract = document.getElementById('contractInput').value.trim();
-      const apiKey = document.getElementById('apiKeyInput').value.trim();
+            let imageBlobs = new Map();
+            let failedIndices = new Set();
+            let isLoading = false;
+            let isDownloading = false;
+            let isRetrying = false;
 
-      if (!contract || !apiKey) { showToast('Please enter both contract address and API key.'); return; }
-      if (!/^0x[a-fA-F0-9]{40}$/.test(contract)) { showToast('Invalid contract address format.'); return; }
+            // মোডাল ফাংশন
+            function openModal(imageUrl, index) {
+                modalImage.src = imageUrl;
+                modalIndex.textContent = `#${index}`;
+                modal.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
 
-      // Set button states
-      const isEth = network === 'ethereum';
-      const btn = document.getElementById(isEth ? 'fetchEthBtn' : 'fetchRobinhoodBtn');
-      const btnText = document.getElementById(isEth ? 'fetchEthBtnText' : 'fetchRobinhoodBtnText');
-      const otherBtn = document.getElementById(isEth ? 'fetchRobinhoodBtn' : 'fetchEthBtn');
-      
-      btn.disabled = true;
-      btnText.textContent = 'Fetching…';
-      otherBtn.disabled = true;
+            function closeModal() {
+                modal.classList.remove('active');
+                document.body.style.overflow = '';
+            }
 
-      document.getElementById('progressSection').classList.remove('hidden');
-      document.getElementById('resultsSection').classList.add('hidden');
-      holdersData = [];
-
-      // Set base URL based on network
-      const baseUrl = network === 'ethereum' 
-        ? `https://eth-mainnet.g.alchemy.com/v2/${apiKey}/getOwnersForCollection`
-        : `https://robinhood-mainnet.g.alchemy.com/v2/${apiKey}/getOwnersForCollection`;
-      
-      let pageKey = '';
-      let pageCount = 0;
-
-      try {
-        do {
-          const url = pageKey 
-            ? `${baseUrl}?contractAddress=${contract}&withTokenBalances=true&pageKey=${pageKey}` 
-            : `${baseUrl}?contractAddress=${contract}&withTokenBalances=true`;
-
-          const res = await fetch(url);
-          if (!res.ok) {
-            const err = await res.json().catch(() => ({}));
-            throw new Error(err.error?.message || `API error ${res.status}`);
-          }
-          const data = await res.json();
-
-          if (data.ownerAddresses && data.ownerAddresses.length > 0) {
-            data.ownerAddresses.forEach(o => {
-              const balance = o.tokenBalances 
-                ? o.tokenBalances.reduce((s, t) => s + parseInt(t.balance, 10), 0) 
-                : 1;
-              holdersData.push({ address: o.ownerAddress, balance });
+            modalClose.addEventListener('click', closeModal);
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) closeModal();
             });
-            document.getElementById('progressCount').textContent = holdersData.length.toLocaleString();
-            const progress = Math.min((pageCount + 1) * 15, 95);
-            document.getElementById('progressBar').style.width = `${progress}%`;
-            document.getElementById('progressMsg').textContent = `Fetched ${holdersData.length.toLocaleString()} holders so far...`;
-          }
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') closeModal();
+            });
 
-          pageKey = data.pageKey || '';
-          pageCount++;
-          
-        } while (pageKey);
+            function clearGallery() {
+                gallery.innerHTML = '';
+                imageBlobs.clear();
+                failedIndices.clear();
+                downloadBtn.disabled = true;
+                statusMsg.textContent = 'গ্যালারি ক্লিয়ার করা হয়েছে। লোড করতে বাটনে ক্লিক করুন।';
+                progressContainer.style.display = 'none';
+                progressBar.style.width = '0%';
+                progressBar.textContent = '০%';
+            }
 
-        document.getElementById('progressBar').style.width = '100%';
-        document.getElementById('progressMsg').textContent = `Complete! Total ${holdersData.length.toLocaleString()} holders found.`;
+            function updateProgress(current, total) {
+                const percent = Math.round((current / total) * 100);
+                progressBar.style.width = percent + '%';
+                progressBar.textContent = percent + '%';
+                statusMsg.textContent = `লোড হচ্ছে... ${current} / ${total} (${percent}%)`;
+            }
 
-        // Sort by balance desc
-        holdersData.sort((a, b) => b.balance - a.balance);
-        renderResults();
-        showToast(`✅ Found ${holdersData.length.toLocaleString()} unique holders on ${network}!`, 'success');
+            function changeNFTBackground(blob, color) {
+                return new Promise((resolve, reject) => {
+                    const img = new Image();
+                    const url = URL.createObjectURL(blob);
+                    
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+                        const ctx = canvas.getContext('2d');
+                        
+                        ctx.fillStyle = color;
+                        ctx.fillRect(0, 0, canvas.width, canvas.height);
+                        ctx.drawImage(img, 0, 0);
+                        
+                        canvas.toBlob((newBlob) => {
+                            URL.revokeObjectURL(url);
+                            if (newBlob) {
+                                resolve(newBlob);
+                            } else {
+                                reject(new Error('ক্যানভাস থেকে ব্লব তৈরি ব্যর্থ'));
+                            }
+                        }, 'image/png');
+                    };
+                    
+                    img.onerror = function() {
+                        URL.revokeObjectURL(url);
+                        reject(new Error('ইমেজ লোড করতে ব্যর্থ'));
+                    };
+                    
+                    img.src = url;
+                });
+            }
 
-      } catch (e) {
-        showToast(e.message || 'Failed to fetch holders.');
-        document.getElementById('progressSection').classList.add('hidden');
-      } finally {
-        btn.disabled = false;
-        btnText.textContent = isEth ? 'Fetch ETH Holders' : 'Fetch Robinhood Holders';
-        otherBtn.disabled = false;
-      }
-    }
+            // শুধু failed ইমেজ রিলোড করার ফাংশন
+            async function retryFailedImages() {
+                if (isRetrying || failedIndices.size === 0) return;
+                isRetrying = true;
+                statusMsg.textContent = `🔄 ${failedIndices.size} টি ব্যর্থ NFT পুনরায় লোড হচ্ছে...`;
 
-    // ------------------- RENDER RESULTS --------------------
-    function renderResults() {
-      document.getElementById('resultsSection').classList.remove('hidden');
-      document.getElementById('statHolders').textContent = holdersData.length.toLocaleString();
-      const totalSupply = holdersData.reduce((s, h) => s + h.balance, 0);
-      document.getElementById('statSupply').textContent = totalSupply.toLocaleString();
-      document.getElementById('resultTitle').textContent = `${holdersData.length.toLocaleString()} Holders Found`;
+                let retryCount = 0;
+                const failedArray = Array.from(failedIndices);
+                
+                for (const index of failedArray) {
+                    try {
+                        const url = BASE_URL + index + IMAGE_EXT;
+                        const response = await fetch(url);
+                        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                        const blob = await response.blob();
+                        const newBlob = await changeNFTBackground(blob, BG_COLOR);
+                        const imageUrl = URL.createObjectURL(newBlob);
+                        
+                        imageBlobs.set(index, newBlob);
+                        failedIndices.delete(index);
+                        retryCount++;
+                        
+                        // গ্যালারি আপডেট
+                        const existingItem = gallery.querySelector(`[data-index="${index}"]`);
+                        if (existingItem) {
+                            const img = existingItem.querySelector('img');
+                            if (img) {
+                                img.src = imageUrl;
+                                img.style.display = 'block';
+                            }
+                            const placeholder = existingItem.querySelector('.placeholder');
+                            if (placeholder) placeholder.style.display = 'none';
+                            existingItem.classList.remove('failed');
+                            const retryBtn = existingItem.querySelector('.retry-btn');
+                            if (retryBtn) retryBtn.style.display = 'none';
+                        }
+                        
+                        statusMsg.textContent = `🔄 পুনরায় লোড হচ্ছে... ${retryCount}/${failedArray.length}`;
+                    } catch (error) {
+                        console.error(`NFT #${index} পুনরায় লোড করতে ব্যর্থ:`, error);
+                    }
+                }
 
-      const tbody = document.getElementById('previewTable');
-      tbody.innerHTML = holdersData.slice(0, 50).map((h, i) =>
-        `<tr class="border-b border-white/5 hover:bg-white/[0.02]">
-          <td class="py-1.5 px-2 text-gray-500">${i + 1}</td>
-          <td class="py-1.5 px-2 truncate max-w-[200px]">${h.address}</td>
-          <td class="py-1.5 px-2 text-right text-violet-300">${h.balance}</td>
-        </tr>`
-      ).join('');
-    }
+                isRetrying = false;
+                if (failedIndices.size === 0) {
+                    statusMsg.textContent = `✅ সব NFT সফলভাবে লোড হয়েছে!`;
+                    downloadBtn.disabled = false;
+                } else {
+                    statusMsg.textContent = `⚠️ ${failedIndices.size} টি NFT এখনও লোড হয়নি। "রিফ্রেশ" বাটনে ক্লিক করুন।`;
+                }
+            }
 
-    // ------------------- DOWNLOAD CSV (ALL HOLDERS) ----------------------
-    function downloadCSV() {
-      if (!holdersData.length) {
-        showToast('No data to download. Fetch holders first.', 'error');
-        return;
-      }
-      const contract = document.getElementById('contractInput').value.trim();
-      const networkLabel = currentNetwork === 'ethereum' ? 'eth' : 'robinhood';
-      let csv = 'rank,address,balance\n';
-      holdersData.forEach((h, i) => { csv += `${i + 1},${h.address},${h.balance}\n`; });
-      const blob = new Blob([csv], { type: 'text/csv' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${networkLabel}_holders_${contract.slice(0, 8)}_all.csv`;
-      a.click();
-      URL.revokeObjectURL(url);
-      showToast(`✅ Downloaded ${holdersData.length.toLocaleString()} holders!`, 'success');
-    }
+            async function loadAllImages() {
+                if (isLoading) return;
+                isLoading = true;
+                loadBtn.disabled = true;
+                downloadBtn.disabled = true;
+                clearBtn.disabled = true;
 
-    // --------------- ELEMENT SDK CONFIG ----------
-    const defaultConfig = {
-      site_title: 'NFT Holder Snapshot',
-      subtitle_text: "Export all holders from ETH or Robinhood NFT collections — complete list with balances.",
-      background_color: '#0a0a0f',
-      surface_color: '#1a0a2e',
-      text_color: '#e5e7eb',
-      primary_action_color: '#7c3aed',
-      secondary_action_color: '#8b5cf6',
-      font_family: 'Sora',
-      font_size: 16
-    };
+                progressContainer.style.display = 'block';
+                progressBar.style.width = '0%';
+                progressBar.textContent = '০%';
+                clearGallery();
 
-    function applyConfig(config) {
-      const c = { ...defaultConfig, ...config };
-      document.getElementById('siteTitle').textContent = c.site_title;
-      document.getElementById('subtitleText').textContent = c.subtitle_text;
-      const font = c.font_family || defaultConfig.font_family;
-      document.getElementById('siteTitle').style.fontFamily = `${font}, sans-serif`;
-      document.getElementById('subtitleText').style.fontFamily = `${font}, sans-serif`;
-      const base = c.font_size || defaultConfig.font_size;
-      document.getElementById('subtitleText').style.fontSize = `${base}px`;
-    }
+                let loadedCount = 0;
+                const total = TOTAL_IMAGES;
+                const batchSize = 15;
+                let errorCount = 0;
 
-    window.elementSdk?.init({
-      defaultConfig,
-      onConfigChange: async (config) => applyConfig(config),
-      mapToCapabilities: (config) => {
-        const c = { ...defaultConfig, ...config };
-        const mk = (key) => ({
-          get: () => c[key] || defaultConfig[key],
-          set: (v) => { c[key] = v; window.elementSdk?.setConfig({ [key]: v }); }
-        });
-        return {
-          recolorables: [mk('background_color'), mk('surface_color'), mk('text_color'), mk('primary_action_color'), mk('secondary_action_color')],
-          borderables: [],
-          fontEditable: mk('font_family'),
-          fontSizeable: mk('font_size')
-        };
-      },
-      mapToEditPanelValues: (config) => {
-        const c = { ...defaultConfig, ...config };
-        return new Map([
-          ['site_title', c.site_title],
-          ['subtitle_text', c.subtitle_text]
-        ]);
-      }
-    });
+                try {
+                    const fetchPromises = [];
+                    for (let i = 1; i <= total; i++) {
+                        const url = BASE_URL + i + IMAGE_EXT;
+                        const promise = fetch(url)
+                            .then(response => {
+                                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                                return response.blob();
+                            })
+                            .then(blob => changeNFTBackground(blob, BG_COLOR))
+                            .then(newBlob => {
+                                const imageUrl = URL.createObjectURL(newBlob);
+                                imageBlobs.set(i, newBlob);
+                                return { index: i, url: imageUrl, success: true };
+                            })
+                            .catch(err => {
+                                errorCount++;
+                                failedIndices.add(i);
+                                return { index: i, url: null, success: false, error: err };
+                            });
 
-    lucide.createIcons();
-  </script>
+                        fetchPromises.push(promise);
+
+                        if (fetchPromises.length >= batchSize || i === total) {
+                            const results = await Promise.all(fetchPromises);
+                            for (const result of results) {
+                                if (result.success && result.url) {
+                                    addImageToGallery(result.index, result.url);
+                                    loadedCount++;
+                                } else {
+                                    addPlaceholderToGallery(result.index);
+                                }
+                                updateProgress(loadedCount, total);
+                            }
+                            fetchPromises.length = 0;
+                        }
+                    }
+
+                } catch (error) {
+                    console.error('লোডিং এ রর:', error);
+                    statusMsg.textContent = `লোডিং এ রর: ${error.message}`;
+                } finally {
+                    isLoading = false;
+                    loadBtn.disabled = false;
+                    clearBtn.disabled = false;
+                    if (loadedCount > 0 && failedIndices.size === 0) {
+                        downloadBtn.disabled = false;
+                    }
+                    if (failedIndices.size > 0) {
+                        statusMsg.textContent = `⚠️ ${loadedCount} টি লোড হয়েছে, ${failedIndices.size} টি ব্যর্থ। "রিফ্রেশ" বাটনে ক্লিক করে শুধু ব্যর্থ গুলো পুনরায় লোড করুন।`;
+                    } else {
+                        statusMsg.textContent = `✅ লোড সম্পূর্ণ! ${loadedCount} টি NFT এর ব্যাকগ্রাউন্ড ${BG_COLOR} করা হয়েছে।`;
+                    }
+                    progressBar.style.width = '100%';
+                    progressBar.textContent = '১০০%';
+                    setTimeout(() => {
+                        progressContainer.style.display = 'none';
+                    }, 2000);
+                }
+            }
+
+            function addImageToGallery(index, imageUrl) {
+                const div = document.createElement('div');
+                div.className = 'nft-item';
+                div.dataset.index = index;
+                
+                const img = document.createElement('img');
+                img.src = imageUrl;
+                img.alt = `NFT #${index}`;
+                img.loading = 'lazy';
+                div.appendChild(img);
+                
+                const badge = document.createElement('span');
+                badge.className = 'index-badge';
+                badge.textContent = `#${index}`;
+                div.appendChild(badge);
+                
+                // ক্লিক ইভেন্ট - বড় করে দেখান
+                div.addEventListener('click', function(e) {
+                    if (e.target.closest('.retry-btn')) return;
+                    const imgElement = this.querySelector('img');
+                    if (imgElement && imgElement.src) {
+                        openModal(imgElement.src, index);
+                    }
+                });
+                
+                gallery.appendChild(div);
+            }
+
+            function addPlaceholderToGallery(index) {
+                const div = document.createElement('div');
+                div.className = 'nft-item failed';
+                div.dataset.index = index;
+                
+                const placeholder = document.createElement('div');
+                placeholder.className = 'placeholder';
+                placeholder.textContent = `#${index} ❌ লোড হয়নি`;
+                div.appendChild(placeholder);
+                
+                const badge = document.createElement('span');
+                badge.className = 'index-badge';
+                badge.textContent = `#${index}`;
+                div.appendChild(badge);
+                
+                // রিফ্রেশ বাটন (শুধু ব্যর্থ গুলোর জন্য)
+                const retryBtn = document.createElement('button');
+                retryBtn.className = 'retry-btn';
+                retryBtn.textContent = '↻';
+                retryBtn.title = 'শুধু এই NFT টি রিফ্রেশ করুন';
+                retryBtn.addEventListener('click', async function(e) {
+                    e.stopPropagation();
+                    const index = parseInt(div.dataset.index);
+                    await retrySingleImage(index);
+                });
+                div.appendChild(retryBtn);
+                
+                gallery.appendChild(div);
+            }
+
+            // একক NFT রিফ্রেশ ফাংশন
+            async function retrySingleImage(index) {
+                if (isRetrying) return;
+                isRetrying = true;
+                
+                const item = gallery.querySelector(`[data-index="${index}"]`);
+                if (!item) return;
+                
+                const placeholder = item.querySelector('.placeholder');
+                const retryBtn = item.querySelector('.retry-btn');
+                if (placeholder) placeholder.textContent = `#${index} ↻ লোড হচ্ছে...`;
+                if (retryBtn) retryBtn.style.display = 'none';
+                
+                try {
+                    const url = BASE_URL + index + IMAGE_EXT;
+                    const response = await fetch(url);
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    const blob = await response.blob();
+                    const newBlob = await changeNFTBackground(blob, BG_COLOR);
+                    const imageUrl = URL.createObjectURL(newBlob);
+                    
+                    imageBlobs.set(index, newBlob);
+                    failedIndices.delete(index);
+                    
+                    // গ্যালারি আপডেট
+                    const img = document.createElement('img');
+                    img.src = imageUrl;
+                    img.alt = `NFT #${index}`;
+                    img.loading = 'lazy';
+                    
+                    // পুরোনো কন্টেন্ট রিমুভ
+                    const oldImg = item.querySelector('img');
+                    if (oldImg) oldImg.remove();
+                    const oldPlaceholder = item.querySelector('.placeholder');
+                    if (oldPlaceholder) oldPlaceholder.remove();
+                    const oldRetryBtn = item.querySelector('.retry-btn');
+                    if (oldRetryBtn) oldRetryBtn.remove();
+                    
+                    item.appendChild(img);
+                    item.classList.remove('failed');
+                    
+                    // ক্লিক ইভেন্ট রিঅ্যাটাচ
+                    item.addEventListener('click', function(e) {
+                        if (e.target.closest('.retry-btn')) return;
+                        const imgElement = this.querySelector('img');
+                        if (imgElement && imgElement.src) {
+                            openModal(imgElement.src, index);
+                        }
+                    });
+                    
+                    statusMsg.textContent = `✅ NFT #${index} সফলভাবে রিফ্রেশ করা হয়েছে!`;
+                    
+                    if (failedIndices.size === 0) {
+                        downloadBtn.disabled = false;
+                        statusMsg.textContent = `✅ সব NFT সফলভাবে লোড হয়েছে!`;
+                    }
+                } catch (error) {
+                    console.error(`NFT #${index} রিফ্রেশ করতে ব্যর্থ:`, error);
+                    if (placeholder) placeholder.textContent = `#${index} ❌ রিফ্রেশ ব্যর্থ`;
+                    if (retryBtn) retryBtn.style.display = 'flex';
+                    statusMsg.textContent = `❌ NFT #${index} রিফ্রেশ করতে ব্যর্থ। আবার চেষ্টা করুন।`;
+                } finally {
+                    isRetrying = false;
+                }
+            }
+
+            // সব failed রিফ্রেশ
+            async function retryAllFailed() {
+                if (failedIndices.size === 0) {
+                    statusMsg.textContent = '✅ কোনো ব্যর্থ NFT নেই!';
+                    return;
+                }
+                await retryFailedImages();
+            }
+
+            async function downloadZip() {
+                if (isDownloading) return;
+                if (imageBlobs.size === 0) {
+                    alert('কোনো NFT লোড হয়নি! প্রথমে লোড করুন।');
+                    return;
+                }
+
+                isDownloading = true;
+                downloadBtn.disabled = true;
+                statusMsg.textContent = 'জিপ তৈরি হচ্ছে... দয়া করে অপেক্ষা করুন।';
+
+                try {
+                    const zip = new JSZip();
+                    const folder = zip.folder('nft_bg_d4ff00');
+
+                    let addedCount = 0;
+                    for (const [index, blob] of imageBlobs.entries()) {
+                        const fileName = `${index}.png`;
+                        folder.file(fileName, blob);
+                        addedCount++;
+                        if (addedCount % 100 === 0) {
+                            statusMsg.textContent = `জিপে যোগ হচ্ছে... ${addedCount}/${imageBlobs.size}`;
+                        }
+                    }
+
+                    statusMsg.textContent = `জিপ তৈরি হচ্ছে... (${imageBlobs.size} টি ফাইল)`;
+                    const zipBlob = await zip.generateAsync({ type: 'blob' });
+                    saveAs(zipBlob, `nft_background_d4ff00_1_to_${TOTAL_IMAGES}.zip`);
+
+                    statusMsg.textContent = `✅ ডাউনলোড সম্পূর্ণ! ${imageBlobs.size} টি NFT এর ব্যাকগ্রাউন্ড ${BG_COLOR} সহ জিপে সংরক্ষিত হয়েছে।`;
+                } catch (error) {
+                    console.error('জিপ তৈরি/ডাউনলোডে রর:', error);
+                    statusMsg.textContent = `জিপ তৈরি/ডাউনলোডে রর: ${error.message}`;
+                    alert('জিপ তৈরি করতে সমস্যা হয়েছে। কনসোল দেখুন।');
+                } finally {
+                    isDownloading = false;
+                    downloadBtn.disabled = false;
+                }
+            }
+
+            loadBtn.addEventListener('click', loadAllImages);
+            downloadBtn.addEventListener('click', downloadZip);
+            clearBtn.addEventListener('click', clearGallery);
+
+            // রিফ্রেশ বাটন (শুধু ব্যর্থ গুলো রিফ্রেশ করবে)
+            const refreshBtn = document.createElement('button');
+            refreshBtn.className = 'btn btn-warning';
+            refreshBtn.textContent = '🔄 শুধু ব্যর্থ গুলো রিফ্রেশ';
+            refreshBtn.id = 'refreshBtn';
+            refreshBtn.addEventListener('click', retryAllFailed);
+            
+            // কন্ট্রোলসে যোগ করো
+            const controls = document.querySelector('.controls');
+            controls.appendChild(refreshBtn);
+
+            statusMsg.textContent = 'লোড করতে "NFT লোড করুন" বাটনে ক্লিক করুন। ব্যর্থ হলে "শুধু ব্যর্থ গুলো রিফ্রেশ" বাটনে ক্লিক করুন।';
+        })();
+    </script>
 </body>
 </html>
