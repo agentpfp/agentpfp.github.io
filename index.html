@@ -3,460 +3,575 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>🧩 5-Part NFT Downloader (Safe)</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  <title>JSON Extractor · ZIP renamer</title>
+  <!-- Font & minimal style -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz@14..32&display=swap" rel="stylesheet">
   <style>
-    * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif; }
-    body { background:#0a0a1a; color:#fff; min-height:100vh; padding:20px; display:flex; align-items:center; justify-content:center; }
-    .container { max-width:1000px; width:100%; margin:0 auto; text-align:center; }
-    h1 { font-size:2.4rem; margin-bottom:8px; background:linear-gradient(135deg,#d4ff00 0%,#a0cc00 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
-    .subtitle { color:#aaa; margin-bottom:20px; font-size:1rem; }
-    .color-preview { display:inline-block; background:#d4ff00; padding:2px 18px; border-radius:4px; color:#000; font-weight:bold; }
-    .card { background:#141428; border-radius:20px; padding:30px 25px; box-shadow:0 20px 40px rgba(0,0,0,.6); border:1px solid #2a2a4a; }
-    .status-box { background:#0f0f22; border-radius:12px; padding:16px; margin-bottom:20px; border:1px solid #1f1f3a; }
-    .status-msg { font-size:1.05rem; color:#ccc; }
-    .status-msg .highlight { color:#d4ff00; font-weight:bold; }
-    .progress-container { width:100%; background:#1a1a2e; border-radius:10px; height:28px; margin:12px 0; overflow:hidden; display:none; }
-    .progress-bar { height:100%; width:0%; background:linear-gradient(90deg,#d4ff00,#a0cc00); border-radius:10px; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:.8rem; color:#000; transition:width .3s ease; }
-    .badge { display:inline-block; background:rgba(212,255,0,.12); color:#d4ff00; padding:4px 14px; border-radius:30px; font-size:.8rem; margin:6px 0; border:1px solid rgba(212,255,0,.15); }
-    .part-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(140px,1fr)); gap:10px; margin:12px 0; }
-    .part-btn { padding:12px 8px; border:none; border-radius:12px; font-weight:700; font-size:.85rem; cursor:pointer; transition:all .25s ease; background:#1a1a2e; color:#fff; border:1px solid #2a2a4a; box-shadow:0 4px 12px rgba(0,0,0,.3); }
-    .part-btn:hover:not(:disabled) { transform:translateY(-2px); border-color:#d4ff00; }
-    .part-btn:disabled { opacity:.4; cursor:not-allowed; transform:none; }
-    .part-btn.active { border-color:#d4ff00; background:rgba(212,255,0,.1); }
-    .part-btn .range { font-size:.7rem; color:#888; display:block; margin-top:2px; }
-    .btn { padding:12px 24px; border:none; border-radius:60px; font-size:.95rem; font-weight:700; cursor:pointer; transition:all .25s ease; box-shadow:0 6px 20px rgba(0,0,0,.4); min-width:140px; }
-    .btn:hover:not(:disabled) { transform:translateY(-3px); box-shadow:0 10px 30px rgba(0,0,0,.6); }
-    .btn:disabled { opacity:.4; cursor:not-allowed; transform:none; }
-    .btn-primary { background:linear-gradient(135deg,#d4ff00 0%,#a0cc00 100%); color:#000; }
-    .btn-success { background:linear-gradient(135deg,#11998e 0%,#38ef7d 100%); color:#000; }
-    .btn-danger  { background:linear-gradient(135deg,#f093fb 0%,#f5576c 100%); }
-    .btn-warning { background:linear-gradient(135deg,#f7971e 0%,#ffd200 100%); color:#000; }
-    .btn-purple  { background:linear-gradient(135deg,#a18cd1 0%,#fbc2eb 100%); color:#000; }
-    .btn-group { display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-top:15px; }
-    .error-box { margin-top:10px; padding:8px 12px; background:rgba(255,107,107,.1); border-radius:8px; border:1px solid rgba(255,107,107,.2); display:none; color:#ff6b6b; font-size:.85rem; }
-    .footer { margin-top:20px; color:#555; font-size:.85rem; }
-    .part-status { font-size:.75rem; color:#888; margin-top:2px; }
-    @media (max-width:600px) {
-      h1 { font-size:1.6rem; }
-      .card { padding:18px 12px; }
-      .part-grid { grid-template-columns:repeat(auto-fit, minmax(100px,1fr)); }
-      .btn { padding:10px 16px; font-size:.85rem; min-width:100px; }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
     }
+    body {
+      background: #f6f9fc;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 1.5rem;
+      color: #1e293b;
+    }
+    .card {
+      max-width: 720px;
+      width: 100%;
+      background: white;
+      border-radius: 2rem;
+      padding: 2.5rem 2rem;
+      box-shadow: 0 20px 40px -12px rgba(0,0,0,0.15);
+      transition: box-shadow 0.2s;
+      border: 1px solid #e9eef3;
+    }
+    h1 {
+      font-weight: 600;
+      font-size: 2rem;
+      letter-spacing: -0.02em;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .badge {
+      background: #dbeafe;
+      color: #1e4e8a;
+      font-size: 0.8rem;
+      font-weight: 500;
+      padding: 0.2rem 0.8rem;
+      border-radius: 40px;
+      letter-spacing: 0.3px;
+    }
+    .sub {
+      margin-top: 0.5rem;
+      color: #475569;
+      border-left: 3px solid #94a3b8;
+      padding-left: 1rem;
+      font-size: 0.95rem;
+    }
+    .drop-zone {
+      margin: 2rem 0 1.5rem;
+      border: 2px dashed #cbd5e1;
+      border-radius: 1.5rem;
+      padding: 2.8rem 1rem;
+      text-align: center;
+      background: #fafcfd;
+      transition: 0.2s;
+      cursor: pointer;
+    }
+    .drop-zone:hover, .drop-zone.drag-over {
+      border-color: #3b82f6;
+      background: #f0f7ff;
+    }
+    .drop-zone input[type="file"] {
+      display: none;
+    }
+    .drop-zone p {
+      font-size: 1rem;
+      color: #334155;
+    }
+    .drop-zone .icon {
+      font-size: 2.8rem;
+      display: block;
+      margin-bottom: 0.5rem;
+    }
+    .file-label {
+      display: inline-block;
+      background: #eef2f6;
+      padding: 0.5rem 1.4rem;
+      border-radius: 60px;
+      font-weight: 500;
+      font-size: 0.9rem;
+      margin-top: 0.5rem;
+      color: #1e293b;
+      transition: 0.15s;
+    }
+    .file-label:hover {
+      background: #dce3ec;
+    }
+    .status-area {
+      margin: 1.2rem 0;
+      padding: 0.8rem 1rem;
+      background: #f1f5f9;
+      border-radius: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      font-size: 0.95rem;
+    }
+    .status-area .filename {
+      font-weight: 500;
+      color: #0f172a;
+      max-width: 220px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .status-area .count {
+      background: #e2e8f0;
+      padding: 0.2rem 0.9rem;
+      border-radius: 30px;
+      font-size: 0.8rem;
+      font-weight: 500;
+    }
+    .actions {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin: 1.5rem 0 0.8rem;
+    }
+    .btn {
+      border: none;
+      background: #eef2f6;
+      padding: 0.7rem 1.8rem;
+      border-radius: 60px;
+      font-weight: 500;
+      font-size: 0.95rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: 0.15s;
+      cursor: pointer;
+      color: #1e293b;
+      flex: 1 1 auto;
+      justify-content: center;
+    }
+    .btn-primary {
+      background: #1e293b;
+      color: white;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+    }
+    .btn-primary:hover {
+      background: #0f172a;
+    }
+    .btn-primary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+    .btn-outline {
+      background: transparent;
+      border: 1px solid #cbd5e1;
+    }
+    .btn-outline:hover {
+      background: #f1f5f9;
+    }
+    .btn-success {
+      background: #0b7e4b;
+      color: white;
+    }
+    .btn-success:hover {
+      background: #0a6a3e;
+    }
+    .log {
+      margin-top: 1.8rem;
+      background: #f8fafc;
+      border-radius: 1rem;
+      padding: 0.8rem 1.2rem;
+      font-family: 'Inter', monospace;
+      font-size: 0.8rem;
+      max-height: 160px;
+      overflow-y: auto;
+      border: 1px solid #e9edf2;
+      color: #1e293b;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    .log-empty {
+      color: #94a3b8;
+      font-style: italic;
+    }
+    .footnote {
+      margin-top: 1.2rem;
+      font-size: 0.8rem;
+      color: #64748b;
+      text-align: center;
+      border-top: 1px solid #e9edf2;
+      padding-top: 1.2rem;
+    }
+    .flex-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 10px;
+      display: inline-block;
+    }
+    .dot-idle { background: #94a3b8; }
+    .dot-ready { background: #22c55e; }
+    .dot-processing { background: #f59e0b; animation: pulse 1s infinite; }
+    @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
+    /* scroll */
+    .log::-webkit-scrollbar { width: 5px; }
+    .log::-webkit-scrollbar-track { background: #e9edf2; border-radius: 8px; }
+    .log::-webkit-scrollbar-thumb { background: #b9c4d0; border-radius: 8px; }
   </style>
 </head>
 <body>
-<div class="container">
-  <h1>🧩 5-Part NFT Downloader</h1>
-  <p class="subtitle">
-    Background <span class="color-preview">#d4ff00</span> · 6,969 NFTs<br>
-    <span style="color:#d4ff00;">⚡ 5 small parts — each ~1,100 NFTs — no crashes</span>
-  </p>
-
   <div class="card">
-    <div class="status-box">
-      <div class="status-msg" id="statusMsg">
-        <span class="highlight">📦 Ready</span> — download in 5 small parts
+    <h1>
+      ⚡ JSON renamer
+      <span class="badge">.json → digits</span>
+    </h1>
+    <div class="sub">
+      Upload a <strong>.zip</strong> containing <strong>6969</strong> JSON files (e.g. <code>1.json</code> … <code>6969.json</code>).<br>
+      All <code>.json</code> extensions will be removed — download as ZIP with pure numbers.
+    </div>
+
+    <!-- drop zone -->
+    <div class="drop-zone" id="dropZone">
+      <span class="icon">📂</span>
+      <p><strong>Drop your ZIP here</strong> or click to browse</p>
+      <span class="file-label" id="fileLabel">Choose file</span>
+      <input type="file" id="fileInput" accept=".zip" />
+    </div>
+
+    <!-- status -->
+    <div class="status-area">
+      <div class="flex-row">
+        <span class="dot dot-idle" id="statusDot"></span>
+        <span id="statusText">No file selected</span>
       </div>
-      <div class="badge" id="countBadge">0 / 6,969 NFTs</div>
+      <span class="filename" id="fileNameDisplay">—</span>
+      <span class="count" id="fileCount">0 files</span>
     </div>
 
-    <div class="part-grid" id="partGrid">
-      <button class="part-btn" data-part="1">📦 Part 1<span class="range">1 – 1,400</span></button>
-      <button class="part-btn" data-part="2">📦 Part 2<span class="range">1,401 – 2,800</span></button>
-      <button class="part-btn" data-part="3">📦 Part 3<span class="range">2,801 – 4,200</span></button>
-      <button class="part-btn" data-part="4">📦 Part 4<span class="range">4,201 – 5,600</span></button>
-      <button class="part-btn" data-part="5">📦 Part 5<span class="range">5,601 – 6,969</span></button>
+    <!-- actions -->
+    <div class="actions">
+      <button class="btn btn-primary" id="processBtn" disabled>✧ Remove .json &amp; download</button>
+      <button class="btn btn-outline" id="resetBtn">↻ Reset</button>
     </div>
 
-    <div class="progress-container" id="progressContainer">
-      <div class="progress-bar" id="progressBar">0%</div>
+    <!-- log -->
+    <div class="log" id="logArea"><span class="log-empty">📋 ready — upload a ZIP to begin</span></div>
+    <div class="footnote">
+      Works in-browser · uses <a href="https://stuk.github.io/jszip/" target="_blank" style="color:#2563eb; text-decoration:none;">JSZip</a> · all processing on your machine
     </div>
-
-    <div class="btn-group">
-      <button id="downloadAllBtn" class="btn btn-primary">⚡ Download All 5</button>
-      <button id="cancelBtn" class="btn btn-danger" disabled style="min-width:100px; padding:8px 18px; font-size:.85rem;">⏹ Cancel</button>
-    </div>
-
-    <div class="error-box" id="errorBox"></div>
-    <div id="retryContainer" style="margin-top:8px;"></div>
   </div>
-  <div class="footer">✓ Sequential naming: 1.png, 1.json … 6969.png, 6969.json · <span style="color:#888;">Auto-retry on failure</span></div>
-</div>
 
-<script>
-(function() {
-  // ---------- constants ----------
-  const IMG_BASE  = 'https://ipfs.io/ipfs/QmTxBwjcBuhLvfrVp7bsbw6KXiTxZkPso3kpHfzw3kxGnU/';
-  const META_BASE = 'https://ipfs.io/ipfs/QmdyZTZKSd4AL7sqVHU4Zpw7tQ82iQb3zefBhynufwNQRM/';
-  const TOTAL = 6969;
-  const BG_COLOR = '#d4ff00';
-  const BATCH_SIZE = 30;
-  const MAX_RETRIES = 3;
+  <!-- JSZip library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <!-- FileSaver for download -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 
-  // Part ranges
-  const PARTS = [
-    { part: 1, start: 1, end: 1400 },
-    { part: 2, start: 1401, end: 2800 },
-    { part: 3, start: 2801, end: 4200 },
-    { part: 4, start: 4201, end: 5600 },
-    { part: 5, start: 5601, end: 6969 }
-  ];
+  <script>
+    (function() {
+      "use strict";
 
-  // ---------- DOM refs ----------
-  const statusMsg = document.getElementById('statusMsg');
-  const countBadge = document.getElementById('countBadge');
-  const progressContainer = document.getElementById('progressContainer');
-  const progressBar = document.getElementById('progressBar');
-  const errorBox = document.getElementById('errorBox');
-  const retryContainer = document.getElementById('retryContainer');
-  const downloadAllBtn = document.getElementById('downloadAllBtn');
-  const cancelBtn = document.getElementById('cancelBtn');
-  const partBtns = document.querySelectorAll('.part-btn');
+      // DOM elements
+      const dropZone = document.getElementById('dropZone');
+      const fileInput = document.getElementById('fileInput');
+      const fileLabel = document.getElementById('fileLabel');
+      const fileNameDisplay = document.getElementById('fileNameDisplay');
+      const fileCount = document.getElementById('fileCount');
+      const statusText = document.getElementById('statusText');
+      const statusDot = document.getElementById('statusDot');
+      const processBtn = document.getElementById('processBtn');
+      const resetBtn = document.getElementById('resetBtn');
+      const logArea = document.getElementById('logArea');
 
-  let isRunning = false;
-  let cancelFlag = false;
-  let failedItems = [];
-  let currentPart = 0;
-  let completedParts = new Set();
+      // state
+      let currentFile = null;           // the raw File object
+      let currentZipBlob = null;        // processed zip as Blob (ready to download)
+      let processedCount = 0;
 
-  // ---------- helpers ----------
-  function setStatus(text, isGood = true) {
-    statusMsg.innerHTML = text;
-    statusMsg.style.color = isGood ? '#ccc' : '#ff6b6b';
-  }
-
-  function updateProgress(current, total) {
-    const pct = Math.min(100, Math.round((current / total) * 100));
-    progressBar.style.width = pct + '%';
-    progressBar.textContent = pct + '%';
-  }
-
-  function updateCount(current, total) {
-    countBadge.textContent = `${current} / ${total} NFTs`;
-  }
-
-  function setButtonsEnabled(enabled) {
-    partBtns.forEach(b => b.disabled = !enabled);
-    downloadAllBtn.disabled = !enabled;
-    cancelBtn.disabled = enabled;
-    if (enabled) {
-      cancelBtn.textContent = '⏹ Cancel';
-    } else {
-      cancelBtn.textContent = '⏳ Processing...';
-    }
-  }
-
-  function showError(msg) {
-    errorBox.style.display = 'block';
-    errorBox.innerHTML = msg;
-  }
-
-  function hideError() {
-    errorBox.style.display = 'none';
-  }
-
-  function markPartComplete(part) {
-    completedParts.add(part);
-    partBtns.forEach(btn => {
-      if (parseInt(btn.dataset.part) === part) {
-        btn.classList.add('active');
-        btn.innerHTML = `✅ Part ${part}<span class="range">Done</span>`;
+      // helpers
+      function setStatus(text, type = 'idle') {
+        statusText.textContent = text;
+        statusDot.className = 'dot';
+        if (type === 'idle') statusDot.classList.add('dot-idle');
+        else if (type === 'ready') statusDot.classList.add('dot-ready');
+        else if (type === 'processing') statusDot.classList.add('dot-processing');
       }
-    });
-  }
 
-  // ---------- image processing ----------
-  function compositeBackground(blob, color) {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      const url = URL.createObjectURL(blob);
-      img.onload = function () {
-        const canvas = document.createElement('canvas');
-        canvas.width = img.width; canvas.height = img.height;
-        const ctx = canvas.getContext('2d');
-        ctx.fillStyle = color;
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(img, 0, 0);
-        canvas.toBlob(nb => {
-          URL.revokeObjectURL(url);
-          nb ? resolve(nb) : reject(new Error('canvas failed'));
-        }, 'image/png');
-      };
-      img.onerror = function () { URL.revokeObjectURL(url); reject(new Error('image load failed')); };
-      img.src = url;
-    });
-  }
-
-  // ---------- fetch with retry ----------
-  async function fetchWithRetry(url, retries = MAX_RETRIES) {
-    for (let i = 0; i < retries; i++) {
-      try {
-        const resp = await fetch(url, { 
-          mode: 'cors',
-          cache: 'force-cache',
-          headers: { 'Accept': 'application/json, image/*' }
-        });
-        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-        return resp;
-      } catch (e) {
-        if (i === retries - 1) throw e;
-        await new Promise(r => setTimeout(r, 400 * (i + 1)));
+      function logMessage(msg, isError = false) {
+        const prefix = isError ? '❌ ' : '✓ ';
+        const line = document.createElement('div');
+        line.textContent = prefix + msg;
+        if (isError) line.style.color = '#b91c1c';
+        else line.style.color = '#0b3b5e';
+        logArea.appendChild(line);
+        logArea.scrollTop = logArea.scrollHeight;
+        // remove placeholder if exists
+        const placeholder = logArea.querySelector('.log-empty');
+        if (placeholder) placeholder.remove();
       }
-    }
-  }
 
-  // ---------- download single part ----------
-  async function downloadPart(partNum) {
-    if (isRunning) return;
-    isRunning = true;
-    cancelFlag = false;
-    failedItems = [];
-    hideError();
-    retryContainer.innerHTML = '';
-    setButtonsEnabled(false);
-    progressContainer.style.display = 'block';
-    progressBar.style.width = '0%';
-    progressBar.textContent = '0%';
+      function clearLog() {
+        logArea.innerHTML = '<span class="log-empty">📋 ready — upload a ZIP to begin</span>';
+      }
 
-    const partInfo = PARTS.find(p => p.part === partNum);
-    if (!partInfo) { isRunning = false; setButtonsEnabled(true); return; }
+      function resetUI() {
+        currentFile = null;
+        currentZipBlob = null;
+        processedCount = 0;
+        fileInput.value = '';
+        fileLabel.textContent = 'Choose file';
+        fileNameDisplay.textContent = '—';
+        fileCount.textContent = '0 files';
+        processBtn.disabled = true;
+        setStatus('No file selected', 'idle');
+        clearLog();
+        // remove drag-over class
+        dropZone.classList.remove('drag-over');
+        // reset dropzone text if needed
+      }
 
-    const { start, end } = partInfo;
-    const total = end - start + 1;
-    currentPart = partNum;
+      // process the zip: rename every .json file to its basename (without .json)
+      // and keep folder structure intact.
+      async function processZip(zipFile) {
+        try {
+          setStatus('Processing ZIP …', 'processing');
+          processBtn.disabled = true;
+          logMessage(`📦 reading ${zipFile.name} (${(zipFile.size / 1024).toFixed(1)} KB)`);
 
-    setStatus(`⚡ Downloading Part ${partNum} (${start}-${end})...`);
+          const arrayBuffer = await zipFile.arrayBuffer();
+          const zip = await JSZip.loadAsync(arrayBuffer);
+          const newZip = new JSZip();
 
-    const startTime = Date.now();
+          let totalFiles = 0;
+          let renamedCount = 0;
+          let skippedCount = 0;
 
-    try {
-      const zip = new JSZip();
-      const imgFolder = zip.folder('nft_images');
-      const metaFolder = zip.folder('nft_metadata');
+          // iterate over all entries
+          zip.forEach((relativePath, zipEntry) => {
+            totalFiles++;
+            // if entry is a directory, just copy it
+            if (zipEntry.dir) {
+              newZip.folder(relativePath);
+              return;
+            }
 
-      let processed = 0;
-      let imgSuccess = 0, metaSuccess = 0;
+            // get file name and extension
+            const fullName = relativePath.split('/').pop(); // base name
+            const pathParts = relativePath.split('/');
+            const dirPath = pathParts.slice(0, -1).join('/'); // may be empty
 
-      for (let s = start; s <= end; s += BATCH_SIZE) {
-        if (cancelFlag) {
-          setStatus('⏹ Cancelled.', false);
+            // check if it's a .json file
+            const lower = fullName.toLowerCase();
+            const isJson = lower.endsWith('.json');
+
+            let newName = fullName;
+            if (isJson) {
+              // remove .json extension (case-insensitive)
+              newName = fullName.slice(0, -5); // remove last 5 chars ".json"
+              // if after removal the name is empty, we keep original? but edge.
+              if (newName === '') {
+                newName = fullName; // fallback (should not happen for "1.json" etc)
+              } else {
+                renamedCount++;
+              }
+            } else {
+              skippedCount++;
+              // keep as is
+            }
+
+            // build new path
+            let newPath = newName;
+            if (dirPath) {
+              newPath = dirPath + '/' + newName;
+            }
+
+            // copy content asynchronously
+            // we need to read the content and add to new zip
+            // using async/await inside forEach is tricky, we'll use a promise array
+            // BUT we have to handle it sequentially? forEach doesn't wait.
+            // We'll collect promises.
+            // We'll push to an array and process later.
+            // Actually we can use zip.file(relativePath).async('blob') and then add.
+            // But we need to collect all promises.
+            // Simpler: store all entries in an array and process after.
+            // We'll do a two-pass: collect promises.
+          });
+
+          // Because forEach doesn't handle promises well, we'll do a manual iteration.
+          const entries = [];
+          zip.forEach((path, entry) => {
+            entries.push({ path, entry });
+          });
+
+          // Process each entry with async/await inside a for-of loop
+          for (const { path, entry } of entries) {
+            const isDir = entry.dir;
+            const fullName = path.split('/').pop() || '';
+            const dirPath = path.substring(0, path.lastIndexOf('/') !== -1 ? path.lastIndexOf('/') : 0);
+            
+            if (isDir) {
+              // just recreate folder
+              newZip.folder(path);
+              continue;
+            }
+
+            // determine new name
+            const lower = fullName.toLowerCase();
+            const isJson = lower.endsWith('.json');
+            let newName = fullName;
+            if (isJson) {
+              newName = fullName.slice(0, -5);
+              if (newName === '') newName = fullName;
+            }
+
+            // build new path
+            let newPath = newName;
+            if (dirPath) {
+              newPath = dirPath + '/' + newName;
+            }
+
+            // read content as blob
+            try {
+              const content = await entry.async('blob');
+              newZip.file(newPath, content);
+              if (isJson && newName !== fullName) {
+                renamedCount++;
+              } else {
+                skippedCount++;
+              }
+            } catch (e) {
+              logMessage(`⚠️ error reading ${path}: ${e.message}`, true);
+              // still try to copy raw? skip.
+            }
+          }
+
+          // generate the new zip
+          const newZipBlob = await newZip.generateAsync({ type: 'blob' });
+          currentZipBlob = newZipBlob;
+          processedCount = renamedCount;
+
+          // update UI
+          fileCount.textContent = `${renamedCount} renamed`;
+          fileNameDisplay.textContent = zipFile.name;
+          setStatus(`✅ ${renamedCount} .json → numbers`, 'ready');
+          processBtn.disabled = false;
+          logMessage(`✔️ done: ${renamedCount} JSON files renamed, ${skippedCount} other files kept.`);
+          logMessage(`📥 new ZIP size: ${(newZipBlob.size / 1024).toFixed(1)} KB`);
+          // enable download via process button (it will download currentZipBlob)
+          // store file name for download
+          currentFile = zipFile; // keep reference for name
+        } catch (err) {
+          console.error(err);
+          setStatus('❌ Error processing ZIP', 'idle');
+          logMessage(`⚠️ ${err.message}`, true);
+          processBtn.disabled = true;
+          currentZipBlob = null;
+        }
+      }
+
+      // handle file selection
+      function handleFile(file) {
+        if (!file) return;
+        // reset previous state
+        currentZipBlob = null;
+        processBtn.disabled = true;
+        clearLog();
+
+        // check if it's a zip
+        if (!file.name.toLowerCase().endsWith('.zip')) {
+          setStatus('⚠️ Please select a ZIP file', 'idle');
+          logMessage(`❌ ${file.name} is not a .zip file`, true);
+          fileInput.value = '';
+          fileLabel.textContent = 'Choose file';
+          fileNameDisplay.textContent = '—';
+          fileCount.textContent = '0 files';
           return;
         }
 
-        const batchEnd = Math.min(s + BATCH_SIZE - 1, end);
-        const batch = [];
-        for (let i = s; i <= batchEnd; i++) batch.push(i);
+        currentFile = file;
+        fileLabel.textContent = file.name;
+        fileNameDisplay.textContent = file.name;
+        fileCount.textContent = '… processing';
+        setStatus(`📂 ${file.name} loaded`, 'idle');
+        logMessage(`📎 selected: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`);
+        logMessage(`⏳ starting extraction …`);
 
-        const promises = batch.map(async (num) => {
-          if (cancelFlag) return;
-
-          try {
-            const [imgResp, metaResp] = await Promise.all([
-              fetchWithRetry(IMG_BASE + num + '.png'),
-              fetchWithRetry(META_BASE + num + '.json')
-            ]);
-
-            // Image
-            try {
-              const rawBlob = await imgResp.blob();
-              let finalBlob;
-              try {
-                finalBlob = await compositeBackground(rawBlob, BG_COLOR);
-              } catch (e) {
-                finalBlob = rawBlob;
-              }
-              imgFolder.file(num + '.png', finalBlob);
-              imgSuccess++;
-            } catch (e) {
-              failedItems.push({ num, type: 'image', error: e.message });
-            }
-
-            // Metadata
-            try {
-              const meta = await metaResp.json();
-              metaFolder.file(num + '.json', JSON.stringify(meta, null, 2));
-              metaSuccess++;
-            } catch (e) {
-              failedItems.push({ num, type: 'metadata', error: e.message });
-            }
-
-          } catch (e) {
-            failedItems.push({ num, type: 'both', error: e.message });
-          }
-
-          processed++;
-          updateProgress(processed, total);
-          updateCount(processed, total);
+        // process the zip
+        processZip(file).then(() => {
+          // after processing, fileCount is updated inside processZip
+        }).catch(err => {
+          logMessage(`❌ unexpected: ${err.message}`, true);
+          setStatus('Error', 'idle');
         });
-
-        await Promise.allSettled(promises);
       }
 
-      if (cancelFlag) {
-        setStatus('⏹ Cancelled.', false);
-        return;
-      }
+      // ----- event listeners -----
+      dropZone.addEventListener('click', () => fileInput.click());
 
-      const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-      setStatus(`📦 Building ZIP Part ${partNum} (${elapsed}s)...`);
+      dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('drag-over');
+      });
 
-      const zipBlob = await zip.generateAsync({ type: 'blob' });
-      const filename = `nft_part${partNum}_${start}-${end}.zip`;
-      saveAs(zipBlob, filename);
+      dropZone.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('drag-over');
+      });
 
-      let msg = `✅ Part ${partNum} complete! ${imgSuccess} images, ${metaSuccess} metadata in ${elapsed}s.`;
-      if (failedItems.length > 0) {
-        msg += ` ⚠️ ${failedItems.length} items failed.`;
-        showError(`⚠️ ${failedItems.length} items failed in Part ${partNum}. <span style="cursor:pointer;color:#d4ff00;text-decoration:underline;" id="retryFailedBtn">↻ Retry Failed</span>`);
-        document.getElementById('retryFailedBtn')?.addEventListener('click', () => retryFailed(partNum));
-      } else {
-        markPartComplete(partNum);
-      }
-      setStatus(msg);
-      updateProgress(total, total);
-      updateCount(total, total);
-    } catch (err) {
-      setStatus(`❌ Error: ${err.message}`, false);
-    } finally {
-      isRunning = false;
-      setButtonsEnabled(true);
-      if (!cancelFlag && failedItems.length === 0) {
-        setTimeout(() => { 
-          if (!isRunning) progressContainer.style.display = 'none'; 
-        }, 1500);
-      }
-    }
-  }
-
-  // ---------- retry failed ----------
-  async function retryFailed(partNum) {
-    if (isRunning || failedItems.length === 0) return;
-    isRunning = true;
-    cancelFlag = false;
-    hideError();
-    setButtonsEnabled(false);
-    setStatus(`🔄 Retrying ${failedItems.length} failed items in Part ${partNum}...`);
-
-    const toRetry = [...failedItems];
-    failedItems = [];
-    let retrySuccess = 0;
-
-    const zip = new JSZip();
-    const imgFolder = zip.folder('nft_images_retry');
-    const metaFolder = zip.folder('nft_metadata_retry');
-
-    const groups = {};
-    toRetry.forEach(item => {
-      if (!groups[item.num]) groups[item.num] = [];
-      groups[item.num].push(item);
-    });
-
-    const numbers = Object.keys(groups).map(Number);
-    let processed = 0;
-
-    for (let i = 0; i < numbers.length; i += 15) {
-      const batch = numbers.slice(i, i + 15);
-      await Promise.all(batch.map(async (num) => {
-        try {
-          const [imgResp, metaResp] = await Promise.all([
-            fetchWithRetry(IMG_BASE + num + '.png', 3),
-            fetchWithRetry(META_BASE + num + '.json', 3)
-          ]);
-
-          const rawBlob = await imgResp.blob();
-          let finalBlob;
-          try {
-            finalBlob = await compositeBackground(rawBlob, BG_COLOR);
-          } catch (e) {
-            finalBlob = rawBlob;
+      dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('drag-over');
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+          const file = files[0];
+          // if it's a zip, handle
+          if (file.name.toLowerCase().endsWith('.zip')) {
+            handleFile(file);
+          } else {
+            setStatus('⚠️ Only ZIP files are supported', 'idle');
+            logMessage(`❌ dropped file is not a ZIP: ${file.name}`, true);
           }
-          imgFolder.file(num + '.png', finalBlob);
-
-          const meta = await metaResp.json();
-          metaFolder.file(num + '.json', JSON.stringify(meta, null, 2));
-
-          retrySuccess++;
-        } catch (e) {
-          failedItems.push({ num, type: 'both', error: e.message });
         }
-        processed++;
-        updateProgress(processed, numbers.length);
-      }));
-    }
+      });
 
-    if (failedItems.length === 0) {
-      const zipBlob = await zip.generateAsync({ type: 'blob' });
-      saveAs(zipBlob, `nft_part${partNum}_recovered.zip`);
-      setStatus(`✅ Retry complete! ${retrySuccess} items recovered in Part ${partNum}.`);
-      markPartComplete(partNum);
-      hideError();
-    } else {
-      setStatus(`⚠️ ${failedItems.length} items still failed in Part ${partNum}.`, false);
-      showError(`⚠️ ${failedItems.length} items still failed. <span style="cursor:pointer;color:#d4ff00;text-decoration:underline;" id="retryFailedBtn2">↻ Retry Again</span>`);
-      document.getElementById('retryFailedBtn2')?.addEventListener('click', () => retryFailed(partNum));
-    }
+      fileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          handleFile(file);
+        } else {
+          resetUI();
+        }
+      });
 
-    isRunning = false;
-    setButtonsEnabled(true);
-    if (failedItems.length === 0) {
-      setTimeout(() => { progressContainer.style.display = 'none'; }, 1500);
-    }
-  }
+      // Process button: download the processed zip
+      processBtn.addEventListener('click', () => {
+        if (currentZipBlob) {
+          // determine download name: remove .json from original? we just keep original zip name but we can rename
+          let baseName = 'renamed';
+          if (currentFile) {
+            baseName = currentFile.name.replace(/\.zip$/i, '') + '_renamed.zip';
+          } else {
+            baseName = 'renamed_files.zip';
+          }
+          // use FileSaver
+          saveAs(currentZipBlob, baseName);
+          logMessage(`⬇️ downloaded ${baseName}`);
+        } else {
+          logMessage('⚠️ no processed ZIP available. Upload first.', true);
+        }
+      });
 
-  // ---------- download all parts sequentially ----------
-  async function downloadAllParts() {
-    if (isRunning) return;
-    completedParts.clear();
-    partBtns.forEach(btn => {
-      const p = parseInt(btn.dataset.part);
-      btn.classList.remove('active');
-      const range = p === 1 ? '1 – 1,400' : p === 2 ? '1,401 – 2,800' : p === 3 ? '2,801 – 4,200' : p === 4 ? '4,201 – 5,600' : '5,601 – 6,969';
-      btn.innerHTML = `📦 Part ${p}<span class="range">${range}</span>`;
-    });
+      // Reset button
+      resetBtn.addEventListener('click', resetUI);
 
-    for (const part of PARTS) {
-      if (cancelFlag) break;
-      await downloadPart(part.part);
-      if (failedItems.length > 0) {
-        // If there are failures, stop and let user retry
-        break;
-      }
-      // Small delay between parts
-      await new Promise(r => setTimeout(r, 500));
-    }
-
-    if (completedParts.size === 5) {
-      setStatus('🎉 All 5 parts downloaded successfully!');
-    }
-  }
-
-  // ---------- cancel ----------
-  cancelBtn.addEventListener('click', () => {
-    if (isRunning) {
-      cancelFlag = true;
-      setStatus('⏹ Cancelling...', false);
-      cancelBtn.disabled = true;
-    }
-  });
-
-  // ---------- button handlers ----------
-  partBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      const part = parseInt(btn.dataset.part);
-      downloadPart(part);
-    });
-  });
-
-  downloadAllBtn.addEventListener('click', downloadAllParts);
-
-  // ---------- initial state ----------
-  countBadge.textContent = `0 / ${TOTAL} NFTs`;
-  setStatus(`<span class="highlight">🧩 Ready</span> — download in 5 small parts (max 1,400 each)`);
-  progressContainer.style.display = 'none';
-  setButtonsEnabled(true);
-})();
-</script>
+      // init
+      resetUI();
+    })();
+  </script>
 </body>
 </html>
