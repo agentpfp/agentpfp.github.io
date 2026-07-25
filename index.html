@@ -1,140 +1,112 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NFT Metadata &amp; Background Studio #d4ff00</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-<style>
-  * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif; }
-  body { background:#0a0a1a; color:#fff; min-height:100vh; padding:20px; overflow-x:hidden; }
-  .container { max-width:1400px; margin:0 auto; }
-  h1 { text-align:center; font-size:2.3rem; margin-bottom:10px;
-       background:linear-gradient(135deg,#d4ff00 0%,#a0cc00 100%);
-       -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
-  .subtitle { text-align:center; color:#aaa; margin-bottom:24px; font-size:1rem; line-height:1.6; }
-  .color-preview { display:inline-block; background:#d4ff00; padding:2px 15px; border-radius:4px; color:#000; font-weight:bold; }
-  .controls { display:flex; justify-content:center; gap:14px; flex-wrap:wrap; margin-bottom:20px; }
-  .btn { padding:12px 28px; border:none; border-radius:50px; font-size:1rem; font-weight:600; cursor:pointer;
-         transition:all .25s ease; background:#2a2a4a; color:#fff; box-shadow:0 4px 15px rgba(0,0,0,.3); }
-  .btn:hover { transform:translateY(-2px); box-shadow:0 8px 22px rgba(0,0,0,.5); }
-  .btn:disabled { opacity:.45; cursor:not-allowed; transform:none; }
-  .btn-primary { background:linear-gradient(135deg,#d4ff00 0%,#a0cc00 100%); color:#000; }
-  .btn-success { background:linear-gradient(135deg,#11998e 0%,#38ef7d 100%); color:#000; }
-  .btn-danger  { background:linear-gradient(135deg,#f093fb 0%,#f5576c 100%); }
-  .btn-warning { background:linear-gradient(135deg,#f7971e 0%,#ffd200 100%); color:#000; }
-  .btn-small   { padding:6px 14px; font-size:.8rem; border-radius:20px; }
-  .progress-container { width:100%; background:#1a1a2e; border-radius:10px; height:28px; margin:16px 0; overflow:hidden; display:none; }
-  .progress-bar { height:100%; width:0%; background:linear-gradient(90deg,#d4ff00,#a0cc00); border-radius:10px;
-                  display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:.85rem; color:#000;
-                  transition:width .25s ease; }
-  .status-msg { text-align:center; padding:12px; color:#aaa; font-size:.95rem; }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NFT Studio - Persistent Load #d4ff00</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif; }
+    body { background:#0a0a1a; color:#fff; min-height:100vh; padding:20px; overflow-x:hidden; }
+    .container { max-width:1400px; margin:0 auto; }
+    h1 { text-align:center; font-size:2.3rem; margin-bottom:10px; background:linear-gradient(135deg,#d4ff00 0%,#a0cc00 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+    .subtitle { text-align:center; color:#aaa; margin-bottom:24px; font-size:1rem; line-height:1.6; }
+    .color-preview { display:inline-block; background:#d4ff00; padding:2px 15px; border-radius:4px; color:#000; font-weight:bold; }
+    .controls { display:flex; justify-content:center; gap:14px; flex-wrap:wrap; margin-bottom:20px; }
+    .btn { padding:12px 28px; border:none; border-radius:50px; font-size:1rem; font-weight:600; cursor:pointer; transition:all .25s ease; background:#2a2a4a; color:#fff; box-shadow:0 4px 15px rgba(0,0,0,.3); }
+    .btn:hover { transform:translateY(-2px); box-shadow:0 8px 22px rgba(0,0,0,.5); }
+    .btn:disabled { opacity:.45; cursor:not-allowed; transform:none; }
+    .btn-primary { background:linear-gradient(135deg,#d4ff00 0%,#a0cc00 100%); color:#000; }
+    .btn-success { background:linear-gradient(135deg,#11998e 0%,#38ef7d 100%); color:#000; }
+    .btn-danger  { background:linear-gradient(135deg,#f093fb 0%,#f5576c 100%); }
+    .btn-warning { background:linear-gradient(135deg,#f7971e 0%,#ffd200 100%); color:#000; }
+    .btn-small   { padding:6px 14px; font-size:.8rem; border-radius:20px; }
+    .progress-container { width:100%; background:#1a1a2e; border-radius:10px; height:28px; margin:16px 0; overflow:hidden; display:none; }
+    .progress-bar { height:100%; width:0%; background:linear-gradient(90deg,#d4ff00,#a0cc00); border-radius:10px; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:.85rem; color:#000; transition:width .25s ease; }
+    .status-msg { text-align:center; padding:12px; color:#aaa; font-size:.95rem; }
+    .logo-panel { display:none; background:#141428; border:1px solid #2a2a4a; border-radius:14px; padding:18px; margin-bottom:20px; }
+    .logo-panel.active { display:block; }
+    .logo-panel h3 { color:#d4ff00; margin-bottom:12px; font-size:1.1rem; }
+    .logo-lib-grid { display:flex; flex-wrap:wrap; gap:12px; margin-bottom:16px; }
+    .logo-lib-item { width:90px; text-align:center; background:#1a1a2e; border-radius:10px; padding:8px; position:relative; border:2px solid transparent; }
+    .logo-lib-item:hover { border-color:#d4ff00; }
+    .logo-lib-item img { width:100%; height:60px; object-fit:contain; background:#fff; border-radius:6px; }
+    .logo-lib-item .name { font-size:.65rem; color:#ccc; margin-top:4px; word-break:break-word; }
+    .logo-lib-item .del { position:absolute; top:-6px; right:-6px; background:#f5576c; border:none; color:#fff; width:20px; height:20px; border-radius:50%; cursor:pointer; font-size:.75rem; line-height:1; }
+    .logo-add-form { display:flex; flex-wrap:wrap; gap:10px; align-items:center; border-top:1px solid #2a2a4a; padding-top:14px; }
+    .logo-add-form input[type=text], .logo-add-form input[type=file] { background:#0f0f22; border:1px solid #333; color:#fff; border-radius:8px; padding:8px 10px; font-size:.85rem; }
+    .logo-add-form input[type=file] { padding:6px; max-width:200px; }
+    .logo-preview-img { width:50px; height:50px; object-fit:contain; background:#fff; border-radius:6px; display:none; border:1px solid #444; }
 
-  /* Logo library panel - updated for PNG */
-  .logo-panel { display:none; background:#141428; border:1px solid #2a2a4a; border-radius:14px; padding:18px; margin-bottom:20px; }
-  .logo-panel.active { display:block; }
-  .logo-panel h3 { color:#d4ff00; margin-bottom:12px; font-size:1.1rem; }
-  .logo-lib-grid { display:flex; flex-wrap:wrap; gap:12px; margin-bottom:16px; }
-  .logo-lib-item { width:90px; text-align:center; background:#1a1a2e; border-radius:10px; padding:8px; position:relative; border:2px solid transparent; }
-  .logo-lib-item:hover { border-color:#d4ff00; }
-  .logo-lib-item img { width:100%; height:60px; object-fit:contain; background:#fff; border-radius:6px; }
-  .logo-lib-item .name { font-size:.65rem; color:#ccc; margin-top:4px; word-break:break-word; }
-  .logo-lib-item .del { position:absolute; top:-6px; right:-6px; background:#f5576c; border:none; color:#fff;
-                         width:20px; height:20px; border-radius:50%; cursor:pointer; font-size:.75rem; line-height:1; }
-  .logo-add-form { display:flex; flex-wrap:wrap; gap:10px; align-items:center; border-top:1px solid #2a2a4a; padding-top:14px; }
-  .logo-add-form input[type=text], .logo-add-form input[type=file] {
-      background:#0f0f22; border:1px solid #333; color:#fff; border-radius:8px; padding:8px 10px; font-size:.85rem; }
-  .logo-add-form input[type=file] { padding:6px; max-width:200px; }
-  .logo-preview-img { width:50px; height:50px; object-fit:contain; background:#fff; border-radius:6px; display:none; border:1px solid #444; }
+    .gallery { display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr)); gap:18px; margin-top:10px; }
+    .nft-item { background:#1a1a2e; border-radius:12px; overflow:hidden; box-shadow:0 4px 15px rgba(0,0,0,.4); transition:transform .25s ease; aspect-ratio:1; position:relative; cursor:pointer; }
+    .nft-item:hover { transform:scale(1.04); z-index:2; }
+    .nft-item img { width:100%; height:100%; object-fit:contain; display:block; }
+    .nft-item .placeholder { color:#666; font-size:.85rem; text-align:center; padding:10px; display:flex; align-items:center; justify-content:center; height:100%; }
+    .nft-item.failed .placeholder { color:#ff6b6b; }
+    .nft-item .index-badge { position:absolute; bottom:8px; right:8px; background:rgba(0,0,0,.7); padding:3px 9px; border-radius:20px; font-size:.68rem; backdrop-filter:blur(4px); }
+    .nft-item .del-badge { position:absolute; top:6px; left:6px; background:rgba(245,87,108,.85); border:none; color:#fff; width:26px; height:26px; border-radius:50%; cursor:pointer; font-size:.85rem; z-index:4; display:flex; align-items:center; justify-content:center; }
+    .nft-item .retry-btn { position:absolute; top:6px; right:6px; background:rgba(255,200,0,.9); border:none; border-radius:50%; width:28px; height:28px; font-size:14px; cursor:pointer; display:none; align-items:center; justify-content:center; color:#000; font-weight:bold; z-index:4; }
+    .nft-item.failed .retry-btn { display:flex; }
+    .nft-item .logo-tag { position:absolute; top:6px; left:38px; background:rgba(212,255,0,.9); color:#000; font-size:.6rem; padding:2px 7px; border-radius:10px; font-weight:700; }
 
-  .gallery { display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr)); gap:18px; margin-top:10px; }
-  .nft-item { background:#1a1a2e; border-radius:12px; overflow:hidden; box-shadow:0 4px 15px rgba(0,0,0,.4);
-              transition:transform .25s ease; aspect-ratio:1; position:relative; cursor:pointer; }
-  .nft-item:hover { transform:scale(1.04); z-index:2; }
-  .nft-item img { width:100%; height:100%; object-fit:contain; display:block; }
-  .nft-item .placeholder { color:#666; font-size:.85rem; text-align:center; padding:10px; display:flex; align-items:center;
-                            justify-content:center; height:100%; }
-  .nft-item.failed .placeholder { color:#ff6b6b; }
-  .nft-item .index-badge { position:absolute; bottom:8px; right:8px; background:rgba(0,0,0,.7); padding:3px 9px;
-                            border-radius:20px; font-size:.68rem; backdrop-filter:blur(4px); }
-  .nft-item .del-badge { position:absolute; top:6px; left:6px; background:rgba(245,87,108,.85); border:none; color:#fff;
-                          width:26px; height:26px; border-radius:50%; cursor:pointer; font-size:.85rem; z-index:4;
-                          display:flex; align-items:center; justify-content:center; }
-  .nft-item .retry-btn { position:absolute; top:6px; right:6px; background:rgba(255,200,0,.9); border:none; border-radius:50%;
-                          width:28px; height:28px; font-size:14px; cursor:pointer; display:none; align-items:center;
-                          justify-content:center; color:#000; font-weight:bold; z-index:4; }
-  .nft-item.failed .retry-btn { display:flex; }
-  .nft-item .logo-tag { position:absolute; top:6px; left:38px; background:rgba(212,255,0,.9); color:#000; font-size:.6rem;
-                         padding:2px 7px; border-radius:10px; font-weight:700; }
+    .modal { display:none; position:fixed; inset:0; z-index:1000; background:rgba(0,0,0,.92); align-items:center; justify-content:center; padding:20px; overflow-y:auto; }
+    .modal.active { display:flex; }
+    .modal-content { max-width:1100px; width:100%; background:#141428; border-radius:16px; padding:22px; box-shadow:0 20px 60px rgba(0,0,0,.8); display:flex; gap:26px; flex-wrap:wrap; position:relative; max-height:92vh; overflow-y:auto; }
+    .modal-close { position:absolute; top:-14px; right:-14px; background:#ff6b6b; border:none; border-radius:50%; width:38px; height:38px; font-size:20px; cursor:pointer; color:#fff; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 15px rgba(255,0,0,.3); }
+    .modal-left { flex:1 1 380px; min-width:300px; }
+    .modal-right { flex:1 1 340px; min-width:280px; }
+    .edit-stage { position:relative; width:100%; aspect-ratio:1/1; background:#0a0a1a; border-radius:10px; overflow:hidden; border:1px solid #2a2a4a; touch-action:none; }
+    .edit-stage img.base-img { width:100%; height:100%; object-fit:contain; pointer-events:none; user-select:none; }
+    .logo-instance { position:absolute; border:1px dashed #d4ff00; cursor:move; }
+    .logo-instance img { width:100%; height:100%; object-fit:contain; pointer-events:none; user-select:none; }
+    .logo-instance .lg-del { position:absolute; top:-10px; right:-10px; width:20px; height:20px; border-radius:50%; background:#f5576c; border:none; color:#fff; font-size:.7rem; cursor:pointer; z-index:5; }
+    .logo-instance .lg-resize { position:absolute; bottom:-6px; right:-6px; width:14px; height:14px; background:#d4ff00; border-radius:3px; cursor:nwse-resize; z-index:5; }
+    .modal-index { text-align:center; color:#d4ff00; font-size:1.1rem; font-weight:bold; margin-top:10px; }
+    .logo-picker { display:flex; gap:8px; margin-top:12px; flex-wrap:wrap; align-items:center; }
+    .logo-picker select { flex:1; background:#0f0f22; border:1px solid #333; color:#fff; border-radius:8px; padding:8px; }
+    .placed-list { margin-top:10px; font-size:.8rem; color:#aaa; }
+    .placed-list div { padding:4px 0; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #222; }
+    .meta-field { margin-bottom:12px; }
+    .meta-field label { display:block; font-size:.75rem; color:#8f8fb0; margin-bottom:4px; text-transform:uppercase; letter-spacing:.5px; }
+    .meta-field input[type=text], .meta-field textarea { width:100%; background:#0f0f22; border:1px solid #333; color:#fff; border-radius:8px; padding:9px 10px; font-size:.9rem; }
+    .meta-field textarea { min-height:60px; resize:vertical; }
+    .attr-row { display:flex; gap:8px; margin-bottom:8px; align-items:center; }
+    .attr-row .trait { flex:0 0 40%; font-size:.8rem; color:#d4ff00; }
+    .attr-row input { flex:1; background:#0f0f22; border:1px solid #333; color:#fff; border-radius:8px; padding:7px 9px; }
+    details.raw-json { margin-top:14px; }
+    details.raw-json summary { cursor:pointer; color:#8f8fb0; font-size:.8rem; margin-bottom:8px; }
+    details.raw-json textarea { width:100%; min-height:160px; font-family:monospace; font-size:.72rem; background:#0f0f22; color:#9dff7a; border:1px solid #333; border-radius:8px; padding:10px; }
+    .modal-actions { display:flex; gap:10px; margin-top:16px; flex-wrap:wrap; }
 
-  /* Modal */
-  .modal { display:none; position:fixed; inset:0; z-index:1000; background:rgba(0,0,0,.92); align-items:center;
-           justify-content:center; padding:20px; overflow-y:auto; }
-  .modal.active { display:flex; }
-  .modal-content { max-width:1100px; width:100%; background:#141428; border-radius:16px; padding:22px;
-                   box-shadow:0 20px 60px rgba(0,0,0,.8); display:flex; gap:26px; flex-wrap:wrap; position:relative; max-height:92vh; overflow-y:auto; }
-  .modal-close { position:absolute; top:-14px; right:-14px; background:#ff6b6b; border:none; border-radius:50%;
-                 width:38px; height:38px; font-size:20px; cursor:pointer; color:#fff; display:flex; align-items:center;
-                 justify-content:center; box-shadow:0 4px 15px rgba(255,0,0,.3); }
-  .modal-left { flex:1 1 380px; min-width:300px; }
-  .modal-right { flex:1 1 340px; min-width:280px; }
-  .edit-stage { position:relative; width:100%; aspect-ratio:1/1; background:#0a0a1a; border-radius:10px; overflow:hidden;
-                border:1px solid #2a2a4a; touch-action:none; }
-  .edit-stage img.base-img { width:100%; height:100%; object-fit:contain; pointer-events:none; user-select:none; }
-  .logo-instance { position:absolute; border:1px dashed #d4ff00; cursor:move; }
-  .logo-instance img { width:100%; height:100%; object-fit:contain; pointer-events:none; user-select:none; }
-  .logo-instance .lg-del { position:absolute; top:-10px; right:-10px; width:20px; height:20px; border-radius:50%;
-                            background:#f5576c; border:none; color:#fff; font-size:.7rem; cursor:pointer; z-index:5; }
-  .logo-instance .lg-resize { position:absolute; bottom:-6px; right:-6px; width:14px; height:14px; background:#d4ff00;
-                               border-radius:3px; cursor:nwse-resize; z-index:5; }
-  .modal-index { text-align:center; color:#d4ff00; font-size:1.1rem; font-weight:bold; margin-top:10px; }
-  .logo-picker { display:flex; gap:8px; margin-top:12px; flex-wrap:wrap; align-items:center; }
-  .logo-picker select { flex:1; background:#0f0f22; border:1px solid #333; color:#fff; border-radius:8px; padding:8px; }
-  .placed-list { margin-top:10px; font-size:.8rem; color:#aaa; }
-  .placed-list div { padding:4px 0; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #222; }
-
-  .meta-field { margin-bottom:12px; }
-  .meta-field label { display:block; font-size:.75rem; color:#8f8fb0; margin-bottom:4px; text-transform:uppercase; letter-spacing:.5px; }
-  .meta-field input[type=text], .meta-field textarea { width:100%; background:#0f0f22; border:1px solid #333; color:#fff;
-                                                         border-radius:8px; padding:9px 10px; font-size:.9rem; }
-  .meta-field textarea { min-height:60px; resize:vertical; }
-  .attr-row { display:flex; gap:8px; margin-bottom:8px; align-items:center; }
-  .attr-row .trait { flex:0 0 40%; font-size:.8rem; color:#d4ff00; }
-  .attr-row input { flex:1; background:#0f0f22; border:1px solid #333; color:#fff; border-radius:8px; padding:7px 9px; }
-  details.raw-json { margin-top:14px; }
-  details.raw-json summary { cursor:pointer; color:#8f8fb0; font-size:.8rem; margin-bottom:8px; }
-  details.raw-json textarea { width:100%; min-height:160px; font-family:monospace; font-size:.72rem; background:#0f0f22;
-                               color:#9dff7a; border:1px solid #333; border-radius:8px; padding:10px; }
-  .modal-actions { display:flex; gap:10px; margin-top:16px; flex-wrap:wrap; }
-
-  @media (max-width:600px) {
-    h1 { font-size:1.6rem; }
-    .gallery { grid-template-columns:repeat(auto-fill,minmax(130px,1fr)); }
-    .btn { padding:10px 20px; font-size:.85rem; }
-    .modal-content { flex-direction:column; padding:16px; }
-  }
-</style>
+    @media (max-width:600px) {
+      h1 { font-size:1.6rem; }
+      .gallery { grid-template-columns:repeat(auto-fill,minmax(130px,1fr)); }
+      .btn { padding:10px 20px; font-size:.85rem; }
+      .modal-content { flex-direction:column; padding:16px; }
+    }
+  </style>
 </head>
 <body>
 <div class="container">
-  <h1>🎨 NFT Metadata &amp; Background Studio</h1>
+  <h1>🎨 NFT Studio · Persistent Load</h1>
   <p class="subtitle">
-    Every NFT's background will show as solid <span class="color-preview">#d4ff00</span><br>
-    Load all 6969 pieces with metadata &middot; add PNG logos &middot; edit attributes &middot; delete &amp; auto-renumber &middot; export two ZIPs
+    Background <span class="color-preview">#d4ff00</span> · loads all 6969 items respecting deletions &amp; edits<br>
+    Deleted NFTs stay deleted across reloads — order automatically renumbered
   </p>
 
   <div class="controls">
     <button id="loadBtn" class="btn btn-primary">📥 Load All NFTs</button>
     <button id="logoLibBtn" class="btn btn-warning">🖼️ Logo Library (PNG)</button>
     <button id="retryBtn" class="btn btn-warning">🔄 Retry Failed</button>
-    <button id="downloadImgBtn" class="btn btn-success" disabled>📦 Download Images ZIP</button>
-    <button id="downloadMetaBtn" class="btn btn-success" disabled>🗂️ Download Metadata ZIP</button>
+    <button id="downloadImgBtn" class="btn btn-success" disabled>📦 Images ZIP</button>
+    <button id="downloadMetaBtn" class="btn btn-success" disabled>🗂️ Metadata ZIP</button>
     <button id="clearBtn" class="btn btn-danger">🗑️ Clear View</button>
   </div>
 
   <div class="logo-panel" id="logoPanel">
-    <h3>📂 Logo Library <span style="color:#8f8fb0; font-weight:400; font-size:.8rem;">(PNG images, survives refresh)</span></h3>
+    <h3>📂 Logo Library <span style="color:#8f8fb0; font-weight:400; font-size:.8rem;">(PNG, survives refresh)</span></h3>
     <div class="logo-lib-grid" id="logoLibGrid"></div>
     <div class="logo-add-form">
       <input type="text" id="logoNameInput" placeholder="Logo name" style="flex:1;min-width:100px;">
@@ -157,30 +129,27 @@
 <div class="modal" id="editModal">
   <div class="modal-content">
     <button class="modal-close" id="modalClose">✕</button>
-
     <div class="modal-left">
       <div class="edit-stage" id="editStage">
         <img class="base-img" id="modalBaseImg" src="" alt="NFT">
       </div>
       <div class="modal-index" id="modalIndex">#0</div>
-
       <div class="logo-picker">
         <select id="logoSelect"></select>
         <button id="addLogoToNftBtn" class="btn btn-small btn-primary">➕ Add Logo</button>
       </div>
       <div class="placed-list" id="placedList"></div>
     </div>
-
     <div class="modal-right">
       <h3 style="color:#d4ff00; margin-bottom:12px;">Metadata</h3>
       <div id="metaFields"></div>
       <details class="raw-json">
-        <summary>Advanced: edit raw JSON</summary>
+        <summary>Advanced: raw JSON</summary>
         <textarea id="rawJsonArea"></textarea>
       </details>
       <div class="modal-actions">
-        <button id="saveModalBtn" class="btn btn-success">💾 Save Changes</button>
-        <button id="deleteModalBtn" class="btn btn-danger">🗑️ Delete this NFT</button>
+        <button id="saveModalBtn" class="btn btn-success">💾 Save</button>
+        <button id="deleteModalBtn" class="btn btn-danger">🗑️ Delete</button>
       </div>
     </div>
   </div>
@@ -188,6 +157,7 @@
 
 <script>
 (function() {
+  // ---------- constants ----------
   const IMG_BASE  = 'https://ipfs.io/ipfs/QmTxBwjcBuhLvfrVp7bsbw6KXiTxZkPso3kpHfzw3kxGnU/';
   const META_BASE = 'https://ipfs.io/ipfs/QmdyZTZKSd4AL7sqVHU4Zpw7tQ82iQb3zefBhynufwNQRM/';
   const TOTAL = 6969;
@@ -226,13 +196,13 @@
   };
 
   // ---------- state ----------
-  let order = [];
-  const baseBlobs = new Map();
-  const finalBlobs = new Map();
-  const metadataMap = new Map();
-  const itemCustom = new Map();
-  const failedSet = new Set();
-  const cardEls = new Map();
+  let order = [];               // source indices (original 1..6969) in current display order
+  const baseBlobs = new Map();  // sourceIndex -> background-blob
+  const finalBlobs = new Map(); // sourceIndex -> final composed blob (with logos)
+  const metadataMap = new Map();// sourceIndex -> metadata object
+  const itemCustom = new Map(); // sourceIndex -> { logos, metaOverride }
+  const failedSet = new Set();  // sourceIndex
+  const cardEls = new Map();    // sourceIndex -> DOM element
   let logoLibrary = [];
   let isLoading = false, isDownloading = false, isRetrying = false;
   let currentModalIndex = null;
@@ -251,10 +221,20 @@
 
   function genId() { return 'lg_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8); }
 
-  // ---------- persistence ----------
+  // ---------- persistence (order, customizations, logos) ----------
   async function loadOrder() {
     const raw = await Store.get('order');
-    if (raw) { try { const arr = JSON.parse(raw); if (Array.isArray(arr) && arr.length) return arr; } catch (e) {} }
+    if (raw) {
+      try {
+        const arr = JSON.parse(raw);
+        if (Array.isArray(arr) && arr.length) {
+          // filter out any sourceIndex that is out of range (safety)
+          const filtered = arr.filter(i => i >= 1 && i <= TOTAL);
+          if (filtered.length) return filtered;
+        }
+      } catch (e) {}
+    }
+    // default: 1..6969
     const arr = []; for (let i = 1; i <= TOTAL; i++) arr.push(i);
     await Store.set('order', JSON.stringify(arr));
     return arr;
@@ -310,7 +290,6 @@
     });
   }
 
-  // Bake PNG logos onto the NFT
   async function bakeLogos(baseBlob, logos) {
     if (!logos || !logos.length) return baseBlob;
     const baseUrl = URL.createObjectURL(baseBlob);
@@ -354,7 +333,7 @@
         <div class="placeholder">Loading…</div>
         <span class="index-badge">#${pos + 1}</span>
         <button class="del-badge" title="Delete">✕</button>
-        <button class="retry-btn" title="Retry this NFT">↻</button>`;
+        <button class="retry-btn" title="Retry">↻</button>`;
       div.querySelector('.del-badge').addEventListener('click', e => { e.stopPropagation(); deleteFromGallery(sourceIndex); });
       div.querySelector('.retry-btn').addEventListener('click', e => { e.stopPropagation(); retrySingle(sourceIndex); });
       div.addEventListener('click', () => { if (finalBlobs.has(sourceIndex)) openModal(sourceIndex); });
@@ -371,7 +350,8 @@
     if (!blob) return;
     const url = URL.createObjectURL(blob);
     div.classList.remove('failed');
-    div.querySelector('.placeholder')?.remove();
+    const ph = div.querySelector('.placeholder');
+    if (ph) ph.remove();
     let img = div.querySelector('img');
     if (!img) { img = document.createElement('img'); div.insertBefore(img, div.firstChild); }
     img.src = url;
@@ -390,8 +370,9 @@
     let ph = div.querySelector('.placeholder');
     if (!ph) { ph = document.createElement('div'); ph.className = 'placeholder'; div.insertBefore(ph, div.firstChild); }
     const pos = order.indexOf(sourceIndex);
-    ph.textContent = `#${pos + 1} ❌ failed to load`;
-    div.querySelector('img')?.remove();
+    ph.textContent = `#${pos + 1} ❌ load failed`;
+    const img = div.querySelector('img');
+    if (img) img.remove();
     div.querySelector('.retry-btn').style.display = 'flex';
   }
 
@@ -409,7 +390,7 @@
     statusMsg.textContent = `Loading… ${cur} / ${tot} (${pct}%)`;
   }
 
-  // ---------- loading ----------
+  // ---------- loading single ----------
   async function loadSingle(sourceIndex) {
     try {
       const [imgResp, metaResp] = await Promise.all([
@@ -442,17 +423,24 @@
     }
   }
 
+  // ---------- load all ----------
   async function loadAll() {
     if (isLoading) return;
     isLoading = true;
     loadBtn.disabled = true; downloadImgBtn.disabled = true; downloadMetaBtn.disabled = true; clearBtn.disabled = true;
     progressContainer.style.display = 'block';
+
+    // 1) load order (already saved deletions)
     order = await loadOrder();
+    // 2) load logos & customizations
     logoLibrary = await loadLogoLibrary();
     renderLogoLibraryUI();
     await loadCustomizations();
+
+    // 3) build skeleton (shows loading placeholders)
     buildSkeleton();
 
+    // 4) load each in order
     let done = 0;
     const total = order.length;
     for (let start = 0; start < order.length; start += BATCH_SIZE) {
@@ -466,11 +454,12 @@
     loadBtn.disabled = false; clearBtn.disabled = false;
     if (finalBlobs.size > 0) { downloadImgBtn.disabled = false; downloadMetaBtn.disabled = false; }
     statusMsg.textContent = failedSet.size
-      ? `✅ Loaded ${finalBlobs.size} · ⚠️ ${failedSet.size} failed — click "Retry Failed" or the ↻ on a card.`
-      : `✅ All ${finalBlobs.size} NFTs loaded with backgrounds set to ${BG_COLOR}.`;
-    setTimeout(() => { progressContainer.style.display = 'none'; }, 1500);
+      ? `✅ Loaded ${finalBlobs.size} · ⚠️ ${failedSet.size} failed — retry or click ↻ on a card.`
+      : `✅ All ${finalBlobs.size} NFTs loaded with background ${BG_COLOR}.`;
+    setTimeout(() => { progressContainer.style.display = 'none'; }, 1200);
   }
 
+  // ---------- retry ----------
   async function retrySingle(sourceIndex) {
     if (isRetrying) return;
     isRetrying = true;
@@ -478,7 +467,7 @@
     statusMsg.textContent = `Retrying NFT #${pos + 1}…`;
     await loadSingle(sourceIndex);
     isRetrying = false;
-    statusMsg.textContent = failedSet.has(sourceIndex) ? 'Retry failed, try again later.' : 'Retried successfully.';
+    statusMsg.textContent = failedSet.has(sourceIndex) ? 'Retry failed.' : 'Retried successfully.';
     if (failedSet.size === 0 && finalBlobs.size > 0) { downloadImgBtn.disabled = false; downloadMetaBtn.disabled = false; }
   }
 
@@ -488,9 +477,9 @@
     isRetrying = true;
     const list = Array.from(failedSet);
     let done = 0;
-    for (const idx of list) { await loadSingle(idx); done++; statusMsg.textContent = `Retrying failed items… ${done}/${list.length}`; }
+    for (const idx of list) { await loadSingle(idx); done++; statusMsg.textContent = `Retrying failed… ${done}/${list.length}`; }
     isRetrying = false;
-    statusMsg.textContent = failedSet.size ? `⚠️ ${failedSet.size} still failing.` : '✅ All NFTs loaded successfully!';
+    statusMsg.textContent = failedSet.size ? `⚠️ ${failedSet.size} still failing.` : '✅ All NFTs loaded!';
     if (failedSet.size === 0 && finalBlobs.size > 0) { downloadImgBtn.disabled = false; downloadMetaBtn.disabled = false; }
   }
 
@@ -498,7 +487,7 @@
   async function deleteFromGallery(sourceIndex) {
     const pos = order.indexOf(sourceIndex);
     if (pos === -1) return;
-    if (!confirm(`Delete NFT #${pos + 1} permanently? Later items will shift up and be renamed.`)) return;
+    if (!confirm(`Delete NFT #${pos + 1} permanently? Order will shift.`)) return;
     order.splice(pos, 1);
     const div = cardEls.get(sourceIndex);
     if (div) div.remove();
@@ -508,15 +497,15 @@
     await deleteItemStorage(sourceIndex);
     await persistOrder();
     renumberBadges(pos);
-    statusMsg.textContent = `Deleted. ${order.length} NFTs remain — sequence renumbered automatically.`;
+    statusMsg.textContent = `Deleted. ${order.length} NFTs remain — renumbered.`;
     if (finalBlobs.size === 0) { downloadImgBtn.disabled = true; downloadMetaBtn.disabled = true; }
   }
 
-  // ---------- logo library UI (PNG support) ----------
+  // ---------- logo library UI ----------
   function renderLogoLibraryUI() {
     logoLibGrid.innerHTML = '';
     if (logoLibrary.length === 0) {
-      logoLibGrid.innerHTML = '<div style="color:#666;font-size:.85rem;padding:10px;">No logos in library. Add PNG images above.</div>';
+      logoLibGrid.innerHTML = '<div style="color:#666;font-size:.85rem;padding:10px;">No logos. Add PNG above.</div>';
       return;
     }
     logoLibrary.forEach((item, idx) => {
@@ -542,12 +531,11 @@
   function populateLogoSelect() {
     logoSelect.innerHTML = logoLibrary.length
       ? logoLibrary.map(l => `<option value="${l.id}">${l.name}</option>`).join('')
-      : '<option value="">No logos yet — add from Logo Library</option>';
+      : '<option value="">No logos — add from library</option>';
   }
 
   logoLibBtn.addEventListener('click', () => logoPanel.classList.toggle('active'));
 
-  // Preview image
   logoFileInput.addEventListener('change', function() {
     if (this.files && this.files[0]) {
       const reader = new FileReader();
@@ -559,12 +547,10 @@
     }
   });
 
-  // Add logo (PNG)
   el('addLogoBtn').addEventListener('click', async () => {
     const name = logoNameInput.value.trim() || ('Logo ' + (logoLibrary.length + 1));
     const file = logoFileInput.files[0];
-    if (!file) { alert('Please select a PNG/JPG/SVG image.'); return; }
-
+    if (!file) { alert('Select a PNG/JPG/SVG image.'); return; }
     const reader = new FileReader();
     reader.onload = async function(e) {
       const dataUrl = e.target.result;
@@ -576,12 +562,12 @@
       logoNameInput.value = '';
       logoFileInput.value = '';
       logoPreviewImg.style.display = 'none';
-      statusMsg.textContent = `✅ Logo "${name}" added to library!`;
+      statusMsg.textContent = `✅ Logo "${name}" added.`;
     };
     reader.readAsDataURL(file);
   });
 
-  // ---------- modal: open / build ----------
+  // ---------- modal ----------
   async function openModal(sourceIndex) {
     currentModalIndex = sourceIndex;
     const pos = order.indexOf(sourceIndex);
@@ -610,7 +596,6 @@
   modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && modal.classList.contains('active')) closeModal(); });
 
-  // ---------- modal: logo placement / drag / resize ----------
   function renderPlacedLogos() {
     editStage.querySelectorAll('.logo-instance').forEach(n => n.remove());
     workingLogos.forEach((lg, i) => createLogoInstanceEl(lg, i));
@@ -621,9 +606,9 @@
     placedList.innerHTML = workingLogos.length
       ? workingLogos.map((lg, i) => {
           const item = logoLibrary.find(l => l.id === lg.logoId);
-          return `<div><span>${i + 1}. ${item ? item.name : 'Unknown logo'}</span></div>`;
+          return `<div><span>${i + 1}. ${item ? item.name : 'Unknown'}</span></div>`;
         }).join('')
-      : '<div style="color:#555;">No logos placed on this NFT yet.</div>';
+      : '<div style="color:#555;">No logos placed.</div>';
   }
 
   function createLogoInstanceEl(lg, index) {
@@ -696,12 +681,12 @@
 
   el('addLogoToNftBtn').addEventListener('click', () => {
     const logoId = logoSelect.value;
-    if (!logoId) { alert('Add a logo to the library first (Logo Library button above).'); return; }
+    if (!logoId) { alert('Add a logo to the library first.'); return; }
     workingLogos.push({ logoId, xPct: 35, yPct: 35, wPct: 30, hPct: 30 });
     renderPlacedLogos();
   });
 
-  // ---------- modal: metadata form ----------
+  // ---------- metadata form ----------
   let metaFormState = null;
   function buildMetaForm(meta) {
     if (!meta) return;
@@ -714,10 +699,10 @@
         meta.attributes.map((a, i) => `<div class="attr-row"><span class="trait">${escapeHtml(a.trait_type ?? ('#' + i))}</span><input type="text" data-attr-i="${i}" value="${escapeAttr(a.value)}"></div>`).join('') +
         `</div>`;
     }
-    metaFields.innerHTML = html || '<p style="color:#666;">No structured fields found — use raw JSON below.</p>';
+    metaFields.innerHTML = html || '<p style="color:#666;">No structured fields — use raw JSON.</p>';
     rawJsonArea.value = JSON.stringify(meta, null, 2);
   }
-  function escapeHtml(s) { return String(s ?? '').replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c])); }
+  function escapeHtml(s) { return String(s ?? '').replace(/[&<>]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[c])); }
   function escapeAttr(s) { return escapeHtml(s).replace(/"/g, '&quot;'); }
 
   function collectMetaFromForm(originalMeta) {
@@ -725,7 +710,7 @@
     const rawInitial = JSON.stringify(originalMeta, null, 2);
     if (rawNow !== rawInitial) {
       try { return JSON.parse(rawNow); }
-      catch (e) { alert('Raw JSON is invalid, please fix it or clear your changes.'); return null; }
+      catch (e) { alert('Raw JSON invalid.'); return null; }
     }
     const meta = Object.assign({}, originalMeta);
     if (metaFormState.name) meta.name = el('metaName').value;
@@ -739,7 +724,7 @@
     return meta;
   }
 
-  // ---------- modal: save / delete ----------
+  // ---------- modal save / delete ----------
   el('saveModalBtn').addEventListener('click', async () => {
     const sourceIndex = currentModalIndex;
     if (sourceIndex == null) return;
@@ -772,7 +757,7 @@
   // ---------- zip downloads ----------
   async function downloadImagesZip() {
     if (isDownloading) return;
-    if (finalBlobs.size === 0) { alert('No NFTs loaded yet.'); return; }
+    if (finalBlobs.size === 0) { alert('No NFTs loaded.'); return; }
     isDownloading = true; downloadImgBtn.disabled = true;
     statusMsg.textContent = 'Building images ZIP…';
     try {
@@ -788,15 +773,15 @@
       statusMsg.textContent = `Zipping ${count} images…`;
       const zipBlob = await zip.generateAsync({ type: 'blob' });
       saveAs(zipBlob, `nft_images_1_to_${order.length}.zip`);
-      statusMsg.textContent = `✅ Images ZIP downloaded (${count} files${skipped ? ', ' + skipped + ' skipped (not loaded)' : ''}).`;
+      statusMsg.textContent = `✅ Images ZIP downloaded (${count} files${skipped ? ', ' + skipped + ' skipped' : ''}).`;
     } catch (e) {
-      statusMsg.textContent = 'Error building images ZIP: ' + e.message;
+      statusMsg.textContent = 'Error: ' + e.message;
     } finally { isDownloading = false; downloadImgBtn.disabled = false; }
   }
 
   async function downloadMetadataZip() {
     if (isDownloading) return;
-    if (metadataMap.size === 0) { alert('No metadata loaded yet.'); return; }
+    if (metadataMap.size === 0) { alert('No metadata loaded.'); return; }
     isDownloading = true; downloadMetaBtn.disabled = true;
     statusMsg.textContent = 'Building metadata ZIP…';
     try {
@@ -812,9 +797,9 @@
       statusMsg.textContent = `Zipping ${count} metadata files…`;
       const zipBlob = await zip.generateAsync({ type: 'blob' });
       saveAs(zipBlob, `nft_metadata_1_to_${order.length}.zip`);
-      statusMsg.textContent = `✅ Metadata ZIP downloaded (${count} files${skipped ? ', ' + skipped + ' skipped (not loaded)' : ''}).`;
+      statusMsg.textContent = `✅ Metadata ZIP downloaded (${count} files${skipped ? ', ' + skipped + ' skipped' : ''}).`;
     } catch (e) {
-      statusMsg.textContent = 'Error building metadata ZIP: ' + e.message;
+      statusMsg.textContent = 'Error: ' + e.message;
     } finally { isDownloading = false; downloadMetaBtn.disabled = false; }
   }
 
@@ -826,7 +811,7 @@
     downloadImgBtn.disabled = true; downloadMetaBtn.disabled = true;
     progressContainer.style.display = 'none';
     progressBar.style.width = '0%'; progressBar.textContent = '0%';
-    statusMsg.textContent = 'View cleared. Your saved logos, edits and deletions are kept — click "Load All NFTs" to reload.';
+    statusMsg.textContent = 'View cleared. Deletions & edits are kept — click "Load All NFTs" to reload.';
   }
 
   // ---------- wire up ----------
@@ -836,11 +821,14 @@
   clearBtn.addEventListener('click', clearView);
   retryBtn.addEventListener('click', retryAllFailed);
 
-  // initial UI bootstrap
+  // initial bootstrap
   (async () => {
     logoLibrary = await loadLogoLibrary();
     renderLogoLibraryUI();
     populateLogoSelect();
+    // load order but don't load NFTs until user clicks
+    order = await loadOrder();
+    // build empty gallery? we build on loadAll instead
   })();
 })();
 </script>
