@@ -1,509 +1,409 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>🚀 NFT Turbo Downloader — 6969 IPFS Pics</title>
-    <!-- JSZip -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
-        }
-        body {
-            background: #0a0a14;
-            color: #f0f4ff;
-            min-height: 100vh;
-            padding: 24px 16px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        .glass {
-            background: rgba(20, 24, 40, 0.7);
-            backdrop-filter: blur(6px);
-            border: 1px solid rgba(0, 255, 200, 0.15);
-            border-radius: 28px;
-            padding: 28px 24px;
-            max-width: 1000px;
-            width: 100%;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
-        }
-        header {
-            text-align: center;
-            margin-bottom: 28px;
-        }
-        header .logo {
-            font-size: 2.6rem;
-            font-weight: 800;
-            background: linear-gradient(145deg, #b3ff77, #00f5d4);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            letter-spacing: -0.5px;
-        }
-        header .sub {
-            color: #8892b0;
-            font-size: 0.95rem;
-            margin-top: 6px;
-            border-top: 1px dashed rgba(255, 255, 255, 0.06);
-            padding-top: 8px;
-        }
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 12px;
-            margin: 18px 0 22px;
-        }
-        .stat-card {
-            background: rgba(255, 255, 255, 0.03);
-            padding: 14px 10px;
-            border-radius: 18px;
-            text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.04);
-        }
-        .stat-card .label {
-            font-size: 0.6rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: #5d6a83;
-        }
-        .stat-card .value {
-            font-size: 1.7rem;
-            font-weight: 700;
-            margin-top: 4px;
-            color: #b3ff77;
-        }
-        .stat-card .value.fail { color: #ff6b6b; }
-        .toolbar {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 12px;
-            margin: 18px 0 24px;
-        }
-        .toolbar button {
-            background: #141b2b;
-            border: none;
-            padding: 14px 30px;
-            border-radius: 40px;
-            font-weight: 600;
-            font-size: 0.95rem;
-            color: white;
-            cursor: pointer;
-            transition: 0.25s;
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-        }
-        .toolbar button#startBtn {
-            background: #a3ff66;
-            color: #0b0e1a;
-            border: none;
-            font-weight: 700;
-        }
-        .toolbar button#startBtn:hover {
-            background: #d4ff9e;
-            transform: scale(1.02);
-            box-shadow: 0 0 30px rgba(163, 255, 102, 0.3);
-        }
-        .toolbar button#startBtn:disabled {
-            opacity: 0.4;
-            transform: none !important;
-            box-shadow: none !important;
-            cursor: not-allowed;
-        }
-        .toolbar button:not(#startBtn):hover {
-            background: #1f2940;
-            border-color: #a3ff66;
-            color: #a3ff66;
-        }
-        .progress-area {
-            width: 100%;
-            margin: 12px 0 18px;
-        }
-        .progress-bar-bg {
-            width: 100%;
-            height: 10px;
-            background: rgba(255, 255, 255, 0.06);
-            border-radius: 30px;
-            overflow: hidden;
-        }
-        .progress-fill {
-            height: 100%;
-            width: 0%;
-            background: linear-gradient(90deg, #b3ff77, #00f5d4);
-            border-radius: 30px;
-            transition: width 0.2s ease;
-        }
-        .progress-meta {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.85rem;
-            color: #7d88a3;
-            margin-top: 8px;
-        }
-        .progress-meta strong { color: #d4ffaa; }
-        .failed-box {
-            background: rgba(255, 60, 60, 0.04);
-            border: 1px solid rgba(255, 60, 60, 0.15);
-            border-radius: 16px;
-            padding: 14px 18px;
-            margin: 14px 0 8px;
-            display: none;
-            max-height: 180px;
-            overflow-y: auto;
-        }
-        .failed-box.show { display: block; }
-        .failed-box .head { color: #ff7a7a; font-weight: 600; }
-        .failed-box .ids { color: #ffb3b3; font-size: 0.8rem; word-break: break-all; }
-        .toast {
-            position: fixed;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%) translateY(100px);
-            background: #161e30;
-            padding: 14px 28px;
-            border-radius: 40px;
-            border: 1px solid rgba(163, 255, 102, 0.2);
-            font-weight: 500;
-            opacity: 0;
-            transition: 0.3s;
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.7);
-            z-index: 999;
-            text-align: center;
-            pointer-events: none;
-            max-width: 90vw;
-        }
-        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-        @media (max-width: 600px) {
-            .stats-grid { grid-template-columns: repeat(2, 1fr); }
-            .toolbar button { padding: 10px 18px; font-size: 0.8rem; }
-            header .logo { font-size: 2rem; }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🧩 NFT Downloader - 2-Part ZIP</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif; }
+    body { background:#0a0a1a; color:#fff; min-height:100vh; padding:20px; display:flex; align-items:center; justify-content:center; }
+    .container { max-width:960px; width:100%; margin:0 auto; text-align:center; }
+    h1 { font-size:2.6rem; margin-bottom:8px; background:linear-gradient(135deg,#d4ff00 0%,#a0cc00 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+    .subtitle { color:#aaa; margin-bottom:25px; font-size:1.05rem; }
+    .color-preview { display:inline-block; background:#d4ff00; padding:2px 18px; border-radius:4px; color:#000; font-weight:bold; }
+    .card { background:#141428; border-radius:20px; padding:35px 25px; box-shadow:0 20px 40px rgba(0,0,0,.6); border:1px solid #2a2a4a; }
+    .status-box { background:#0f0f22; border-radius:12px; padding:18px; margin-bottom:22px; border:1px solid #1f1f3a; }
+    .status-msg { font-size:1.1rem; color:#ccc; }
+    .status-msg .highlight { color:#d4ff00; font-weight:bold; }
+    .progress-container { width:100%; background:#1a1a2e; border-radius:10px; height:30px; margin:12px 0; overflow:hidden; display:none; }
+    .progress-bar { height:100%; width:0%; background:linear-gradient(90deg,#d4ff00,#a0cc00); border-radius:10px; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:.85rem; color:#000; transition:width .3s ease; }
+    .btn-group { display:flex; gap:12px; flex-wrap:wrap; justify-content:center; margin-top:18px; }
+    .btn { padding:14px 30px; border:none; border-radius:60px; font-size:1rem; font-weight:700; cursor:pointer; transition:all .25s ease; box-shadow:0 6px 20px rgba(0,0,0,.4); min-width:170px; }
+    .btn:hover:not(:disabled) { transform:translateY(-3px); box-shadow:0 10px 30px rgba(0,0,0,.6); }
+    .btn:disabled { opacity:.4; cursor:not-allowed; transform:none; }
+    .btn-primary { background:linear-gradient(135deg,#d4ff00 0%,#a0cc00 100%); color:#000; }
+    .btn-success { background:linear-gradient(135deg,#11998e 0%,#38ef7d 100%); color:#000; }
+    .btn-danger  { background:linear-gradient(135deg,#f093fb 0%,#f5576c 100%); }
+    .btn-warning { background:linear-gradient(135deg,#f7971e 0%,#ffd200 100%); color:#000; }
+    .btn-purple  { background:linear-gradient(135deg,#a18cd1 0%,#fbc2eb 100%); color:#000; }
+    .badge { display:inline-block; background:rgba(212,255,0,.12); color:#d4ff00; padding:5px 16px; border-radius:30px; font-size:.85rem; margin:8px 0; border:1px solid rgba(212,255,0,.15); }
+    .footer { margin-top:25px; color:#555; font-size:.9rem; }
+    .part-box { display:flex; gap:15px; flex-wrap:wrap; justify-content:center; margin-top:12px; }
+    .part-card { background:#0f0f22; border-radius:12px; padding:15px 20px; border:1px solid #2a2a4a; flex:1; min-width:200px; }
+    .part-card .title { color:#d4ff00; font-weight:600; font-size:.95rem; }
+    .part-card .info { color:#888; font-size:.8rem; margin-top:4px; }
+    .error-box { margin-top:10px; padding:10px; background:rgba(255,107,107,.1); border-radius:8px; border:1px solid rgba(255,107,107,.2); display:none; color:#ff6b6b; font-size:.9rem; }
+    @media (max-width:600px) {
+      h1 { font-size:1.8rem; }
+      .card { padding:20px 15px; }
+      .btn { padding:12px 18px; font-size:.9rem; min-width:120px; }
+    }
+  </style>
 </head>
 <body>
-    <div class="glass">
-        <header>
-            <div class="logo">⚡ NFT TURBO</div>
-            <div class="sub">IPFS · 1 → 6969 · Smart Memory Management</div>
-        </header>
+<div class="container">
+  <h1>🧩 2-Part NFT Downloader</h1>
+  <p class="subtitle">
+    Background <span class="color-preview">#d4ff00</span> · 6,969 NFTs<br>
+    <span style="color:#d4ff00;">⚡ Part 1 (1–5500) + Part 2 (5501–6969) — no crashes</span>
+  </p>
 
-        <div class="stats-grid">
-            <div class="stat-card"><div class="label">📦 Total</div><div class="value" id="totalStat">0</div></div>
-            <div class="stat-card"><div class="label">✅ Success</div><div class="value" id="successStat">0</div></div>
-            <div class="stat-card"><div class="label">❌ Failed</div><div class="value fail" id="failStat">0</div></div>
-            <div class="stat-card"><div class="label">⚡ Speed</div><div class="value" id="speedStat">0/s</div></div>
-        </div>
-
-        <div class="toolbar">
-            <button id="startBtn">🚀 Start Turbo</button>
-            <button id="downloadBtn" disabled>📦 ZIP Download</button>
-            <button id="resetBtn">⟳ Reset</button>
-        </div>
-
-        <div class="progress-area">
-            <div class="progress-bar-bg"><div class="progress-fill" id="progressFill"></div></div>
-            <div class="progress-meta">
-                <span>📊 <strong id="pctText">0%</strong></span>
-                <span>⏳ <strong id="countText">0</strong> / 6969</span>
-                <span>🚀 <strong id="speedText">0</strong>/s</span>
-            </div>
-        </div>
-
-        <div class="failed-box" id="failedBox">
-            <div class="head">❌ Failed IDs</div>
-            <div class="ids" id="failedIds"></div>
-            <div style="margin-top:6px; color:#ff7a7a;">Total: <span id="failedCount">0</span></div>
-        </div>
+  <div class="card">
+    <div class="status-box">
+      <div class="status-msg" id="statusMsg">
+        <span class="highlight">📦 Ready</span> — download in 2 parts
+      </div>
+      <div class="badge" id="countBadge">0 / 6,969 NFTs</div>
+      <div class="part-box">
+        <div class="part-card"><div class="title">📦 Part 1</div><div class="info" id="part1Info">1 – 5,500</div></div>
+        <div class="part-card"><div class="title">📦 Part 2</div><div class="info" id="part2Info">5,501 – 6,969</div></div>
+      </div>
     </div>
 
-    <div id="toast" class="toast">✨ Ready</div>
+    <div class="progress-container" id="progressContainer">
+      <div class="progress-bar" id="progressBar">0%</div>
+    </div>
 
-    <script>
-        (function() {
-            'use strict';
+    <div class="btn-group">
+      <button id="downloadPart1Btn" class="btn btn-success">📥 Part 1 ZIP</button>
+      <button id="downloadPart2Btn" class="btn btn-warning">📥 Part 2 ZIP</button>
+      <button id="downloadAllBtn" class="btn btn-primary">⚡ Both Parts</button>
+    </div>
 
-            // ===== CONFIG =====
-            const TOTAL = 6969;
-            const CONCURRENCY = 30; // কমিয়ে দিলাম মেমোরি বাঁচাতে
-            const BATCH_SIZE = 100; // প্রতি ব্যাচে কতগুলো ইমেজ প্রসেস করবে
+    <div style="margin-top:12px;">
+      <button id="cancelBtn" class="btn btn-danger" disabled style="min-width:100px; padding:8px 18px; font-size:.85rem;">⏹ Cancel</button>
+    </div>
 
-            // ===== DOM =====
-            const startBtn = document.getElementById('startBtn');
-            const downloadBtn = document.getElementById('downloadBtn');
-            const resetBtn = document.getElementById('resetBtn');
-            const progressFill = document.getElementById('progressFill');
-            const pctText = document.getElementById('pctText');
-            const countText = document.getElementById('countText');
-            const speedText = document.getElementById('speedText');
-            const totalStat = document.getElementById('totalStat');
-            const successStat = document.getElementById('successStat');
-            const failStat = document.getElementById('failStat');
-            const speedStat = document.getElementById('speedStat');
-            const failedBox = document.getElementById('failedBox');
-            const failedIds = document.getElementById('failedIds');
-            const failedCount = document.getElementById('failedCount');
-            const toast = document.getElementById('toast');
+    <div class="error-box" id="errorBox"></div>
+    <div id="retryContainer" style="margin-top:8px;"></div>
+  </div>
+  <div class="footer">✓ Sequential naming: 1.png, 1.json … 6969.png, 6969.json · <span style="color:#888;">Auto-retry on failure</span></div>
+</div>
 
-            // ===== STATE =====
-            let running = false;
-            let completed = false;
-            let success = 0, fail = 0, processed = 0;
-            let failedTokens = [];
-            let allImages = []; // store { id, dataUrl }
-            let startTime = 0;
-            let timerId = null;
+<script>
+(function() {
+  // ---------- constants ----------
+  const IMG_BASE  = 'https://ipfs.io/ipfs/QmTxBwjcBuhLvfrVp7bsbw6KXiTxZkPso3kpHfzw3kxGnU/';
+  const META_BASE = 'https://ipfs.io/ipfs/QmdyZTZKSd4AL7sqVHU4Zpw7tQ82iQb3zefBhynufwNQRM/';
+  const TOTAL = 6969;
+  const PART1_END = 5500;
+  const IMG_EXT = '.png';
+  const BG_COLOR = '#d4ff00';
+  const BATCH_SIZE = 40;
+  const MAX_RETRIES = 3;
 
-            // ===== TOAST =====
-            function showToast(msg, type = 'info', duration = 3000) {
-                toast.textContent = msg;
-                toast.className = 'toast show';
-                if (type === 'error') toast.style.borderColor = 'rgba(255,100,100,0.4)';
-                else toast.style.borderColor = 'rgba(163,255,102,0.3)';
-                clearTimeout(toast._timer);
-                toast._timer = setTimeout(() => toast.classList.remove('show'), duration);
+  // ---------- DOM refs ----------
+  const statusMsg = document.getElementById('statusMsg');
+  const countBadge = document.getElementById('countBadge');
+  const progressContainer = document.getElementById('progressContainer');
+  const progressBar = document.getElementById('progressBar');
+  const errorBox = document.getElementById('errorBox');
+  const retryContainer = document.getElementById('retryContainer');
+  const downloadPart1Btn = document.getElementById('downloadPart1Btn');
+  const downloadPart2Btn = document.getElementById('downloadPart2Btn');
+  const downloadAllBtn = document.getElementById('downloadAllBtn');
+  const cancelBtn = document.getElementById('cancelBtn');
+
+  let isRunning = false;
+  let cancelFlag = false;
+  let failedItems = [];
+  let currentPart = '';
+
+  // ---------- helpers ----------
+  function setStatus(text, isGood = true) {
+    statusMsg.innerHTML = text;
+    statusMsg.style.color = isGood ? '#ccc' : '#ff6b6b';
+  }
+
+  function updateProgress(current, total) {
+    const pct = Math.min(100, Math.round((current / total) * 100));
+    progressBar.style.width = pct + '%';
+    progressBar.textContent = pct + '%';
+    countBadge.textContent = `${current} / ${total} NFTs`;
+  }
+
+  function setButtonsEnabled(enabled) {
+    const btns = [downloadPart1Btn, downloadPart2Btn, downloadAllBtn];
+    btns.forEach(b => b.disabled = !enabled);
+    cancelBtn.disabled = enabled;
+    if (enabled) {
+      cancelBtn.textContent = '⏹ Cancel';
+    } else {
+      cancelBtn.textContent = '⏳ Processing...';
+    }
+  }
+
+  function showError(msg) {
+    errorBox.style.display = 'block';
+    errorBox.innerHTML = msg;
+  }
+
+  function hideError() {
+    errorBox.style.display = 'none';
+  }
+
+  // ---------- image processing ----------
+  function compositeBackground(blob, color) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const url = URL.createObjectURL(blob);
+      img.onload = function () {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width; canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = color;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0);
+        canvas.toBlob(nb => {
+          URL.revokeObjectURL(url);
+          nb ? resolve(nb) : reject(new Error('canvas failed'));
+        }, 'image/png');
+      };
+      img.onerror = function () { URL.revokeObjectURL(url); reject(new Error('image load failed')); };
+      img.src = url;
+    });
+  }
+
+  // ---------- fetch with retry ----------
+  async function fetchWithRetry(url, retries = MAX_RETRIES) {
+    for (let i = 0; i < retries; i++) {
+      try {
+        const resp = await fetch(url, { 
+          mode: 'cors',
+          cache: 'force-cache',
+          headers: { 'Accept': 'application/json, image/*' }
+        });
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        return resp;
+      } catch (e) {
+        if (i === retries - 1) throw e;
+        await new Promise(r => setTimeout(r, 300 * (i + 1)));
+      }
+    }
+  }
+
+  // ---------- download part ----------
+  async function downloadPart(part) {
+    if (isRunning) return;
+    isRunning = true;
+    cancelFlag = false;
+    failedItems = [];
+    hideError();
+    retryContainer.innerHTML = '';
+    setButtonsEnabled(false);
+    progressContainer.style.display = 'block';
+    progressBar.style.width = '0%';
+    progressBar.textContent = '0%';
+
+    const startNum = part === 1 ? 1 : PART1_END + 1;
+    const endNum = part === 1 ? PART1_END : TOTAL;
+    const total = endNum - startNum + 1;
+    currentPart = `Part ${part} (${startNum}-${endNum})`;
+
+    setStatus(`⚡ Downloading ${currentPart}...`);
+
+    const startTime = Date.now();
+
+    try {
+      const zip = new JSZip();
+      const imgFolder = zip.folder('nft_images');
+      const metaFolder = zip.folder('nft_metadata');
+
+      let processed = 0;
+      let imgSuccess = 0, metaSuccess = 0;
+
+      for (let start = startNum; start <= endNum; start += BATCH_SIZE) {
+        if (cancelFlag) {
+          setStatus('⏹ Cancelled.', false);
+          return;
+        }
+
+        const batchEnd = Math.min(start + BATCH_SIZE - 1, endNum);
+        const batch = [];
+        for (let i = start; i <= batchEnd; i++) batch.push(i);
+
+        const promises = batch.map(async (num) => {
+          if (cancelFlag) return;
+
+          try {
+            const [imgResp, metaResp] = await Promise.all([
+              fetchWithRetry(IMG_BASE + num + IMG_EXT),
+              fetchWithRetry(META_BASE + num + '.json')
+            ]);
+
+            // Image
+            try {
+              const rawBlob = await imgResp.blob();
+              let finalBlob;
+              try {
+                finalBlob = await compositeBackground(rawBlob, BG_COLOR);
+              } catch (e) {
+                finalBlob = rawBlob;
+              }
+              imgFolder.file(num + '.png', finalBlob);
+              imgSuccess++;
+            } catch (e) {
+              failedItems.push({ num, type: 'image', error: e.message });
             }
 
-            // ===== UI UPDATE =====
-            function updateUI() {
-                const pct = Math.min(100, Math.round((processed / TOTAL) * 100));
-                progressFill.style.width = pct + '%';
-                pctText.textContent = pct + '%';
-                countText.textContent = processed;
-                totalStat.textContent = processed;
-                successStat.textContent = success;
-                failStat.textContent = fail;
-
-                if (startTime > 0) {
-                    const elapsed = (Date.now() - startTime) / 1000;
-                    const speed = elapsed > 0 ? Math.round(processed / elapsed) : 0;
-                    speedText.textContent = speed;
-                    speedStat.textContent = speed + '/s';
-                }
-
-                if (failedTokens.length > 0) {
-                    failedBox.classList.add('show');
-                    failedIds.textContent = failedTokens.join(', ');
-                    failedCount.textContent = failedTokens.length;
-                } else {
-                    failedBox.classList.remove('show');
-                }
-
-                if (completed) {
-                    startBtn.disabled = true;
-                    startBtn.textContent = '✅ Done';
-                    downloadBtn.disabled = false;
-                }
+            // Metadata
+            try {
+              const meta = await metaResp.json();
+              metaFolder.file(num + '.json', JSON.stringify(meta, null, 2));
+              metaSuccess++;
+            } catch (e) {
+              failedItems.push({ num, type: 'metadata', error: e.message });
             }
 
-            // ===== FETCH IMAGE AS BLOB =====
-            async function fetchImage(id) {
-                const url = `https://ipfs.io/ipfs/QmTxBwjcBuhLvfrVp7bsbw6KXiTxZkPso3kpHfzw3kxGnU/${id}.png`;
-                try {
-                    const res = await fetch(url, { mode: 'cors' });
-                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                    const blob = await res.blob();
-                    return { success: true, id, blob };
-                } catch (err) {
-                    return { success: false, id, error: err.message };
-                }
-            }
+          } catch (e) {
+            failedItems.push({ num, type: 'both', error: e.message });
+          }
 
-            // ===== PROCESS BATCH WITH MEMORY MANAGEMENT =====
-            async function processBatch(ids) {
-                const promises = ids.map(id => fetchImage(id));
-                const results = await Promise.all(promises);
+          processed++;
+          updateProgress(processed, total);
+        });
 
-                const batchData = [];
-                for (const r of results) {
-                    if (r.success) {
-                        success++;
-                        // Convert blob to dataURL
-                        const dataUrl = await new Promise((resolve) => {
-                            const reader = new FileReader();
-                            reader.onload = () => resolve(reader.result);
-                            reader.readAsDataURL(r.blob);
-                        });
-                        batchData.push({ id: r.id, dataUrl });
-                        // Blob clean করার জন্য
-                        r.blob = null;
-                    } else {
-                        fail++;
-                        failedTokens.push(r.id);
-                    }
-                    processed++;
-                }
-                return batchData;
-            }
+        await Promise.allSettled(promises);
+      }
 
-            // ===== MAIN ENGINE WITH BATCH PROCESSING =====
-            async function startTurbo() {
-                if (running) return;
-                running = true;
-                completed = false;
-                startBtn.disabled = true;
-                startBtn.textContent = '⏳ Running...';
-                downloadBtn.disabled = true;
-                allImages = [];
-                failedTokens = [];
-                success = 0; fail = 0; processed = 0;
-                startTime = Date.now();
+      if (cancelFlag) {
+        setStatus('⏹ Cancelled.', false);
+        return;
+      }
 
-                showToast('⚡ Turbo started: 6969 images', 'info', 2500);
+      const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+      setStatus(`📦 Building ZIP (${elapsed}s) — ${imgSuccess} images, ${metaSuccess} metadata...`);
 
-                // প্রতি ব্যাচে BATCH_SIZE সংখ্যক ইমেজ প্রসেস করব
-                for (let i = 1; i <= TOTAL; i += BATCH_SIZE) {
-                    const end = Math.min(i + BATCH_SIZE - 1, TOTAL);
-                    const batchIds = [];
-                    for (let id = i; id <= end; id++) {
-                        batchIds.push(id);
-                    }
+      const zipBlob = await zip.generateAsync({ type: 'blob' });
+      const label = part === 1 ? 'part1_1-5500' : 'part2_5501-6969';
+      const filename = `nft_${label}.zip`;
+      saveAs(zipBlob, filename);
 
-                    // প্রতি ব্যাচকে CONCURRENCY সংখ্যক সাব-ব্যাচে ভাগ করি
-                    const subBatches = [];
-                    for (let j = 0; j < batchIds.length; j += CONCURRENCY) {
-                        subBatches.push(batchIds.slice(j, j + CONCURRENCY));
-                    }
+      let msg = `✅ Part ${part} complete! ${imgSuccess} images, ${metaSuccess} metadata in ${elapsed}s.`;
+      if (failedItems.length > 0) {
+        msg += ` ⚠️ ${failedItems.length} items failed.`;
+        showError(`⚠️ ${failedItems.length} items failed. <span style="cursor:pointer;color:#d4ff00;text-decoration:underline;" id="retryFailedBtn">↻ Retry Failed</span>`);
+        document.getElementById('retryFailedBtn')?.addEventListener('click', () => retryFailed(part));
+      }
+      setStatus(msg);
+      updateProgress(total, total);
+    } catch (err) {
+      setStatus(`❌ Error: ${err.message}`, false);
+    } finally {
+      isRunning = false;
+      setButtonsEnabled(true);
+      if (!cancelFlag && failedItems.length === 0) {
+        setTimeout(() => { progressContainer.style.display = 'none'; }, 1500);
+      }
+    }
+  }
 
-                    // সাব-ব্যাচগুলো প্রসেস করি
-                    for (const subBatch of subBatches) {
-                        const batchData = await processBatch(subBatch);
-                        allImages.push(...batchData);
-                        updateUI();
+  // ---------- retry failed ----------
+  async function retryFailed(part) {
+    if (isRunning || failedItems.length === 0) return;
+    isRunning = true;
+    cancelFlag = false;
+    hideError();
+    setButtonsEnabled(false);
+    setStatus(`🔄 Retrying ${failedItems.length} failed items...`);
 
-                        // মেমোরি ক্লিয়ার করার জন্য
-                        await new Promise(resolve => setTimeout(resolve, 50));
-                    }
+    const toRetry = [...failedItems];
+    failedItems = [];
+    let retrySuccess = 0;
 
-                    // প্রতি ব্যাচ শেষে স্ট্যাটাস দেখাই
-                    const pct = Math.round((processed / TOTAL) * 100);
-                    const elapsed = (Date.now() - startTime) / 1000;
-                    const spd = elapsed > 0 ? Math.round(processed / elapsed) : 0;
-                    showToast(`⚡ ${processed}/${TOTAL} (${pct}%)  ${spd}/s`, 'info', 1200);
+    const zip = new JSZip();
+    const imgFolder = zip.folder('nft_images_retry');
+    const metaFolder = zip.folder('nft_metadata_retry');
 
-                    // মেমোরি ক্লিয়ার করার জন্য ছোট ব্রেক
-                    await new Promise(resolve => setTimeout(resolve, 100));
-                    
-                    // যদি অনেকগুলো ইমেজ হয়ে যায় তাহলে গারবেজ কালেক্টরকে সাহায্য করার জন্য
-                    if (i % 500 === 0) {
-                        if (window.gc) window.gc();
-                    }
-                }
+    const groups = {};
+    toRetry.forEach(item => {
+      if (!groups[item.num]) groups[item.num] = [];
+      groups[item.num].push(item);
+    });
 
-                running = false;
-                completed = true;
-                startBtn.disabled = true;
-                startBtn.textContent = '✅ Complete!';
-                downloadBtn.disabled = false;
-                updateUI();
+    const numbers = Object.keys(groups).map(Number);
+    let processed = 0;
 
-                const elapsed = (Date.now() - startTime) / 1000;
-                const avg = Math.round(processed / elapsed);
-                if (failedTokens.length > 0) {
-                    showToast(`⚠️ Done. ${failedTokens.length} failed. Check log.`, 'error', 5000);
-                } else {
-                    showToast(`🎉 All ${TOTAL} downloaded in ${Math.round(elapsed)}s (${avg}/s)`, 'info', 6000);
-                }
-            }
+    for (let i = 0; i < numbers.length; i += 20) {
+      const batch = numbers.slice(i, i + 20);
+      await Promise.all(batch.map(async (num) => {
+        try {
+          const [imgResp, metaResp] = await Promise.all([
+            fetchWithRetry(IMG_BASE + num + IMG_EXT, 3),
+            fetchWithRetry(META_BASE + num + '.json', 3)
+          ]);
 
-            // ===== DOWNLOAD ZIP =====
-            async function downloadZip() {
-                if (allImages.length === 0) {
-                    showToast('⚠️ No images to zip', 'error');
-                    return;
-                }
-                showToast('⏳ Building ZIP ... (May take a moment)', 'info', 5000);
-                downloadBtn.disabled = true;
-                downloadBtn.textContent = '⏳ Zipping...';
+          const rawBlob = await imgResp.blob();
+          let finalBlob;
+          try {
+            finalBlob = await compositeBackground(rawBlob, BG_COLOR);
+          } catch (e) {
+            finalBlob = rawBlob;
+          }
+          imgFolder.file(num + '.png', finalBlob);
 
-                try {
-                    const zip = new JSZip();
-                    const folder = zip.folder('nft_images');
+          const meta = await metaResp.json();
+          metaFolder.file(num + '.json', JSON.stringify(meta, null, 2));
 
-                    // ধাপে ধাপে ফাইল যোগ করি
-                    const chunkSize = 500;
-                    for (let i = 0; i < allImages.length; i += chunkSize) {
-                        const chunk = allImages.slice(i, i + chunkSize);
-                        for (const item of chunk) {
-                            const raw = item.dataUrl.split(',')[1];
-                            folder.file(`${item.id}.png`, raw, { base64: true });
-                        }
-                        // প্রগ্রেস দেখাই
-                        const pct = Math.round(((i + chunk.length) / allImages.length) * 100);
-                        showToast(`📦 Zipping: ${pct}%`, 'info', 1000);
-                        
-                        // মেমোরি রিলিজের জন্য ছোট ব্রেক
-                        await new Promise(resolve => setTimeout(resolve, 50));
-                    }
+          retrySuccess++;
+        } catch (e) {
+          failedItems.push({ num, type: 'both', error: e.message });
+        }
+        processed++;
+        updateProgress(processed, numbers.length);
+      }));
+    }
 
-                    const blob = await zip.generateAsync({ 
-                        type: 'blob',
-                        compression: 'DEFLATE',
-                        compressionOptions: { level: 1 } // লেভেল ১ দ্রুততার জন্য
-                    });
-                    
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `NFT_1_to_6969.zip`;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
-                    showToast('✅ ZIP downloaded successfully!', 'info', 4000);
-                } catch (e) {
-                    showToast('❌ ZIP error: ' + e.message, 'error', 4000);
-                }
-                downloadBtn.disabled = false;
-                downloadBtn.textContent = '📦 ZIP Download';
-            }
+    if (failedItems.length === 0) {
+      const zipBlob = await zip.generateAsync({ type: 'blob' });
+      const label = part === 1 ? 'part1_retry' : 'part2_retry';
+      saveAs(zipBlob, `nft_${label}_recovered.zip`);
+      setStatus(`✅ Retry complete! ${retrySuccess} items recovered.`);
+      hideError();
+    } else {
+      setStatus(`⚠️ ${failedItems.length} items still failed.`, false);
+      showError(`⚠️ ${failedItems.length} items still failed. <span style="cursor:pointer;color:#d4ff00;text-decoration:underline;" id="retryFailedBtn2">↻ Retry Again</span>`);
+      document.getElementById('retryFailedBtn2')?.addEventListener('click', () => retryFailed(part));
+    }
 
-            // ===== RESET =====
-            function resetAll() {
-                if (running) return;
-                completed = false;
-                allImages = [];
-                failedTokens = [];
-                success = 0; fail = 0; processed = 0;
-                startTime = 0;
+    isRunning = false;
+    setButtonsEnabled(true);
+    if (failedItems.length === 0) {
+      setTimeout(() => { progressContainer.style.display = 'none'; }, 1500);
+    }
+  }
 
-                startBtn.disabled = false;
-                startBtn.textContent = '🚀 Start Turbo';
-                downloadBtn.disabled = true;
-                downloadBtn.textContent = '📦 ZIP Download';
+  // ---------- cancel ----------
+  cancelBtn.addEventListener('click', () => {
+    if (isRunning) {
+      cancelFlag = true;
+      setStatus('⏹ Cancelling...', false);
+      cancelBtn.disabled = true;
+    }
+  });
 
-                progressFill.style.width = '0%';
-                pctText.textContent = '0%';
-                countText.textContent = '0';
-                speedText.textContent = '0';
-                totalStat.textContent = '0';
-                successStat.textContent = '0';
-                failStat.textContent = '0';
-                speedStat.textContent = '0/s';
-                failedBox.classList.remove('show');
-                failedIds.textContent = '';
-                failedCount.textContent = '0';
-                
-                // মেমোরি ক্লিয়ার
-                if (window.gc) window.gc();
-                showToast('⟳ Reset done', 'info', 2000);
-            }
+  // ---------- button handlers ----------
+  downloadPart1Btn.addEventListener('click', () => downloadPart(1));
+  downloadPart2Btn.addEventListener('click', () => downloadPart(2));
+  
+  downloadAllBtn.addEventListener('click', async () => {
+    if (isRunning) return;
+    await downloadPart(1);
+    if (!cancelFlag && failedItems.length === 0) {
+      setTimeout(async () => {
+        await downloadPart(2);
+      }, 1000);
+    }
+  });
 
-            // ===== EVENTS =====
-            startBtn.addEventListener('click', startTurbo);
-            downloadBtn.addEventListener('click', downloadZip);
-            resetBtn.addEventListener('click', resetAll);
-
-            // ===== INIT =====
-            updateUI();
-            showToast('✨ Ready — Press "Start Turbo"', 'info', 3000);
-        })();
-    </script>
+  // ---------- initial state ----------
+  countBadge.textContent = `0 / ${TOTAL} NFTs`;
+  setStatus(`<span class="highlight">🧩 Ready</span> — download in 2 parts (max 5,500 per part)`);
+  progressContainer.style.display = 'none';
+  setButtonsEnabled(true);
+})();
+</script>
 </body>
 </html>
