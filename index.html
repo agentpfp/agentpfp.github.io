@@ -43,8 +43,8 @@
 <div class="container">
   <h1>🚀 Ultra-Fast NFT Downloader</h1>
   <p class="subtitle">
-    Background <span class="color-preview">#d4ff00</span> · 6,969 NFTs · <span style="color:#d4ff00;">⚡ Lightning speed</span><br>
-    <span style="color:#888;">Images + Metadata – sequential naming – no crashes</span>
+    6,969 NFTs · Original files, no editing · <span style="color:#d4ff00;">⚡ Lightning speed</span><br>
+    <span style="color:#888;">2 ZIPs — images.zip + metadata.zip – sequential naming – no crashes</span>
   </p>
 
   <div class="card">
@@ -90,8 +90,7 @@
   ];
   const TOTAL = 6969;
   const IMG_EXT = '.png';
-  const BG_COLOR = '#d4ff00';
-  const CONCURRENCY = 48;      // number of items being fetched in parallel at once
+  const CONCURRENCY = 60;      // number of items being fetched in parallel at once
   const MAX_ATTEMPTS_PER_ITEM = GATEWAYS.length * 2; // cycles through every gateway twice
   const MAX_AUTO_PASSES = 6;   // fully automatic retry passes before asking the user
 
@@ -132,28 +131,6 @@
 
   function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-  // ---------- image processing ----------
-  function compositeBackground(blob, color) {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      const url = URL.createObjectURL(blob);
-      img.onload = function () {
-        const canvas = document.createElement('canvas');
-        canvas.width = img.width; canvas.height = img.height;
-        const ctx = canvas.getContext('2d');
-        ctx.fillStyle = color;
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(img, 0, 0);
-        canvas.toBlob(nb => {
-          URL.revokeObjectURL(url);
-          nb ? resolve(nb) : reject(new Error('canvas failed'));
-        }, 'image/png');
-      };
-      img.onerror = function () { URL.revokeObjectURL(url); reject(new Error('image load failed')); };
-      img.src = url;
-    });
-  }
-
   // ---------- fetch a single asset, cycling through every gateway ----------
   // Never gives up until every gateway has been tried MAX_ATTEMPTS_PER_ITEM/GATEWAYS.length times.
   async function fetchAsset(path, signalCancel) {
@@ -189,10 +166,8 @@
       jobs.push((async () => {
         const resp = await fetchImage(num);
         const rawBlob = await resp.blob();
-        let finalBlob;
-        try { finalBlob = await compositeBackground(rawBlob, BG_COLOR); }
-        catch (e) { finalBlob = rawBlob; }
-        imgFolder.file(num + '.png', finalBlob);
+        // store the original file exactly as-is - no re-encoding, faster & lighter on memory
+        imgFolder.file(num + '.png', rawBlob);
       })());
     }
 
@@ -252,9 +227,11 @@
     const startTime = Date.now();
 
     try {
-      const zip = new JSZip();
-      const imgFolder = type === 'both' || type === 'images' ? zip.folder('nft_images') : null;
-      const metaFolder = type === 'both' || type === 'metadata' ? zip.folder('nft_metadata') : null;
+      // Two independent zips - one for images, one for metadata.
+      const imgZip  = type === 'both' || type === 'images'  ? new JSZip() : null;
+      const metaZip = type === 'both' || type === 'metadata' ? new JSZip() : null;
+      const imgFolder  = imgZip;   // store files at zip root
+      const metaFolder = metaZip;
 
       let remaining = Array.from({ length: TOTAL }, (_, i) => i + 1);
       let pass = 0;
@@ -277,12 +254,16 @@
 
       const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
       const succeeded = TOTAL - remaining.length;
-      setStatus(`📦 Building ZIP (${elapsed}s) — ${succeeded}/${TOTAL} items ready...`);
+      setStatus(`📦 Building ZIP file(s) (${elapsed}s) — ${succeeded}/${TOTAL} items ready...`);
 
-      const zipBlob = await zip.generateAsync({ type: 'blob' });
-      const label = type === 'both' ? 'full' : type;
-      const filename = `nft_${label}_1_to_${TOTAL}.zip`;
-      saveAs(zipBlob, filename);
+      if (imgZip) {
+        const blob = await imgZip.generateAsync({ type: 'blob' });
+        saveAs(blob, `nft_images_1_to_${TOTAL}.zip`);
+      }
+      if (metaZip) {
+        const blob = await metaZip.generateAsync({ type: 'blob' });
+        saveAs(blob, `nft_metadata_1_to_${TOTAL}.zip`);
+      }
 
       if (remaining.length === 0) {
         setStatus(`✅ Complete! All ${TOTAL} items downloaded in ${elapsed}s.`);
@@ -310,21 +291,20 @@
     errorDisplay.style.display = 'none';
     setStatus(`🔄 Retrying ${numbers.length} stuck item(s)...`);
 
-    const zip = new JSZip();
-    const imgFolder = type === 'both' || type === 'images' ? zip.folder('nft_images_retry') : null;
-    const metaFolder = type === 'both' || type === 'metadata' ? zip.folder('nft_metadata_retry') : null;
+    const imgZip  = type === 'both' || type === 'images'  ? new JSZip() : null;
+    const metaZip = type === 'both' || type === 'metadata' ? new JSZip() : null;
 
     let remaining = [...numbers];
     let pass = 0;
     while (remaining.length && pass < MAX_AUTO_PASSES) {
       pass++;
       if (pass > 1) await sleep(500 * pass);
-      remaining = await runPool(remaining, imgFolder, metaFolder, (done, total) => updateProgress(done, total));
+      remaining = await runPool(remaining, imgZip, metaZip, (done, total) => updateProgress(done, total));
     }
 
     if (remaining.length === 0) {
-      const zipBlob = await zip.generateAsync({ type: 'blob' });
-      saveAs(zipBlob, `nft_retry_${Date.now()}.zip`);
+      if (imgZip)  saveAs(await imgZip.generateAsync({ type: 'blob' }), `nft_images_retry_${Date.now()}.zip`);
+      if (metaZip) saveAs(await metaZip.generateAsync({ type: 'blob' }), `nft_metadata_retry_${Date.now()}.zip`);
       setStatus(`✅ Retry complete! All remaining items recovered.`);
       errorDisplay.style.display = 'none';
     } else {
