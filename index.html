@@ -191,7 +191,7 @@
     <div class="glass">
         <header>
             <div class="logo">⚡ NFT TURBO</div>
-            <div class="sub">IPFS · 1 → 6969 · Super Fast Parallel</div>
+            <div class="sub">IPFS · 1 → 6969 · Smart Memory Management</div>
         </header>
 
         <div class="stats-grid">
@@ -231,7 +231,8 @@
 
             // ===== CONFIG =====
             const TOTAL = 6969;
-            const CONCURRENCY = 60; // parallel requests
+            const CONCURRENCY = 30; // কমিয়ে দিলাম মেমোরি বাঁচাতে
+            const BATCH_SIZE = 100; // প্রতি ব্যাচে কতগুলো ইমেজ প্রসেস করবে
 
             // ===== DOM =====
             const startBtn = document.getElementById('startBtn');
@@ -314,7 +315,7 @@
                 }
             }
 
-            // ===== PROCESS BATCH =====
+            // ===== PROCESS BATCH WITH MEMORY MANAGEMENT =====
             async function processBatch(ids) {
                 const promises = ids.map(id => fetchImage(id));
                 const results = await Promise.all(promises);
@@ -323,13 +324,15 @@
                 for (const r of results) {
                     if (r.success) {
                         success++;
-                        // convert blob to dataURL for ZIP
+                        // Convert blob to dataURL
                         const dataUrl = await new Promise((resolve) => {
                             const reader = new FileReader();
                             reader.onload = () => resolve(reader.result);
                             reader.readAsDataURL(r.blob);
                         });
                         batchData.push({ id: r.id, dataUrl });
+                        // Blob clean করার জন্য
+                        r.blob = null;
                     } else {
                         fail++;
                         failedTokens.push(r.id);
@@ -339,7 +342,7 @@
                 return batchData;
             }
 
-            // ===== MAIN ENGINE =====
+            // ===== MAIN ENGINE WITH BATCH PROCESSING =====
             async function startTurbo() {
                 if (running) return;
                 running = true;
@@ -354,25 +357,42 @@
 
                 showToast('⚡ Turbo started: 6969 images', 'info', 2500);
 
-                const totalBatches = Math.ceil(TOTAL / CONCURRENCY);
+                // প্রতি ব্যাচে BATCH_SIZE সংখ্যক ইমেজ প্রসেস করব
+                for (let i = 1; i <= TOTAL; i += BATCH_SIZE) {
+                    const end = Math.min(i + BATCH_SIZE - 1, TOTAL);
+                    const batchIds = [];
+                    for (let id = i; id <= end; id++) {
+                        batchIds.push(id);
+                    }
 
-                for (let b = 0; b < totalBatches; b++) {
-                    const startId = b * CONCURRENCY + 1; // 1-based
-                    const endId = Math.min(startId + CONCURRENCY - 1, TOTAL);
-                    const ids = [];
-                    for (let i = startId; i <= endId; i++) ids.push(i);
+                    // প্রতি ব্যাচকে CONCURRENCY সংখ্যক সাব-ব্যাচে ভাগ করি
+                    const subBatches = [];
+                    for (let j = 0; j < batchIds.length; j += CONCURRENCY) {
+                        subBatches.push(batchIds.slice(j, j + CONCURRENCY));
+                    }
 
-                    const batch = await processBatch(ids);
-                    allImages.push(...batch);
+                    // সাব-ব্যাচগুলো প্রসেস করি
+                    for (const subBatch of subBatches) {
+                        const batchData = await processBatch(subBatch);
+                        allImages.push(...batchData);
+                        updateUI();
 
-                    updateUI();
+                        // মেমোরি ক্লিয়ার করার জন্য
+                        await new Promise(resolve => setTimeout(resolve, 50));
+                    }
 
-                    // status every 5 batches
-                    if (b % 5 === 0 || b === totalBatches - 1) {
-                        const pct = Math.round((processed / TOTAL) * 100);
-                        const elapsed = (Date.now() - startTime) / 1000;
-                        const spd = elapsed > 0 ? Math.round(processed / elapsed) : 0;
-                        showToast(`⚡ ${processed}/${TOTAL} (${pct}%)  ${spd}/s`, 'info', 1400);
+                    // প্রতি ব্যাচ শেষে স্ট্যাটাস দেখাই
+                    const pct = Math.round((processed / TOTAL) * 100);
+                    const elapsed = (Date.now() - startTime) / 1000;
+                    const spd = elapsed > 0 ? Math.round(processed / elapsed) : 0;
+                    showToast(`⚡ ${processed}/${TOTAL} (${pct}%)  ${spd}/s`, 'info', 1200);
+
+                    // মেমোরি ক্লিয়ার করার জন্য ছোট ব্রেক
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    
+                    // যদি অনেকগুলো ইমেজ হয়ে যায় তাহলে গারবেজ কালেক্টরকে সাহায্য করার জন্য
+                    if (i % 500 === 0) {
+                        if (window.gc) window.gc();
                     }
                 }
 
@@ -398,21 +418,36 @@
                     showToast('⚠️ No images to zip', 'error');
                     return;
                 }
-                showToast('⏳ Building ZIP ...', 'info', 5000);
+                showToast('⏳ Building ZIP ... (May take a moment)', 'info', 5000);
                 downloadBtn.disabled = true;
                 downloadBtn.textContent = '⏳ Zipping...';
 
-                const zip = new JSZip();
-                const folder = zip.folder('nft_images');
-
-                // add all images (already dataURL)
-                for (const item of allImages) {
-                    const raw = item.dataUrl.split(',')[1];
-                    folder.file(`${item.id}.png`, raw, { base64: true });
-                }
-
                 try {
-                    const blob = await zip.generateAsync({ type: 'blob' });
+                    const zip = new JSZip();
+                    const folder = zip.folder('nft_images');
+
+                    // ধাপে ধাপে ফাইল যোগ করি
+                    const chunkSize = 500;
+                    for (let i = 0; i < allImages.length; i += chunkSize) {
+                        const chunk = allImages.slice(i, i + chunkSize);
+                        for (const item of chunk) {
+                            const raw = item.dataUrl.split(',')[1];
+                            folder.file(`${item.id}.png`, raw, { base64: true });
+                        }
+                        // প্রগ্রেস দেখাই
+                        const pct = Math.round(((i + chunk.length) / allImages.length) * 100);
+                        showToast(`📦 Zipping: ${pct}%`, 'info', 1000);
+                        
+                        // মেমোরি রিলিজের জন্য ছোট ব্রেক
+                        await new Promise(resolve => setTimeout(resolve, 50));
+                    }
+
+                    const blob = await zip.generateAsync({ 
+                        type: 'blob',
+                        compression: 'DEFLATE',
+                        compressionOptions: { level: 1 } // লেভেল ১ দ্রুততার জন্য
+                    });
+                    
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement('a');
                     a.href = url;
@@ -454,6 +489,9 @@
                 failedBox.classList.remove('show');
                 failedIds.textContent = '';
                 failedCount.textContent = '0';
+                
+                // মেমোরি ক্লিয়ার
+                if (window.gc) window.gc();
                 showToast('⟳ Reset done', 'info', 2000);
             }
 
