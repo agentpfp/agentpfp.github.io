@@ -77,13 +77,23 @@
 <script>
 (function() {
   // ---------- constants ----------
-  const IMG_BASE  = 'https://ipfs.io/ipfs/QmTxBwjcBuhLvfrVp7bsbw6KXiTxZkPso3kpHfzw3kxGnU/';
-  const META_BASE = 'https://ipfs.io/ipfs/QmdyZTZKSd4AL7sqVHU4Zpw7tQ82iQb3zefBhynufwNQRM/';
+  // Multiple gateways for the same CID — if one is slow/rate-limited we
+  // automatically fall back to the next one instead of failing.
+  const IMG_CID  = 'QmTxBwjcBuhLvfrVp7bsbw6KXiTxZkPso3kpHfzw3kxGnU';
+  const META_CID = 'QmdyZTZKSd4AL7sqVHU4Zpw7tQ82iQb3zefBhynufwNQRM';
+  const GATEWAYS = [
+    'https://ipfs.io/ipfs/',
+    'https://cloudflare-ipfs.com/ipfs/',
+    'https://dweb.link/ipfs/',
+    'https://gateway.pinata.cloud/ipfs/',
+    'https://nftstorage.link/ipfs/'
+  ];
   const TOTAL = 6969;
   const IMG_EXT = '.png';
   const BG_COLOR = '#d4ff00';
-  const BATCH_SIZE = 50;       // Aggressive parallel requests
-  const MAX_RETRIES = 3;
+  const CONCURRENCY = 48;      // number of items being fetched in parallel at once
+  const MAX_ATTEMPTS_PER_ITEM = GATEWAYS.length * 2; // cycles through every gateway twice
+  const MAX_AUTO_PASSES = 6;   // fully automatic retry passes before asking the user
 
   // ---------- DOM refs ----------
   const statusMsg = document.getElementById('statusMsg');
@@ -99,16 +109,11 @@
 
   let isRunning = false;
   let cancelFlag = false;
-  let failedItems = [];
 
   // ---------- helpers ----------
   function setStatus(text, isGood = true) {
     statusMsg.innerHTML = text;
-    if (!isGood) {
-      statusMsg.style.color = '#ff6b6b';
-    } else {
-      statusMsg.style.color = '#ccc';
-    }
+    statusMsg.style.color = isGood ? '#ccc' : '#ff6b6b';
   }
 
   function updateProgress(current, total) {
@@ -122,12 +127,10 @@
     const btns = [downloadAllBtn, downloadImagesBtn, downloadMetaBtn];
     btns.forEach(b => b.disabled = !enabled);
     cancelBtn.disabled = enabled;
-    if (enabled) {
-      cancelBtn.textContent = '⏹ Cancel';
-    } else {
-      cancelBtn.textContent = '⏳ Processing...';
-    }
+    cancelBtn.textContent = enabled ? '⏹ Cancel' : '⏳ Processing...';
   }
+
+  function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
   // ---------- image processing ----------
   function compositeBackground(blob, color) {
@@ -151,30 +154,93 @@
     });
   }
 
-  // ---------- fetch with retry ----------
-  async function fetchWithRetry(url, retries = MAX_RETRIES) {
-    for (let i = 0; i < retries; i++) {
+  // ---------- fetch a single asset, cycling through every gateway ----------
+  // Never gives up until every gateway has been tried MAX_ATTEMPTS_PER_ITEM/GATEWAYS.length times.
+  async function fetchAsset(path, signalCancel) {
+    let lastErr;
+    for (let attempt = 0; attempt < MAX_ATTEMPTS_PER_ITEM; attempt++) {
+      if (signalCancel()) throw new Error('cancelled');
+      const gateway = GATEWAYS[attempt % GATEWAYS.length];
       try {
-        const resp = await fetch(url, { 
+        const resp = await fetch(gateway + path, {
           mode: 'cors',
-          cache: 'force-cache',
+          cache: 'default',
           headers: { 'Accept': 'application/json, image/*' }
         });
-        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        if (!resp.ok) throw new Error(`HTTP ${resp.status} @ ${gateway}`);
         return resp;
       } catch (e) {
-        if (i === retries - 1) throw e;
-        await new Promise(r => setTimeout(r, 200 * (i + 1)));
+        lastErr = e;
+        // short backoff with jitter before trying the next gateway
+        await sleep(150 + Math.random() * 250);
       }
     }
+    throw lastErr || new Error('all gateways failed');
   }
 
-  // ---------- download logic ----------
+  async function fetchImage(num) { return fetchAsset(IMG_CID + '/' + num + IMG_EXT, () => cancelFlag); }
+  async function fetchMeta(num)  { return fetchAsset(META_CID + '/' + num + '.json', () => cancelFlag); }
+
+  // ---------- process a single NFT number into the zip folders ----------
+  async function processItem(num, imgFolder, metaFolder) {
+    const jobs = [];
+
+    if (imgFolder) {
+      jobs.push((async () => {
+        const resp = await fetchImage(num);
+        const rawBlob = await resp.blob();
+        let finalBlob;
+        try { finalBlob = await compositeBackground(rawBlob, BG_COLOR); }
+        catch (e) { finalBlob = rawBlob; }
+        imgFolder.file(num + '.png', finalBlob);
+      })());
+    }
+
+    if (metaFolder) {
+      jobs.push((async () => {
+        const resp = await fetchMeta(num);
+        const meta = await resp.json();
+        metaFolder.file(num + '.json', JSON.stringify(meta, null, 2));
+      })());
+    }
+
+    // both image and metadata must succeed for this item to count as done
+    await Promise.all(jobs);
+  }
+
+  // ---------- worker-pool runner: keeps CONCURRENCY workers always busy ----------
+  // Faster than fixed batches because a worker instantly grabs the next
+  // number instead of waiting for the whole batch to finish.
+  async function runPool(numbers, imgFolder, metaFolder, onProgress) {
+    const queue = [...numbers];
+    const failed = [];
+    let done = 0;
+
+    async function worker() {
+      while (queue.length) {
+        if (cancelFlag) return;
+        const num = queue.shift();
+        if (num === undefined) return;
+        try {
+          await processItem(num, imgFolder, metaFolder);
+        } catch (e) {
+          failed.push(num);
+        }
+        done++;
+        onProgress(done, numbers.length);
+      }
+    }
+
+    const workers = Array.from({ length: Math.min(CONCURRENCY, numbers.length) }, () => worker());
+    await Promise.all(workers);
+    return failed;
+  }
+
+  // ---------- main download flow with fully automatic retry passes ----------
   async function downloadAll(type) {
     if (isRunning) return;
     isRunning = true;
     cancelFlag = false;
-    failedItems = [];
     errorDisplay.style.display = 'none';
     retryContainer.innerHTML = '';
     setButtonsEnabled(false);
@@ -190,181 +256,86 @@
       const imgFolder = type === 'both' || type === 'images' ? zip.folder('nft_images') : null;
       const metaFolder = type === 'both' || type === 'metadata' ? zip.folder('nft_metadata') : null;
 
-      let processed = 0;
-      let imgSuccess = 0, metaSuccess = 0;
-      const total = TOTAL;
+      let remaining = Array.from({ length: TOTAL }, (_, i) => i + 1);
+      let pass = 0;
 
-      // Process in large batches for speed
-      for (let start = 1; start <= total; start += BATCH_SIZE) {
-        if (cancelFlag) {
-          setStatus('⏹ Cancelled by user.', false);
-          return;
+      while (remaining.length && pass < MAX_AUTO_PASSES) {
+        if (cancelFlag) { setStatus('⏹ Cancelled by user.', false); return; }
+        pass++;
+        if (pass > 1) {
+          setStatus(`🔄 Auto-retry pass ${pass}: recovering ${remaining.length} item(s)...`);
+          await sleep(500 * pass); // give rate-limited gateways a short breather
         }
 
-        const end = Math.min(start + BATCH_SIZE - 1, total);
-        const batch = [];
-        for (let i = start; i <= end; i++) batch.push(i);
-
-        // Parallel fetch with aggressive concurrency
-        const promises = batch.map(async (num) => {
-          if (cancelFlag) return;
-
-          try {
-            // Fetch image and metadata in parallel
-            const [imgResp, metaResp] = await Promise.all([
-              fetchWithRetry(IMG_BASE + num + IMG_EXT),
-              fetchWithRetry(META_BASE + num + '.json')
-            ]);
-
-            // Process image
-            if (imgFolder) {
-              try {
-                const rawBlob = await imgResp.blob();
-                let finalBlob;
-                try {
-                  finalBlob = await compositeBackground(rawBlob, BG_COLOR);
-                } catch (e) {
-                  finalBlob = rawBlob; // fallback
-                }
-                imgFolder.file(num + '.png', finalBlob);
-                imgSuccess++;
-              } catch (e) {
-                failedItems.push({ num, type: 'image', error: e.message });
-              }
-            }
-
-            // Process metadata
-            if (metaFolder) {
-              try {
-                const meta = await metaResp.json();
-                metaFolder.file(num + '.json', JSON.stringify(meta, null, 2));
-                metaSuccess++;
-              } catch (e) {
-                failedItems.push({ num, type: 'metadata', error: e.message });
-              }
-            }
-
-          } catch (e) {
-            failedItems.push({ num, type: 'both', error: e.message });
-          }
-
-          processed++;
-          updateProgress(processed, total);
+        const startCount = TOTAL - remaining.length;
+        remaining = await runPool(remaining, imgFolder, metaFolder, (doneInPass, totalInPass) => {
+          updateProgress(startCount + doneInPass, TOTAL);
         });
-
-        await Promise.allSettled(promises);
       }
 
-      // Finalize
-      if (cancelFlag) {
-        setStatus('⏹ Cancelled.', false);
-        return;
-      }
+      if (cancelFlag) { setStatus('⏹ Cancelled.', false); return; }
 
       const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-      setStatus(`📦 Building ZIP (${elapsed}s) — ${imgSuccess} images, ${metaSuccess} metadata...`);
+      const succeeded = TOTAL - remaining.length;
+      setStatus(`📦 Building ZIP (${elapsed}s) — ${succeeded}/${TOTAL} items ready...`);
 
       const zipBlob = await zip.generateAsync({ type: 'blob' });
-
       const label = type === 'both' ? 'full' : type;
-      const filename = `nft_${label}_1_to_${total}.zip`;
+      const filename = `nft_${label}_1_to_${TOTAL}.zip`;
       saveAs(zipBlob, filename);
 
-      let msg = `✅ Complete! ${imgSuccess} images, ${metaSuccess} metadata in ${elapsed}s.`;
-      if (failedItems.length > 0) {
-        msg += ` ⚠️ ${failedItems.length} items failed.`;
+      if (remaining.length === 0) {
+        setStatus(`✅ Complete! All ${TOTAL} items downloaded in ${elapsed}s.`);
+        updateProgress(TOTAL, TOTAL);
+      } else {
+        setStatus(`✅ Downloaded ${succeeded}/${TOTAL} in ${elapsed}s. ⚠️ ${remaining.length} still stuck after ${MAX_AUTO_PASSES} auto-retries.`, false);
         errorDisplay.style.display = 'block';
-        errorDisplay.innerHTML = `⚠️ ${failedItems.length} items failed. <span class="retry-btn" id="retryFailedBtn">↻ Retry Failed</span>`;
-        document.getElementById('retryFailedBtn')?.addEventListener('click', () => retryFailed());
+        errorDisplay.innerHTML = `⚠️ ${remaining.length} item(s) could not be fetched from any gateway. <span class="retry-btn" id="retryFailedBtn">↻ Retry These Now</span>`;
+        document.getElementById('retryFailedBtn')?.addEventListener('click', () => retryStuck(remaining, type));
       }
-      setStatus(msg);
-      updateProgress(total, total);
     } catch (err) {
       setStatus(`❌ Error: ${err.message}`, false);
     } finally {
       isRunning = false;
       setButtonsEnabled(true);
-      if (!cancelFlag && failedItems.length === 0) {
-        setTimeout(() => { progressContainer.style.display = 'none'; }, 2000);
-      }
     }
   }
 
-  // ---------- retry failed ----------
-  async function retryFailed() {
-    if (isRunning || failedItems.length === 0) return;
+  // ---------- manual retry for whatever is still stuck after all auto-passes ----------
+  async function retryStuck(numbers, type) {
+    if (isRunning || !numbers.length) return;
     isRunning = true;
     cancelFlag = false;
     setButtonsEnabled(false);
     errorDisplay.style.display = 'none';
-    setStatus(`🔄 Retrying ${failedItems.length} failed items...`);
-
-    const toRetry = [...failedItems];
-    failedItems = [];
-    let retrySuccess = 0;
+    setStatus(`🔄 Retrying ${numbers.length} stuck item(s)...`);
 
     const zip = new JSZip();
-    const imgFolder = zip.folder('nft_images_retry');
-    const metaFolder = zip.folder('nft_metadata_retry');
+    const imgFolder = type === 'both' || type === 'images' ? zip.folder('nft_images_retry') : null;
+    const metaFolder = type === 'both' || type === 'metadata' ? zip.folder('nft_metadata_retry') : null;
 
-    // Group by number
-    const groups = {};
-    toRetry.forEach(item => {
-      if (!groups[item.num]) groups[item.num] = [];
-      groups[item.num].push(item);
-    });
-
-    const numbers = Object.keys(groups).map(Number);
-    let processed = 0;
-
-    for (let i = 0; i < numbers.length; i += 20) {
-      const batch = numbers.slice(i, i + 20);
-      await Promise.all(batch.map(async (num) => {
-        try {
-          const [imgResp, metaResp] = await Promise.all([
-            fetchWithRetry(IMG_BASE + num + IMG_EXT, 3),
-            fetchWithRetry(META_BASE + num + '.json', 3)
-          ]);
-
-          const rawBlob = await imgResp.blob();
-          let finalBlob;
-          try {
-            finalBlob = await compositeBackground(rawBlob, BG_COLOR);
-          } catch (e) {
-            finalBlob = rawBlob;
-          }
-          imgFolder.file(num + '.png', finalBlob);
-
-          const meta = await metaResp.json();
-          metaFolder.file(num + '.json', JSON.stringify(meta, null, 2));
-
-          retrySuccess++;
-          processed++;
-          updateProgress(processed, numbers.length);
-        } catch (e) {
-          failedItems.push({ num, type: 'both', error: e.message });
-          processed++;
-        }
-      }));
+    let remaining = [...numbers];
+    let pass = 0;
+    while (remaining.length && pass < MAX_AUTO_PASSES) {
+      pass++;
+      if (pass > 1) await sleep(500 * pass);
+      remaining = await runPool(remaining, imgFolder, metaFolder, (done, total) => updateProgress(done, total));
     }
 
-    if (failedItems.length === 0) {
+    if (remaining.length === 0) {
       const zipBlob = await zip.generateAsync({ type: 'blob' });
       saveAs(zipBlob, `nft_retry_${Date.now()}.zip`);
-      setStatus(`✅ Retry complete! ${retrySuccess} items recovered.`);
+      setStatus(`✅ Retry complete! All remaining items recovered.`);
       errorDisplay.style.display = 'none';
     } else {
-      setStatus(`⚠️ ${failedItems.length} items still failed.`, false);
+      setStatus(`⚠️ ${remaining.length} item(s) still failed — the gateways may be down for these.`, false);
       errorDisplay.style.display = 'block';
-      errorDisplay.innerHTML = `⚠️ ${failedItems.length} items still failed. <span class="retry-btn" id="retryFailedBtn2">↻ Retry Again</span>`;
-      document.getElementById('retryFailedBtn2')?.addEventListener('click', () => retryFailed());
+      errorDisplay.innerHTML = `⚠️ ${remaining.length} item(s) still failed. <span class="retry-btn" id="retryFailedBtn2">↻ Retry Again</span>`;
+      document.getElementById('retryFailedBtn2')?.addEventListener('click', () => retryStuck(remaining, type));
     }
 
     isRunning = false;
     setButtonsEnabled(true);
-    if (failedItems.length === 0) {
-      setTimeout(() => { progressContainer.style.display = 'none'; }, 1500);
-    }
   }
 
   // ---------- cancel ----------
