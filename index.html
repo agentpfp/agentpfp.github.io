@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>NFT Bulk Downloader #d4ff00</title>
+  <title>🚀 Ultra-Fast NFT Downloader</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
   <style>
@@ -17,11 +17,12 @@
     .status-box { background:#0f0f22; border-radius:12px; padding:20px; margin-bottom:25px; border:1px solid #1f1f3a; }
     .status-msg { font-size:1.1rem; color:#ccc; }
     .status-msg .highlight { color:#d4ff00; font-weight:bold; }
+    .status-msg .error { color:#ff6b6b; }
     .progress-container { width:100%; background:#1a1a2e; border-radius:10px; height:32px; margin:16px 0; overflow:hidden; display:none; }
     .progress-bar { height:100%; width:0%; background:linear-gradient(90deg,#d4ff00,#a0cc00); border-radius:10px; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:.9rem; color:#000; transition:width .3s ease; }
     .btn-group { display:flex; gap:16px; flex-wrap:wrap; justify-content:center; margin-top:20px; }
     .btn { padding:16px 36px; border:none; border-radius:60px; font-size:1.1rem; font-weight:700; cursor:pointer; transition:all .25s ease; box-shadow:0 6px 20px rgba(0,0,0,.4); min-width:200px; }
-    .btn:hover { transform:translateY(-3px); box-shadow:0 10px 30px rgba(0,0,0,.6); }
+    .btn:hover:not(:disabled) { transform:translateY(-3px); box-shadow:0 10px 30px rgba(0,0,0,.6); }
     .btn:disabled { opacity:.4; cursor:not-allowed; transform:none; }
     .btn-primary { background:linear-gradient(135deg,#d4ff00 0%,#a0cc00 100%); color:#000; }
     .btn-success { background:linear-gradient(135deg,#11998e 0%,#38ef7d 100%); color:#000; }
@@ -29,6 +30,8 @@
     .btn-warning { background:linear-gradient(135deg,#f7971e 0%,#ffd200 100%); color:#000; }
     .badge { display:inline-block; background:rgba(212,255,0,.15); color:#d4ff00; padding:6px 18px; border-radius:30px; font-size:.9rem; margin:10px 0; border:1px solid rgba(212,255,0,.2); }
     .footer { margin-top:30px; color:#555; font-size:.9rem; }
+    .retry-btn { background:rgba(255,200,0,.15); border:1px solid rgba(255,200,0,.3); color:#ffd200; padding:8px 18px; border-radius:30px; cursor:pointer; font-size:.9rem; margin-top:10px; display:inline-block; transition:all .2s; }
+    .retry-btn:hover { background:rgba(255,200,0,.25); }
     @media (max-width:600px) {
       h1 { font-size:2rem; }
       .card { padding:25px 18px; }
@@ -38,10 +41,10 @@
 </head>
 <body>
 <div class="container">
-  <h1>⚡ NFT Bulk Downloader</h1>
+  <h1>🚀 Ultra-Fast NFT Downloader</h1>
   <p class="subtitle">
-    Background <span class="color-preview">#d4ff00</span> · 6,969 NFTs with metadata<br>
-    <span style="color:#888;">All images and JSON metadata – serialized &amp; zipped</span>
+    Background <span class="color-preview">#d4ff00</span> · 6,969 NFTs · <span style="color:#d4ff00;">⚡ Lightning speed</span><br>
+    <span style="color:#888;">Images + Metadata – sequential naming – no crashes</span>
   </p>
 
   <div class="card">
@@ -50,6 +53,7 @@
         <span class="highlight">📦 Ready</span> — click download to start
       </div>
       <div class="badge" id="countBadge">0 / 6,969 NFTs</div>
+      <div id="errorDisplay" style="margin-top:8px; font-size:.9rem; color:#ff6b6b; display:none;"></div>
     </div>
 
     <div class="progress-container" id="progressContainer">
@@ -57,16 +61,17 @@
     </div>
 
     <div class="btn-group">
-      <button id="downloadAllBtn" class="btn btn-success">📥 Download All (ZIP)</button>
+      <button id="downloadAllBtn" class="btn btn-success">⚡ Download All (ZIP)</button>
       <button id="downloadImagesBtn" class="btn btn-primary">🖼️ Images ZIP</button>
       <button id="downloadMetaBtn" class="btn btn-warning">📄 Metadata ZIP</button>
     </div>
 
-    <div style="margin-top:20px; display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
+    <div style="margin-top:15px;">
       <button id="cancelBtn" class="btn btn-danger" disabled style="min-width:120px; padding:10px 20px; font-size:.9rem;">⏹ Cancel</button>
     </div>
+    <div id="retryContainer" style="margin-top:10px;"></div>
   </div>
-  <div class="footer">✓ Sequential naming: 1.png, 1.json … 6969.png, 6969.json</div>
+  <div class="footer">✓ Sequential: 1.png, 1.json … 6969.png, 6969.json · <span style="color:#888;">Auto-retry on failure</span></div>
 </div>
 
 <script>
@@ -77,13 +82,16 @@
   const TOTAL = 6969;
   const IMG_EXT = '.png';
   const BG_COLOR = '#d4ff00';
-  const BATCH_SIZE = 30;      // parallel requests per batch
+  const BATCH_SIZE = 50;       // Aggressive parallel requests
+  const MAX_RETRIES = 3;
 
   // ---------- DOM refs ----------
   const statusMsg = document.getElementById('statusMsg');
   const countBadge = document.getElementById('countBadge');
   const progressContainer = document.getElementById('progressContainer');
   const progressBar = document.getElementById('progressBar');
+  const errorDisplay = document.getElementById('errorDisplay');
+  const retryContainer = document.getElementById('retryContainer');
   const downloadAllBtn = document.getElementById('downloadAllBtn');
   const downloadImagesBtn = document.getElementById('downloadImagesBtn');
   const downloadMetaBtn = document.getElementById('downloadMetaBtn');
@@ -91,10 +99,16 @@
 
   let isRunning = false;
   let cancelFlag = false;
+  let failedItems = [];
 
   // ---------- helpers ----------
   function setStatus(text, isGood = true) {
     statusMsg.innerHTML = text;
+    if (!isGood) {
+      statusMsg.style.color = '#ff6b6b';
+    } else {
+      statusMsg.style.color = '#ccc';
+    }
   }
 
   function updateProgress(current, total) {
@@ -108,9 +122,14 @@
     const btns = [downloadAllBtn, downloadImagesBtn, downloadMetaBtn];
     btns.forEach(b => b.disabled = !enabled);
     cancelBtn.disabled = enabled;
+    if (enabled) {
+      cancelBtn.textContent = '⏹ Cancel';
+    } else {
+      cancelBtn.textContent = '⏳ Processing...';
+    }
   }
 
-  // ---------- image processing (background composite) ----------
+  // ---------- image processing ----------
   function compositeBackground(blob, color) {
     return new Promise((resolve, reject) => {
       const img = new Image();
@@ -132,30 +151,53 @@
     });
   }
 
+  // ---------- fetch with retry ----------
+  async function fetchWithRetry(url, retries = MAX_RETRIES) {
+    for (let i = 0; i < retries; i++) {
+      try {
+        const resp = await fetch(url, { 
+          mode: 'cors',
+          cache: 'force-cache',
+          headers: { 'Accept': 'application/json, image/*' }
+        });
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        return resp;
+      } catch (e) {
+        if (i === retries - 1) throw e;
+        await new Promise(r => setTimeout(r, 200 * (i + 1)));
+      }
+    }
+  }
+
   // ---------- download logic ----------
   async function downloadAll(type) {
     if (isRunning) return;
     isRunning = true;
     cancelFlag = false;
+    failedItems = [];
+    errorDisplay.style.display = 'none';
+    retryContainer.innerHTML = '';
     setButtonsEnabled(false);
     progressContainer.style.display = 'block';
     progressBar.style.width = '0%';
     progressBar.textContent = '0%';
-    setStatus(`⏳ Starting ${type === 'both' ? 'full' : type} download...`);
+    setStatus(`⚡ Starting ultra-fast ${type === 'both' ? 'full' : type} download...`);
+
+    const startTime = Date.now();
 
     try {
       const zip = new JSZip();
-      const imgFolder = zip.folder('nft_images');
-      const metaFolder = zip.folder('nft_metadata');
+      const imgFolder = type === 'both' || type === 'images' ? zip.folder('nft_images') : null;
+      const metaFolder = type === 'both' || type === 'metadata' ? zip.folder('nft_metadata') : null;
 
       let processed = 0;
       let imgSuccess = 0, metaSuccess = 0;
       const total = TOTAL;
 
-      // Process in batches
+      // Process in large batches for speed
       for (let start = 1; start <= total; start += BATCH_SIZE) {
         if (cancelFlag) {
-          setStatus('⏹ Download cancelled by user.', false);
+          setStatus('⏹ Cancelled by user.', false);
           return;
         }
 
@@ -163,48 +205,47 @@
         const batch = [];
         for (let i = start; i <= end; i++) batch.push(i);
 
-        // Parallel fetch for this batch
+        // Parallel fetch with aggressive concurrency
         const promises = batch.map(async (num) => {
           if (cancelFlag) return;
 
-          const results = { num, imgOk: false, metaOk: false };
-
           try {
-            // 1) Fetch image
-            const imgResp = await fetch(IMG_BASE + num + IMG_EXT);
-            if (!imgResp.ok) throw new Error('img HTTP ' + imgResp.status);
-            const rawBlob = await imgResp.blob();
+            // Fetch image and metadata in parallel
+            const [imgResp, metaResp] = await Promise.all([
+              fetchWithRetry(IMG_BASE + num + IMG_EXT),
+              fetchWithRetry(META_BASE + num + '.json')
+            ]);
 
-            // 2) Composite background
-            let finalBlob;
-            try {
-              finalBlob = await compositeBackground(rawBlob, BG_COLOR);
-            } catch (e) {
-              finalBlob = rawBlob; // fallback
+            // Process image
+            if (imgFolder) {
+              try {
+                const rawBlob = await imgResp.blob();
+                let finalBlob;
+                try {
+                  finalBlob = await compositeBackground(rawBlob, BG_COLOR);
+                } catch (e) {
+                  finalBlob = rawBlob; // fallback
+                }
+                imgFolder.file(num + '.png', finalBlob);
+                imgSuccess++;
+              } catch (e) {
+                failedItems.push({ num, type: 'image', error: e.message });
+              }
             }
 
-            if (type === 'both' || type === 'images') {
-              imgFolder.file(num + '.png', finalBlob);
-              imgSuccess++;
+            // Process metadata
+            if (metaFolder) {
+              try {
+                const meta = await metaResp.json();
+                metaFolder.file(num + '.json', JSON.stringify(meta, null, 2));
+                metaSuccess++;
+              } catch (e) {
+                failedItems.push({ num, type: 'metadata', error: e.message });
+              }
             }
-            results.imgOk = true;
+
           } catch (e) {
-            // image failed – skip
-          }
-
-          try {
-            // 3) Fetch metadata
-            const metaResp = await fetch(META_BASE + num + '.json');
-            if (!metaResp.ok) throw new Error('meta HTTP ' + metaResp.status);
-            const meta = await metaResp.json();
-
-            if (type === 'both' || type === 'metadata') {
-              metaFolder.file(num + '.json', JSON.stringify(meta, null, 2));
-              metaSuccess++;
-            }
-            results.metaOk = true;
-          } catch (e) {
-            // meta failed – skip
+            failedItems.push({ num, type: 'both', error: e.message });
           }
 
           processed++;
@@ -216,27 +257,113 @@
 
       // Finalize
       if (cancelFlag) {
-        setStatus('⏹ Download cancelled.', false);
+        setStatus('⏹ Cancelled.', false);
         return;
       }
 
-      setStatus(`📦 Building ZIP with ${imgSuccess} images and ${metaSuccess} metadata files…`);
+      const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+      setStatus(`📦 Building ZIP (${elapsed}s) — ${imgSuccess} images, ${metaSuccess} metadata...`);
+
       const zipBlob = await zip.generateAsync({ type: 'blob' });
 
-      const label = type === 'both' ? 'all' : type;
+      const label = type === 'both' ? 'full' : type;
       const filename = `nft_${label}_1_to_${total}.zip`;
       saveAs(zipBlob, filename);
 
-      setStatus(`✅ Download complete! ${imgSuccess} images, ${metaSuccess} metadata files in ZIP.`);
+      let msg = `✅ Complete! ${imgSuccess} images, ${metaSuccess} metadata in ${elapsed}s.`;
+      if (failedItems.length > 0) {
+        msg += ` ⚠️ ${failedItems.length} items failed.`;
+        errorDisplay.style.display = 'block';
+        errorDisplay.innerHTML = `⚠️ ${failedItems.length} items failed. <span class="retry-btn" id="retryFailedBtn">↻ Retry Failed</span>`;
+        document.getElementById('retryFailedBtn')?.addEventListener('click', () => retryFailed());
+      }
+      setStatus(msg);
       updateProgress(total, total);
     } catch (err) {
       setStatus(`❌ Error: ${err.message}`, false);
     } finally {
       isRunning = false;
       setButtonsEnabled(true);
-      setTimeout(() => {
-        if (!cancelFlag) progressContainer.style.display = 'none';
-      }, 1500);
+      if (!cancelFlag && failedItems.length === 0) {
+        setTimeout(() => { progressContainer.style.display = 'none'; }, 2000);
+      }
+    }
+  }
+
+  // ---------- retry failed ----------
+  async function retryFailed() {
+    if (isRunning || failedItems.length === 0) return;
+    isRunning = true;
+    cancelFlag = false;
+    setButtonsEnabled(false);
+    errorDisplay.style.display = 'none';
+    setStatus(`🔄 Retrying ${failedItems.length} failed items...`);
+
+    const toRetry = [...failedItems];
+    failedItems = [];
+    let retrySuccess = 0;
+
+    const zip = new JSZip();
+    const imgFolder = zip.folder('nft_images_retry');
+    const metaFolder = zip.folder('nft_metadata_retry');
+
+    // Group by number
+    const groups = {};
+    toRetry.forEach(item => {
+      if (!groups[item.num]) groups[item.num] = [];
+      groups[item.num].push(item);
+    });
+
+    const numbers = Object.keys(groups).map(Number);
+    let processed = 0;
+
+    for (let i = 0; i < numbers.length; i += 20) {
+      const batch = numbers.slice(i, i + 20);
+      await Promise.all(batch.map(async (num) => {
+        try {
+          const [imgResp, metaResp] = await Promise.all([
+            fetchWithRetry(IMG_BASE + num + IMG_EXT, 3),
+            fetchWithRetry(META_BASE + num + '.json', 3)
+          ]);
+
+          const rawBlob = await imgResp.blob();
+          let finalBlob;
+          try {
+            finalBlob = await compositeBackground(rawBlob, BG_COLOR);
+          } catch (e) {
+            finalBlob = rawBlob;
+          }
+          imgFolder.file(num + '.png', finalBlob);
+
+          const meta = await metaResp.json();
+          metaFolder.file(num + '.json', JSON.stringify(meta, null, 2));
+
+          retrySuccess++;
+          processed++;
+          updateProgress(processed, numbers.length);
+        } catch (e) {
+          failedItems.push({ num, type: 'both', error: e.message });
+          processed++;
+        }
+      }));
+    }
+
+    if (failedItems.length === 0) {
+      const zipBlob = await zip.generateAsync({ type: 'blob' });
+      saveAs(zipBlob, `nft_retry_${Date.now()}.zip`);
+      setStatus(`✅ Retry complete! ${retrySuccess} items recovered.`);
+      errorDisplay.style.display = 'none';
+    } else {
+      setStatus(`⚠️ ${failedItems.length} items still failed.`, false);
+      errorDisplay.style.display = 'block';
+      errorDisplay.innerHTML = `⚠️ ${failedItems.length} items still failed. <span class="retry-btn" id="retryFailedBtn2">↻ Retry Again</span>`;
+      document.getElementById('retryFailedBtn2')?.addEventListener('click', () => retryFailed());
+    }
+
+    isRunning = false;
+    setButtonsEnabled(true);
+    if (failedItems.length === 0) {
+      setTimeout(() => { progressContainer.style.display = 'none'; }, 1500);
     }
   }
 
@@ -244,7 +371,7 @@
   cancelBtn.addEventListener('click', () => {
     if (isRunning) {
       cancelFlag = true;
-      setStatus('⏹ Cancelling... please wait.', false);
+      setStatus('⏹ Cancelling...', false);
       cancelBtn.disabled = true;
     }
   });
@@ -256,7 +383,7 @@
 
   // ---------- initial state ----------
   countBadge.textContent = `0 / ${TOTAL} NFTs`;
-  setStatus(`<span class="highlight">📦 Ready</span> — click download to start`);
+  setStatus(`<span class="highlight">🚀 Ready</span> — ultra-fast parallel download`);
   progressContainer.style.display = 'none';
   setButtonsEnabled(true);
 })();
