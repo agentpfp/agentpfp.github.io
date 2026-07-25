@@ -3,24 +3,30 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>🧩 NFT Downloader - 2-Part ZIP</title>
+  <title>🧩 5-Part NFT Downloader (Safe)</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
   <style>
     * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif; }
     body { background:#0a0a1a; color:#fff; min-height:100vh; padding:20px; display:flex; align-items:center; justify-content:center; }
-    .container { max-width:960px; width:100%; margin:0 auto; text-align:center; }
-    h1 { font-size:2.6rem; margin-bottom:8px; background:linear-gradient(135deg,#d4ff00 0%,#a0cc00 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
-    .subtitle { color:#aaa; margin-bottom:25px; font-size:1.05rem; }
+    .container { max-width:1000px; width:100%; margin:0 auto; text-align:center; }
+    h1 { font-size:2.4rem; margin-bottom:8px; background:linear-gradient(135deg,#d4ff00 0%,#a0cc00 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+    .subtitle { color:#aaa; margin-bottom:20px; font-size:1rem; }
     .color-preview { display:inline-block; background:#d4ff00; padding:2px 18px; border-radius:4px; color:#000; font-weight:bold; }
-    .card { background:#141428; border-radius:20px; padding:35px 25px; box-shadow:0 20px 40px rgba(0,0,0,.6); border:1px solid #2a2a4a; }
-    .status-box { background:#0f0f22; border-radius:12px; padding:18px; margin-bottom:22px; border:1px solid #1f1f3a; }
-    .status-msg { font-size:1.1rem; color:#ccc; }
+    .card { background:#141428; border-radius:20px; padding:30px 25px; box-shadow:0 20px 40px rgba(0,0,0,.6); border:1px solid #2a2a4a; }
+    .status-box { background:#0f0f22; border-radius:12px; padding:16px; margin-bottom:20px; border:1px solid #1f1f3a; }
+    .status-msg { font-size:1.05rem; color:#ccc; }
     .status-msg .highlight { color:#d4ff00; font-weight:bold; }
-    .progress-container { width:100%; background:#1a1a2e; border-radius:10px; height:30px; margin:12px 0; overflow:hidden; display:none; }
-    .progress-bar { height:100%; width:0%; background:linear-gradient(90deg,#d4ff00,#a0cc00); border-radius:10px; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:.85rem; color:#000; transition:width .3s ease; }
-    .btn-group { display:flex; gap:12px; flex-wrap:wrap; justify-content:center; margin-top:18px; }
-    .btn { padding:14px 30px; border:none; border-radius:60px; font-size:1rem; font-weight:700; cursor:pointer; transition:all .25s ease; box-shadow:0 6px 20px rgba(0,0,0,.4); min-width:170px; }
+    .progress-container { width:100%; background:#1a1a2e; border-radius:10px; height:28px; margin:12px 0; overflow:hidden; display:none; }
+    .progress-bar { height:100%; width:0%; background:linear-gradient(90deg,#d4ff00,#a0cc00); border-radius:10px; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:.8rem; color:#000; transition:width .3s ease; }
+    .badge { display:inline-block; background:rgba(212,255,0,.12); color:#d4ff00; padding:4px 14px; border-radius:30px; font-size:.8rem; margin:6px 0; border:1px solid rgba(212,255,0,.15); }
+    .part-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(140px,1fr)); gap:10px; margin:12px 0; }
+    .part-btn { padding:12px 8px; border:none; border-radius:12px; font-weight:700; font-size:.85rem; cursor:pointer; transition:all .25s ease; background:#1a1a2e; color:#fff; border:1px solid #2a2a4a; box-shadow:0 4px 12px rgba(0,0,0,.3); }
+    .part-btn:hover:not(:disabled) { transform:translateY(-2px); border-color:#d4ff00; }
+    .part-btn:disabled { opacity:.4; cursor:not-allowed; transform:none; }
+    .part-btn.active { border-color:#d4ff00; background:rgba(212,255,0,.1); }
+    .part-btn .range { font-size:.7rem; color:#888; display:block; margin-top:2px; }
+    .btn { padding:12px 24px; border:none; border-radius:60px; font-size:.95rem; font-weight:700; cursor:pointer; transition:all .25s ease; box-shadow:0 6px 20px rgba(0,0,0,.4); min-width:140px; }
     .btn:hover:not(:disabled) { transform:translateY(-3px); box-shadow:0 10px 30px rgba(0,0,0,.6); }
     .btn:disabled { opacity:.4; cursor:not-allowed; transform:none; }
     .btn-primary { background:linear-gradient(135deg,#d4ff00 0%,#a0cc00 100%); color:#000; }
@@ -28,38 +34,40 @@
     .btn-danger  { background:linear-gradient(135deg,#f093fb 0%,#f5576c 100%); }
     .btn-warning { background:linear-gradient(135deg,#f7971e 0%,#ffd200 100%); color:#000; }
     .btn-purple  { background:linear-gradient(135deg,#a18cd1 0%,#fbc2eb 100%); color:#000; }
-    .badge { display:inline-block; background:rgba(212,255,0,.12); color:#d4ff00; padding:5px 16px; border-radius:30px; font-size:.85rem; margin:8px 0; border:1px solid rgba(212,255,0,.15); }
-    .footer { margin-top:25px; color:#555; font-size:.9rem; }
-    .part-box { display:flex; gap:15px; flex-wrap:wrap; justify-content:center; margin-top:12px; }
-    .part-card { background:#0f0f22; border-radius:12px; padding:15px 20px; border:1px solid #2a2a4a; flex:1; min-width:200px; }
-    .part-card .title { color:#d4ff00; font-weight:600; font-size:.95rem; }
-    .part-card .info { color:#888; font-size:.8rem; margin-top:4px; }
-    .error-box { margin-top:10px; padding:10px; background:rgba(255,107,107,.1); border-radius:8px; border:1px solid rgba(255,107,107,.2); display:none; color:#ff6b6b; font-size:.9rem; }
+    .btn-group { display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-top:15px; }
+    .error-box { margin-top:10px; padding:8px 12px; background:rgba(255,107,107,.1); border-radius:8px; border:1px solid rgba(255,107,107,.2); display:none; color:#ff6b6b; font-size:.85rem; }
+    .footer { margin-top:20px; color:#555; font-size:.85rem; }
+    .part-status { font-size:.75rem; color:#888; margin-top:2px; }
     @media (max-width:600px) {
-      h1 { font-size:1.8rem; }
-      .card { padding:20px 15px; }
-      .btn { padding:12px 18px; font-size:.9rem; min-width:120px; }
+      h1 { font-size:1.6rem; }
+      .card { padding:18px 12px; }
+      .part-grid { grid-template-columns:repeat(auto-fit, minmax(100px,1fr)); }
+      .btn { padding:10px 16px; font-size:.85rem; min-width:100px; }
     }
   </style>
 </head>
 <body>
 <div class="container">
-  <h1>🧩 2-Part NFT Downloader</h1>
+  <h1>🧩 5-Part NFT Downloader</h1>
   <p class="subtitle">
     Background <span class="color-preview">#d4ff00</span> · 6,969 NFTs<br>
-    <span style="color:#d4ff00;">⚡ Part 1 (1–5500) + Part 2 (5501–6969) — no crashes</span>
+    <span style="color:#d4ff00;">⚡ 5 small parts — each ~1,100 NFTs — no crashes</span>
   </p>
 
   <div class="card">
     <div class="status-box">
       <div class="status-msg" id="statusMsg">
-        <span class="highlight">📦 Ready</span> — download in 2 parts
+        <span class="highlight">📦 Ready</span> — download in 5 small parts
       </div>
       <div class="badge" id="countBadge">0 / 6,969 NFTs</div>
-      <div class="part-box">
-        <div class="part-card"><div class="title">📦 Part 1</div><div class="info" id="part1Info">1 – 5,500</div></div>
-        <div class="part-card"><div class="title">📦 Part 2</div><div class="info" id="part2Info">5,501 – 6,969</div></div>
-      </div>
+    </div>
+
+    <div class="part-grid" id="partGrid">
+      <button class="part-btn" data-part="1">📦 Part 1<span class="range">1 – 1,400</span></button>
+      <button class="part-btn" data-part="2">📦 Part 2<span class="range">1,401 – 2,800</span></button>
+      <button class="part-btn" data-part="3">📦 Part 3<span class="range">2,801 – 4,200</span></button>
+      <button class="part-btn" data-part="4">📦 Part 4<span class="range">4,201 – 5,600</span></button>
+      <button class="part-btn" data-part="5">📦 Part 5<span class="range">5,601 – 6,969</span></button>
     </div>
 
     <div class="progress-container" id="progressContainer">
@@ -67,12 +75,7 @@
     </div>
 
     <div class="btn-group">
-      <button id="downloadPart1Btn" class="btn btn-success">📥 Part 1 ZIP</button>
-      <button id="downloadPart2Btn" class="btn btn-warning">📥 Part 2 ZIP</button>
-      <button id="downloadAllBtn" class="btn btn-primary">⚡ Both Parts</button>
-    </div>
-
-    <div style="margin-top:12px;">
+      <button id="downloadAllBtn" class="btn btn-primary">⚡ Download All 5</button>
       <button id="cancelBtn" class="btn btn-danger" disabled style="min-width:100px; padding:8px 18px; font-size:.85rem;">⏹ Cancel</button>
     </div>
 
@@ -88,11 +91,18 @@
   const IMG_BASE  = 'https://ipfs.io/ipfs/QmTxBwjcBuhLvfrVp7bsbw6KXiTxZkPso3kpHfzw3kxGnU/';
   const META_BASE = 'https://ipfs.io/ipfs/QmdyZTZKSd4AL7sqVHU4Zpw7tQ82iQb3zefBhynufwNQRM/';
   const TOTAL = 6969;
-  const PART1_END = 5500;
-  const IMG_EXT = '.png';
   const BG_COLOR = '#d4ff00';
-  const BATCH_SIZE = 40;
+  const BATCH_SIZE = 30;
   const MAX_RETRIES = 3;
+
+  // Part ranges
+  const PARTS = [
+    { part: 1, start: 1, end: 1400 },
+    { part: 2, start: 1401, end: 2800 },
+    { part: 3, start: 2801, end: 4200 },
+    { part: 4, start: 4201, end: 5600 },
+    { part: 5, start: 5601, end: 6969 }
+  ];
 
   // ---------- DOM refs ----------
   const statusMsg = document.getElementById('statusMsg');
@@ -101,15 +111,15 @@
   const progressBar = document.getElementById('progressBar');
   const errorBox = document.getElementById('errorBox');
   const retryContainer = document.getElementById('retryContainer');
-  const downloadPart1Btn = document.getElementById('downloadPart1Btn');
-  const downloadPart2Btn = document.getElementById('downloadPart2Btn');
   const downloadAllBtn = document.getElementById('downloadAllBtn');
   const cancelBtn = document.getElementById('cancelBtn');
+  const partBtns = document.querySelectorAll('.part-btn');
 
   let isRunning = false;
   let cancelFlag = false;
   let failedItems = [];
-  let currentPart = '';
+  let currentPart = 0;
+  let completedParts = new Set();
 
   // ---------- helpers ----------
   function setStatus(text, isGood = true) {
@@ -121,12 +131,15 @@
     const pct = Math.min(100, Math.round((current / total) * 100));
     progressBar.style.width = pct + '%';
     progressBar.textContent = pct + '%';
+  }
+
+  function updateCount(current, total) {
     countBadge.textContent = `${current} / ${total} NFTs`;
   }
 
   function setButtonsEnabled(enabled) {
-    const btns = [downloadPart1Btn, downloadPart2Btn, downloadAllBtn];
-    btns.forEach(b => b.disabled = !enabled);
+    partBtns.forEach(b => b.disabled = !enabled);
+    downloadAllBtn.disabled = !enabled;
     cancelBtn.disabled = enabled;
     if (enabled) {
       cancelBtn.textContent = '⏹ Cancel';
@@ -142,6 +155,16 @@
 
   function hideError() {
     errorBox.style.display = 'none';
+  }
+
+  function markPartComplete(part) {
+    completedParts.add(part);
+    partBtns.forEach(btn => {
+      if (parseInt(btn.dataset.part) === part) {
+        btn.classList.add('active');
+        btn.innerHTML = `✅ Part ${part}<span class="range">Done</span>`;
+      }
+    });
   }
 
   // ---------- image processing ----------
@@ -179,13 +202,13 @@
         return resp;
       } catch (e) {
         if (i === retries - 1) throw e;
-        await new Promise(r => setTimeout(r, 300 * (i + 1)));
+        await new Promise(r => setTimeout(r, 400 * (i + 1)));
       }
     }
   }
 
-  // ---------- download part ----------
-  async function downloadPart(part) {
+  // ---------- download single part ----------
+  async function downloadPart(partNum) {
     if (isRunning) return;
     isRunning = true;
     cancelFlag = false;
@@ -197,12 +220,14 @@
     progressBar.style.width = '0%';
     progressBar.textContent = '0%';
 
-    const startNum = part === 1 ? 1 : PART1_END + 1;
-    const endNum = part === 1 ? PART1_END : TOTAL;
-    const total = endNum - startNum + 1;
-    currentPart = `Part ${part} (${startNum}-${endNum})`;
+    const partInfo = PARTS.find(p => p.part === partNum);
+    if (!partInfo) { isRunning = false; setButtonsEnabled(true); return; }
 
-    setStatus(`⚡ Downloading ${currentPart}...`);
+    const { start, end } = partInfo;
+    const total = end - start + 1;
+    currentPart = partNum;
+
+    setStatus(`⚡ Downloading Part ${partNum} (${start}-${end})...`);
 
     const startTime = Date.now();
 
@@ -214,22 +239,22 @@
       let processed = 0;
       let imgSuccess = 0, metaSuccess = 0;
 
-      for (let start = startNum; start <= endNum; start += BATCH_SIZE) {
+      for (let s = start; s <= end; s += BATCH_SIZE) {
         if (cancelFlag) {
           setStatus('⏹ Cancelled.', false);
           return;
         }
 
-        const batchEnd = Math.min(start + BATCH_SIZE - 1, endNum);
+        const batchEnd = Math.min(s + BATCH_SIZE - 1, end);
         const batch = [];
-        for (let i = start; i <= batchEnd; i++) batch.push(i);
+        for (let i = s; i <= batchEnd; i++) batch.push(i);
 
         const promises = batch.map(async (num) => {
           if (cancelFlag) return;
 
           try {
             const [imgResp, metaResp] = await Promise.all([
-              fetchWithRetry(IMG_BASE + num + IMG_EXT),
+              fetchWithRetry(IMG_BASE + num + '.png'),
               fetchWithRetry(META_BASE + num + '.json')
             ]);
 
@@ -263,6 +288,7 @@
 
           processed++;
           updateProgress(processed, total);
+          updateCount(processed, total);
         });
 
         await Promise.allSettled(promises);
@@ -274,40 +300,44 @@
       }
 
       const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-      setStatus(`📦 Building ZIP (${elapsed}s) — ${imgSuccess} images, ${metaSuccess} metadata...`);
+      setStatus(`📦 Building ZIP Part ${partNum} (${elapsed}s)...`);
 
       const zipBlob = await zip.generateAsync({ type: 'blob' });
-      const label = part === 1 ? 'part1_1-5500' : 'part2_5501-6969';
-      const filename = `nft_${label}.zip`;
+      const filename = `nft_part${partNum}_${start}-${end}.zip`;
       saveAs(zipBlob, filename);
 
-      let msg = `✅ Part ${part} complete! ${imgSuccess} images, ${metaSuccess} metadata in ${elapsed}s.`;
+      let msg = `✅ Part ${partNum} complete! ${imgSuccess} images, ${metaSuccess} metadata in ${elapsed}s.`;
       if (failedItems.length > 0) {
         msg += ` ⚠️ ${failedItems.length} items failed.`;
-        showError(`⚠️ ${failedItems.length} items failed. <span style="cursor:pointer;color:#d4ff00;text-decoration:underline;" id="retryFailedBtn">↻ Retry Failed</span>`);
-        document.getElementById('retryFailedBtn')?.addEventListener('click', () => retryFailed(part));
+        showError(`⚠️ ${failedItems.length} items failed in Part ${partNum}. <span style="cursor:pointer;color:#d4ff00;text-decoration:underline;" id="retryFailedBtn">↻ Retry Failed</span>`);
+        document.getElementById('retryFailedBtn')?.addEventListener('click', () => retryFailed(partNum));
+      } else {
+        markPartComplete(partNum);
       }
       setStatus(msg);
       updateProgress(total, total);
+      updateCount(total, total);
     } catch (err) {
       setStatus(`❌ Error: ${err.message}`, false);
     } finally {
       isRunning = false;
       setButtonsEnabled(true);
       if (!cancelFlag && failedItems.length === 0) {
-        setTimeout(() => { progressContainer.style.display = 'none'; }, 1500);
+        setTimeout(() => { 
+          if (!isRunning) progressContainer.style.display = 'none'; 
+        }, 1500);
       }
     }
   }
 
   // ---------- retry failed ----------
-  async function retryFailed(part) {
+  async function retryFailed(partNum) {
     if (isRunning || failedItems.length === 0) return;
     isRunning = true;
     cancelFlag = false;
     hideError();
     setButtonsEnabled(false);
-    setStatus(`🔄 Retrying ${failedItems.length} failed items...`);
+    setStatus(`🔄 Retrying ${failedItems.length} failed items in Part ${partNum}...`);
 
     const toRetry = [...failedItems];
     failedItems = [];
@@ -326,12 +356,12 @@
     const numbers = Object.keys(groups).map(Number);
     let processed = 0;
 
-    for (let i = 0; i < numbers.length; i += 20) {
-      const batch = numbers.slice(i, i + 20);
+    for (let i = 0; i < numbers.length; i += 15) {
+      const batch = numbers.slice(i, i + 15);
       await Promise.all(batch.map(async (num) => {
         try {
           const [imgResp, metaResp] = await Promise.all([
-            fetchWithRetry(IMG_BASE + num + IMG_EXT, 3),
+            fetchWithRetry(IMG_BASE + num + '.png', 3),
             fetchWithRetry(META_BASE + num + '.json', 3)
           ]);
 
@@ -358,20 +388,47 @@
 
     if (failedItems.length === 0) {
       const zipBlob = await zip.generateAsync({ type: 'blob' });
-      const label = part === 1 ? 'part1_retry' : 'part2_retry';
-      saveAs(zipBlob, `nft_${label}_recovered.zip`);
-      setStatus(`✅ Retry complete! ${retrySuccess} items recovered.`);
+      saveAs(zipBlob, `nft_part${partNum}_recovered.zip`);
+      setStatus(`✅ Retry complete! ${retrySuccess} items recovered in Part ${partNum}.`);
+      markPartComplete(partNum);
       hideError();
     } else {
-      setStatus(`⚠️ ${failedItems.length} items still failed.`, false);
+      setStatus(`⚠️ ${failedItems.length} items still failed in Part ${partNum}.`, false);
       showError(`⚠️ ${failedItems.length} items still failed. <span style="cursor:pointer;color:#d4ff00;text-decoration:underline;" id="retryFailedBtn2">↻ Retry Again</span>`);
-      document.getElementById('retryFailedBtn2')?.addEventListener('click', () => retryFailed(part));
+      document.getElementById('retryFailedBtn2')?.addEventListener('click', () => retryFailed(partNum));
     }
 
     isRunning = false;
     setButtonsEnabled(true);
     if (failedItems.length === 0) {
       setTimeout(() => { progressContainer.style.display = 'none'; }, 1500);
+    }
+  }
+
+  // ---------- download all parts sequentially ----------
+  async function downloadAllParts() {
+    if (isRunning) return;
+    completedParts.clear();
+    partBtns.forEach(btn => {
+      const p = parseInt(btn.dataset.part);
+      btn.classList.remove('active');
+      const range = p === 1 ? '1 – 1,400' : p === 2 ? '1,401 – 2,800' : p === 3 ? '2,801 – 4,200' : p === 4 ? '4,201 – 5,600' : '5,601 – 6,969';
+      btn.innerHTML = `📦 Part ${p}<span class="range">${range}</span>`;
+    });
+
+    for (const part of PARTS) {
+      if (cancelFlag) break;
+      await downloadPart(part.part);
+      if (failedItems.length > 0) {
+        // If there are failures, stop and let user retry
+        break;
+      }
+      // Small delay between parts
+      await new Promise(r => setTimeout(r, 500));
+    }
+
+    if (completedParts.size === 5) {
+      setStatus('🎉 All 5 parts downloaded successfully!');
     }
   }
 
@@ -385,22 +442,18 @@
   });
 
   // ---------- button handlers ----------
-  downloadPart1Btn.addEventListener('click', () => downloadPart(1));
-  downloadPart2Btn.addEventListener('click', () => downloadPart(2));
-  
-  downloadAllBtn.addEventListener('click', async () => {
-    if (isRunning) return;
-    await downloadPart(1);
-    if (!cancelFlag && failedItems.length === 0) {
-      setTimeout(async () => {
-        await downloadPart(2);
-      }, 1000);
-    }
+  partBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const part = parseInt(btn.dataset.part);
+      downloadPart(part);
+    });
   });
+
+  downloadAllBtn.addEventListener('click', downloadAllParts);
 
   // ---------- initial state ----------
   countBadge.textContent = `0 / ${TOTAL} NFTs`;
-  setStatus(`<span class="highlight">🧩 Ready</span> — download in 2 parts (max 5,500 per part)`);
+  setStatus(`<span class="highlight">🧩 Ready</span> — download in 5 small parts (max 1,400 each)`);
   progressContainer.style.display = 'none';
   setButtonsEnabled(true);
 })();
