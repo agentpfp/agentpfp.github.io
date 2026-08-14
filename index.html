@@ -226,6 +226,7 @@ const SECTIONS_ORDER = ["Background","Skin","Clothes","Head","Eyes"];
 const EXCLUDED_FROM_TRAITS = new Set(["Background","Skin"]);
 const MAX_NFT_LIMIT = 6666;
 const STORAGE_KEY = '404punks_nfts_v2';
+const LAYERS_STORAGE_KEY = '404punks_layers_v2';
 
 // Firebase
 const firebaseConfig = {
@@ -288,6 +289,31 @@ function loadNFTsLocal() {
   try {
     const data = localStorage.getItem(STORAGE_KEY);
     if (data) { nfts = JSON.parse(data); return true; }
+  } catch(e) { console.warn(e); }
+  return false;
+}
+
+// ============================================================
+// LAYER LOCAL PERSISTENCE — layers survive a refresh even if
+// Firebase hasn't finished syncing yet (or is unreachable).
+// ============================================================
+function saveLayersLocal() {
+  try { localStorage.setItem(LAYERS_STORAGE_KEY, JSON.stringify(layersBySection)); }
+  catch(e) { console.warn(e); }
+}
+
+function loadLayersLocal() {
+  try {
+    const data = localStorage.getItem(LAYERS_STORAGE_KEY);
+    if (data) {
+      const parsed = JSON.parse(data);
+      let found = false;
+      for (const s of SECTIONS_ORDER) {
+        if (parsed[s] && parsed[s].length) found = true;
+        layersBySection[s] = parsed[s] || [];
+      }
+      return found;
+    }
   } catch(e) { console.warn(e); }
   return false;
 }
@@ -368,8 +394,9 @@ function toCleanArray(section) {
 
 async function addLayerToFirebase(section, layer) {
   layersBySection[section] = [...(layersBySection[section]||[]), layer];
+  saveLayersLocal();
   renderSections(); showToast(`✅ ADDED: ${layer.value}`);
-  database.ref(`layers/${section}`).set(toCleanArray(section)).catch(e=>console.warn(e));
+  database.ref(`layers/${section}`).set(toCleanArray(section)).catch(e=>_handleFirebaseWriteError(e));
 }
 
 async function deleteLayer(section, id) {
@@ -377,7 +404,8 @@ async function deleteLayer(section, id) {
   if (!layer) return;
   if (!confirm(`🗑️ DELETE "${layer.value}" from ${section}?\nThis cannot be undone!`)) return;
   layersBySection[section] = (layersBySection[section]||[]).filter(l=>String(l.id)!==String(id));
-  database.ref(`layers/${section}`).set(toCleanArray(section)).catch(e=>console.warn(e));
+  saveLayersLocal();
+  database.ref(`layers/${section}`).set(toCleanArray(section)).catch(e=>_handleFirebaseWriteError(e));
   showToast(`🗑️ DELETED: ${layer.value}`);
   renderSections();
 }
@@ -416,11 +444,34 @@ async function addLayer() {
   document.getElementById('layer-value').value='';
 }
 
+// ============================================================
+// FIREBASE ERROR HANDLING — never lose local data over a
+// permission/connection problem; only warn the user once.
+// ============================================================
+let _firebaseWarned = false;
+function _handleFirebaseWriteError(e) {
+  console.warn(e);
+  if (_firebaseWarned) return;
+  _firebaseWarned = true;
+  if (e && e.code === 'PERMISSION_DENIED') {
+    showToast('⚠️ Cloud sync blocked (Firebase rules) — saved on this device only', 5000);
+  } else {
+    showToast('⚠️ Cloud sync failed — saved on this device only', 5000);
+  }
+}
+
 function listenFirebase() {
-  showToast('🔄 Connecting to Firebase...');
   database.ref('layers').on('value', snap => {
     const d = snap.val(); let totalFound=0;
-    if (d && typeof d==='object') {
+
+    // Does this snapshot actually contain any layers?
+    const hasRemoteData = !!(d && typeof d==='object' && SECTIONS_ORDER.some(s=>{
+      const raw=d[s];
+      return raw && (Array.isArray(raw) ? raw.length : Object.keys(raw).length);
+    }));
+
+    if (hasRemoteData) {
+      // Trust Firebase — it has real data, sync it in and cache locally.
       for (const s of SECTIONS_ORDER) {
         const raw=d[s];
         if (!raw) { layersBySection[s]=[]; continue; }
@@ -429,10 +480,14 @@ function listenFirebase() {
         else layersBySection[s]=[];
         totalFound+=layersBySection[s].length;
       }
-      showToast(`✅ ${totalFound} layers loaded!`);
-    } else { for (const s of SECTIONS_ORDER) layersBySection[s]=[]; showToast('⚠️ No layers in Firebase'); }
+      saveLayersLocal();
+    } else {
+      // Firebase came back empty (offline, race condition, fresh DB, etc).
+      // NEVER wipe layers the browser already has — keep whatever is cached
+      // locally no matter what the (possibly empty) snapshot says.
+    }
     renderSections(); updateStats();
-  }, err=>showToast('❌ Firebase error: '+err.message));
+  }, err=>_handleFirebaseWriteError(err));
 }
 
 // ============================================================
@@ -1059,6 +1114,8 @@ window.App = {
 // Init
 loadNFTsLocal();
 renderCollection();
+loadLayersLocal();
+renderSections();
 listenFirebase();
 </script>
 </body>
