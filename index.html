@@ -62,8 +62,6 @@
     .del-layer-btn:active { border-top-color: #808080; border-left-color: #808080; border-right-color: #ffffff; border-bottom-color: #ffffff; }
     .edit-layer-btn { background: #c0c0c0; border: 2px solid; border-top-color: #ffffff; border-left-color: #ffffff; border-right-color: #808080; border-bottom-color: #808080; padding: 3px 7px; cursor: pointer; font-family: 'Press Start 2P', monospace; font-size: 8px; color: #004400; margin-top: 6px; width: 100%; }
     .edit-layer-btn:active { border-top-color: #808080; border-left-color: #808080; border-right-color: #ffffff; border-bottom-color: #ffffff; }
-    .src-tab { background: #c0c0c0; border: 2px solid; border-top-color: #ffffff; border-left-color: #ffffff; border-right-color: #808080; border-bottom-color: #808080; padding: 6px 14px; font-family: 'Press Start 2P', monospace; font-size: 8px; cursor: pointer; }
-    .src-tab.active { border-top-color: #808080; border-left-color: #808080; border-right-color: #ffffff; border-bottom-color: #ffffff; background: #a0a0a0; }
     .svg-textarea { background: #ffffff; border: 2px inset #808080; padding: 8px 12px; font-family: 'Share Tech Mono', monospace; font-size: 12px; width: 100%; outline: none; resize: vertical; }
     .filter-select { font-family: 'VT323', monospace; font-size: 13px; padding: 6px 8px; border: 2px inset #808080; background: #ffffff; cursor: pointer; }
     .exclude-cb-label { font-family: 'VT323', monospace; font-size: 14px; background: #d4d0c8; border: 2px outset #808080; padding: 3px 8px; display:inline-flex; align-items:center; gap:4px; }
@@ -73,7 +71,7 @@
 <body>
 <div class="win95-desktop">
   <div class="win95-window">
-    <div class="win95-titlebar"><span>📁 BURNOVA NFT GENERATOR v12.0</span><button onclick="location.reload()">✕</button></div>
+    <div class="win95-titlebar"><span>📁 BURNOVA NFT GENERATOR v13.0 (SVG)</span><button onclick="location.reload()">✕</button></div>
     <div style="background: #c0c0c0; padding: 8px 16px 0 16px;">
       <div style="display: flex; gap: 4px; flex-wrap: wrap;">
         <button onclick="App.switchTab('layers')" id="tab-layers" class="win95-tab active">📂 LAYERS</button>
@@ -86,14 +84,10 @@
       <!-- LAYERS TAB -->
       <div id="panel-layers">
         <div class="win95-window" style="margin-bottom: 16px;">
-          <div class="win95-titlebar" style="background: #808080;">➕ ADD NEW LAYER</div>
+          <div class="win95-titlebar" style="background: #808080;">➕ ADD NEW LAYER (SVG ONLY)</div>
           <div class="win95-content">
-            <div style="display:flex; gap:4px; margin-bottom:10px;">
-              <button type="button" id="src-tab-url" class="src-tab active" onclick="App.setLayerSource('url')">🔗 URL / GITHUB</button>
-              <button type="button" id="src-tab-svg" class="src-tab" onclick="App.setLayerSource('svg')">🧩 SVG CODE</button>
-            </div>
-            <input id="github-url" placeholder="[ IMAGE URL or GITHUB LINK ]" class="win95-input mb-2">
-            <textarea id="svg-code" placeholder="[ PASTE SVG CODE HERE, e.g. <svg>...</svg> ]" rows="5" class="svg-textarea mb-2 hidden"></textarea>
+            <div class="text-pixel" style="font-size:8px;margin-bottom:6px;">🧩 PASTE SVG CODE:</div>
+            <textarea id="svg-code" placeholder="[ PASTE SVG CODE HERE, e.g. <svg>...</svg> ]" rows="6" class="svg-textarea mb-2"></textarea>
             <div class="flex gap-2 mb-2 flex-wrap">
               <input id="layer-value" placeholder="[ VALUE / NAME ]" class="win95-input flex-1">
               <select id="layer-section" class="win95-select flex-1" onchange="App.renderExcludeCheckboxes()">
@@ -121,7 +115,7 @@
           </div>
         </div>
         <div style="background:#000080;color:#ffff00;font-family:'Press Start 2P',monospace;font-size:7px;padding:8px 12px;margin-bottom:12px;border:2px inset #808080;">
-          ⚙️ LAYER RENDER ORDER: Background → Skin → Clothes → Head → Eyes. Each layer now has its own rarity weight % and can exclude other sections (conflict rules).
+          ⚙️ LAYER RENDER ORDER: Background → Skin → Clothes → Head → Eyes. All layers are SVG — generated NFTs are composited as vector SVG files. Each layer has its own rarity weight % and can exclude other sections (conflict rules).
         </div>
         <div id="sections-container" class="space-y-3"></div>
       </div>
@@ -133,8 +127,8 @@
           <div style="font-family:'Press Start 2P',monospace; font-size:8px; color:#aaaaff; margin-bottom:16px;">Enter count → Hit MINT → Done fast!</div>
           <div style="display:flex; gap:12px; align-items:flex-end; justify-content:center; flex-wrap:wrap;">
             <div>
-              <div style="font-family:'Press Start 2P',monospace; font-size:8px; color:#ccccff; margin-bottom:8px;">TOTAL NFTs (max 6666)</div>
-              <input type="number" id="total-nft-count" min="1" max="6666" value="2222" class="big-mint-input" oninput="App.onTotalChange()">
+              <div style="font-family:'Press Start 2P',monospace; font-size:8px; color:#ccccff; margin-bottom:8px;">TOTAL NFTs (max 5555)</div>
+              <input type="number" id="total-nft-count" min="1" max="5555" value="2222" class="big-mint-input" oninput="App.onTotalChange()">
             </div>
             <div style="flex:1; min-width:200px;">
               <div style="font-family:'Press Start 2P',monospace; font-size:8px; color:#ccccff; margin-bottom:8px;">NAME PREFIX</div>
@@ -163,13 +157,13 @@
         </div>
         <div style="background:#001a00;border:2px inset #808080;padding:10px 14px;margin-bottom:16px;font-family:'Press Start 2P',monospace;font-size:7px;line-height:2;">
           <div style="color:#ffff00;margin-bottom:6px;">⚙️ RARITY SYSTEM:</div>
-          <div style="color:#88ffaa;">Each layer carries its own weight % (set it in the LAYERS tab). Generation picks layers proportionally to those weights and will never exceed the % you set. Layers with an exclusion rule will automatically block their chosen sections from appearing on the same NFT (e.g. a specific Eyes layer can block Head, or a specific Head layer can block Eyes).</div>
+          <div style="color:#88ffaa;">Each layer carries its own weight % (set it in the LAYERS tab). Generation picks layers proportionally to those weights and will never exceed the % you set. Layers with an exclusion rule will automatically block their chosen sections from appearing on the same NFT. The exact count you request is always generated — if a gender or trait combo runs short, the engine falls back automatically instead of skipping NFTs.</div>
         </div>
         <div class="win95-window" style="margin-bottom:16px;">
           <div class="win95-titlebar" style="background:#808080;">⬇️ DOWNLOAD COLLECTION</div>
           <div class="win95-content">
             <div style="display:flex; gap:8px; flex-wrap:wrap;">
-              <button onclick="App.downloadAllPNG()" class="win95-btn flex-1" style="background:#000080; color:#fff; font-size:9px;">🖼️ DOWNLOAD ALL NFTs<br><span style="font-size:7px;">ZIP (1.png, 2.png...)</span></button>
+              <button onclick="App.downloadAllSVG()" class="win95-btn flex-1" style="background:#000080; color:#fff; font-size:9px;">🖼️ DOWNLOAD ALL NFTs<br><span style="font-size:7px;">ZIP (1.svg, 2.svg...)</span></button>
               <button onclick="App.downloadAllJSON()" class="win95-btn flex-1" style="background:#006400; color:#fff; font-size:9px;">📄 DOWNLOAD ALL JSON<br><span style="font-size:7px;">ZIP (1.json, 2.json...)</span></button>
               <button onclick="App.deleteAllNFTs()" class="win95-btn" style="border-color:#ff4444; color:#aa0000;">🗑️ DELETE ALL</button>
             </div>
@@ -239,7 +233,7 @@
 const SECTIONS_ORDER = ["Background","Skin","Clothes","Head","Eyes"];
 const REQUIRED_SECTIONS = ["Background","Skin","Clothes"];
 const EXCLUDED_FROM_TRAITS = new Set(["Background","Skin"]);
-const MAX_NFT_LIMIT = 6666;
+const MAX_NFT_LIMIT = 5555;
 const STORAGE_KEY = '404punks_nfts_v2';
 const LAYERS_STORAGE_KEY = '404punks_layers_v2';
 
@@ -263,7 +257,6 @@ let filteredNFTs = null;
 let openSectionLayers = null;
 let addLayerTargetNFTId = null;
 let vsPage = 0;
-let currentLayerSource = 'url';
 let activeSearchQuery = '';
 const VS_PAGE_SIZE = 40;
 
@@ -346,12 +339,9 @@ function svgToDataUrl(svgCode) {
   return 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(cleaned)));
 }
 
-function setLayerSource(mode) {
-  currentLayerSource = mode;
-  document.getElementById('src-tab-url').classList.toggle('active', mode==='url');
-  document.getElementById('src-tab-svg').classList.toggle('active', mode==='svg');
-  document.getElementById('github-url').classList.toggle('hidden', mode!=='url');
-  document.getElementById('svg-code').classList.toggle('hidden', mode!=='svg');
+function dataURLtoSvgText(dataURL) {
+  const b64 = dataURL.split(',')[1];
+  return decodeURIComponent(escape(atob(b64)));
 }
 
 // ============================================================
@@ -444,6 +434,9 @@ async function deleteLayer(section, id) {
   renderSections();
 }
 
+// ============================================================
+// ADD LAYER — SVG code is the only accepted source now
+// ============================================================
 async function addLayer() {
   const val = document.getElementById('layer-value').value.trim();
   const section = document.getElementById('layer-section').value;
@@ -452,33 +445,15 @@ async function addLayer() {
   const excludes = Array.from(document.querySelectorAll('#layer-excludes-box .exclude-cb:checked')).map(cb=>cb.value);
   if (!val) { showToast('VALUE required'); return; }
 
-  if (currentLayerSource === 'svg') {
-    const svgCode = document.getElementById('svg-code').value.trim();
-    if (!svgCode || !svgCode.includes('<svg')) { showToast('❌ PASTE VALID SVG CODE'); return; }
-    const imgUrl = svgToDataUrl(svgCode);
-    const newLayer = { id: Date.now()+'_'+Math.random().toString(36).substr(2,6), value: val, imageUrl: imgUrl, gender, weight, excludes };
-    const test = new Image();
-    test.onload = () => addLayerToFirebase(section, newLayer);
-    test.onerror = () => showToast('❌ BAD SVG CODE');
-    test.src = imgUrl;
-    document.getElementById('svg-code').value='';
-    document.getElementById('layer-value').value='';
-    document.getElementById('layer-weight').value='10';
-    renderExcludeCheckboxes();
-    return;
-  }
-
-  const url = document.getElementById('github-url').value.trim();
-  if (!url) { showToast('URL required'); return; }
-  let imgUrl = url;
-  if (imgUrl.includes('github.com')&&!imgUrl.includes('raw.githubusercontent.com'))
-    imgUrl = imgUrl.replace('github.com','raw.githubusercontent.com').replace('/blob/','/');
+  const svgCode = document.getElementById('svg-code').value.trim();
+  if (!svgCode || !svgCode.includes('<svg')) { showToast('❌ PASTE VALID SVG CODE'); return; }
+  const imgUrl = svgToDataUrl(svgCode);
   const newLayer = { id: Date.now()+'_'+Math.random().toString(36).substr(2,6), value: val, imageUrl: imgUrl, gender, weight, excludes };
   const test = new Image();
   test.onload = () => addLayerToFirebase(section, newLayer);
-  test.onerror = () => showToast('❌ BAD IMAGE URL');
+  test.onerror = () => showToast('❌ BAD SVG CODE');
   test.src = imgUrl;
-  document.getElementById('github-url').value='';
+  document.getElementById('svg-code').value='';
   document.getElementById('layer-value').value='';
   document.getElementById('layer-weight').value='10';
   renderExcludeCheckboxes();
@@ -571,69 +546,18 @@ function listenFirebase() {
 }
 
 // ============================================================
-// IMAGE COMPOSITING
+// SVG COMPOSITING — every layer is already an SVG data URL, so
+// the final NFT is built by stacking each layer's SVG as an
+// <image> inside one master <svg>. The output stays a real,
+// self-contained vector SVG file (data:image/svg+xml;base64,...).
 // ============================================================
-const imageCache = new Map();
-
-function loadImage(url) {
-  if (imageCache.has(url)) return Promise.resolve(imageCache.get(url));
-  return new Promise(res => {
-    const img = new Image(); img.crossOrigin = "Anonymous";
-    img.onload = () => { imageCache.set(url,img); res(img); };
-    img.onerror = () => { imageCache.set(url,null); res(null); };
-    img.src = url;
-  });
-}
-
-async function preloadAllImages() {
-  const allUrls = [];
-  for (const s of SECTIONS_ORDER)
-    for (const l of (layersBySection[s]||[]))
-      if (l.imageUrl && !imageCache.has(l.imageUrl)) allUrls.push(l.imageUrl);
-  if (!allUrls.length) return;
-  showToast(`⚡ Pre-loading ${allUrls.length} images...`);
-  const BATCH = 20;
-  for (let i = 0; i < allUrls.length; i += BATCH) {
-    await Promise.all(allUrls.slice(i, i + BATCH).map(u => loadImage(u)));
-  }
-  showToast(`✅ ${allUrls.length} images cached!`);
-}
-
-let _sharedCanvas = null;
-let _sharedCtx = null;
-
-function getSharedCanvas(w, h) {
-  if (typeof OffscreenCanvas !== 'undefined') {
-    if (!_sharedCanvas || _sharedCanvas.width !== w || _sharedCanvas.height !== h) {
-      _sharedCanvas = new OffscreenCanvas(w, h);
-      _sharedCtx = _sharedCanvas.getContext('2d');
-    }
-    return { canvas: _sharedCanvas, ctx: _sharedCtx };
-  }
-  if (!_sharedCanvas) {
-    _sharedCanvas = document.createElement('canvas');
-    _sharedCanvas.width = w; _sharedCanvas.height = h;
-    _sharedCtx = _sharedCanvas.getContext('2d');
-  } else if (_sharedCanvas.width !== w || _sharedCanvas.height !== h) {
-    _sharedCanvas.width = w; _sharedCanvas.height = h;
-  }
-  return { canvas: _sharedCanvas, ctx: _sharedCtx };
-}
-
-async function compositeFromLayers(layers, w=512, h=512) {
+function compositeFromLayers(layers, w=512, h=512) {
   const sorted = [...layers].sort((a,b)=>SECTIONS_ORDER.indexOf(a.section)-SECTIONS_ORDER.indexOf(b.section));
-  const { canvas, ctx } = getSharedCanvas(w, h);
-  ctx.clearRect(0, 0, w, h);
-  ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, w, h);
-  for (const l of sorted) {
-    const img = imageCache.get(l.imageUrl);
-    if (img) ctx.drawImage(img, 0, 0, w, h);
-  }
-  if (canvas instanceof OffscreenCanvas) {
-    const blob = await canvas.convertToBlob({ type: 'image/png' });
-    return new Promise(res => { const r = new FileReader(); r.onload = () => res(r.result); r.readAsDataURL(blob); });
-  }
-  return canvas.toDataURL('image/png');
+  const imagesMarkup = sorted.map(l =>
+    `<image href="${l.imageUrl}" x="0" y="0" width="${w}" height="${h}" preserveAspectRatio="xMidYMid slice"/>`
+  ).join('');
+  const markup = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}"><rect width="100%" height="100%" fill="#ffffff"/>${imagesMarkup}</svg>`;
+  return Promise.resolve('data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(markup))));
 }
 
 // ============================================================
@@ -681,17 +605,45 @@ function buildWeightedQueue(layers, total) {
   return queue;
 }
 
+// A gender is only usable for full alternation if EVERY required
+// section actually has a layer available for it (male-or-both /
+// female-or-both). Otherwise forcing a 50/50 split silently starves
+// one gender of required layers and half the requested NFTs get
+// skipped as unresolvable duplicates — that was the "2222 in, 1111
+// out" bug. We now detect this up front and adapt instead.
+function genderHasRequiredCoverage(gender) {
+  return REQUIRED_SECTIONS.every(s => (layersBySection[s]||[]).some(l => l.gender==='both' || l.gender===gender));
+}
+
+// ============================================================
+// MAIN GENERATION — always produces exactly `total` NFTs.
+// Duplicate combos are avoided when possible (8 attempts per NFT),
+// but if the layer pool is too small to guarantee uniqueness the
+// engine accepts the best combo found rather than skipping the
+// NFT — the requested count is never reduced.
+// ============================================================
 async function generateAllNFTs(total, progressCb) {
+  const maleOK = genderHasRequiredCoverage('male');
+  const femaleOK = genderHasRequiredCoverage('female');
+
   const genders = [];
-  for (let i=0;i<total;i++) genders.push(i%2===0 ? 'male' : 'female');
-  const counts = { male: genders.filter(g=>g==='male').length, female: 0 };
-  counts.female = total - counts.male;
+  if (maleOK && femaleOK) {
+    for (let i=0;i<total;i++) genders.push(i%2===0 ? 'male' : 'female');
+  } else if (maleOK) {
+    for (let i=0;i<total;i++) genders.push('male');
+  } else if (femaleOK) {
+    for (let i=0;i<total;i++) genders.push('female');
+  } else {
+    for (let i=0;i<total;i++) genders.push(i%2===0 ? 'male' : 'female');
+  }
+  const counts = { male: genders.filter(g=>g==='male').length, female: genders.filter(g=>g==='female').length };
 
   const queues = {}, pointers = {};
   for (const gender of ['male','female']) {
     queues[gender] = {}; pointers[gender] = {};
     for (const s of SECTIONS_ORDER) {
-      const layers = (layersBySection[s]||[]).filter(l=>l.gender==='both'||l.gender===gender);
+      let layers = (layersBySection[s]||[]).filter(l=>l.gender==='both'||l.gender===gender);
+      if (!layers.length) layers = layersBySection[s]||[]; // last-resort: never leave a section starved
       queues[gender][s] = buildWeightedQueue(layers, counts[gender]);
       pointers[gender][s] = 0;
     }
@@ -699,59 +651,71 @@ async function generateAllNFTs(total, progressCb) {
 
   const existingKeys = buildExistingKeys();
   const generatedSets = [];
-  let skipped=0, maleGenerated=0, femaleGenerated=0;
+  let maleGenerated=0, femaleGenerated=0;
+
+  function pickCandidates(gender) {
+    const candidates = {};
+    for (const s of SECTIONS_ORDER) {
+      const q = queues[gender][s]; const ptr = pointers[gender][s];
+      candidates[s] = ptr < q.length ? q[ptr] : null;
+    }
+    return candidates;
+  }
+
+  function buildPicked(gender, candidates) {
+    const excludedSections = new Set();
+    for (const s of SECTIONS_ORDER) {
+      const c = candidates[s];
+      if (c && c.excludes && c.excludes.length) c.excludes.forEach(ex=>excludedSections.add(ex));
+    }
+    const pickedLayers = [];
+    const consumedSections = [];
+    for (const s of SECTIONS_ORDER) {
+      if (excludedSections.has(s)) continue;
+      let c = candidates[s];
+      if (!c && REQUIRED_SECTIONS.includes(s)) {
+        const pool = (layersBySection[s]||[]).filter(l=>l.gender==='both'||l.gender===gender);
+        const fallbackPool = pool.length ? pool : (layersBySection[s]||[]);
+        if (fallbackPool.length) c = pickRandom(fallbackPool);
+      }
+      if (c) {
+        pickedLayers.push({ section:s, value:c.value, imageUrl:c.imageUrl });
+        if (candidates[s]===c) consumedSections.push(s);
+      }
+    }
+    return { pickedLayers, consumedSections };
+  }
 
   for (let i=0;i<total;i++) {
     const gender = genders[i];
-    let result = null;
+    let finalPick = null, finalConsumed = [];
 
-    for (let attempt=0; attempt<8 && !result; attempt++) {
-      // 1) Peek the next candidate for every section without consuming it
-      const candidates = {};
-      for (const s of SECTIONS_ORDER) {
-        const q = queues[gender][s]; const ptr = pointers[gender][s];
-        candidates[s] = ptr < q.length ? q[ptr] : null;
-      }
-      // 2) Gather every exclusion rule from ALL candidates, regardless of section order
-      const excludedSections = new Set();
-      for (const s of SECTIONS_ORDER) {
-        const c = candidates[s];
-        if (c && c.excludes && c.excludes.length) c.excludes.forEach(ex=>excludedSections.add(ex));
-      }
-      // 3) Build the picked layer set, only consuming the queue pointer for sections actually used
-      const pickedLayers = [];
-      const consumedSections = [];
-      for (const s of SECTIONS_ORDER) {
-        if (excludedSections.has(s)) continue;
-        let c = candidates[s];
-        if (!c && REQUIRED_SECTIONS.includes(s)) {
-          const pool = (layersBySection[s]||[]).filter(l=>l.gender==='both'||l.gender===gender);
-          if (pool.length) c = pickRandom(pool);
-        }
-        if (c) {
-          pickedLayers.push({ section:s, value:c.value, imageUrl:c.imageUrl });
-          if (candidates[s]===c) consumedSections.push(s);
-        }
-      }
+    for (let attempt=0; attempt<8; attempt++) {
+      const candidates = pickCandidates(gender);
+      const { pickedLayers, consumedSections } = buildPicked(gender, candidates);
       const key = pickedLayers.filter(l=>!EXCLUDED_FROM_TRAITS.has(l.section)).map(l=>String(l.value).toLowerCase().trim()).sort().join('|');
+
       if (!existingKeys.has(key)) {
         existingKeys.add(key);
-        consumedSections.forEach(s=>pointers[gender][s]++);
-        result = { layers: pickedLayers, attributes: buildNFTAttributes(pickedLayers) };
-      } else if (attempt < 7) {
-        // Break the duplicate by nudging one section's pointer forward (never beyond its cap)
-        const eligible = SECTIONS_ORDER.filter(s => pointers[gender][s] < (queues[gender][s]||[]).length);
-        if (eligible.length) { const forceSec = pickRandom(eligible); pointers[gender][forceSec]++; }
+        finalPick = pickedLayers; finalConsumed = consumedSections;
+        break;
+      }
+      const eligible = SECTIONS_ORDER.filter(s => pointers[gender][s] < (queues[gender][s]||[]).length);
+      if (eligible.length) { const forceSec = pickRandom(eligible); pointers[gender][forceSec]++; }
+      if (attempt === 7) {
+        // Couldn't avoid a duplicate — accept it anyway so the requested COUNT is always met.
+        finalPick = pickedLayers; finalConsumed = consumedSections;
       }
     }
 
-    if (result) { generatedSets.push({...result, gender}); if (gender==='male') maleGenerated++; else femaleGenerated++; }
-    else skipped++;
+    finalConsumed.forEach(s=>pointers[gender][s]++);
+    generatedSets.push({ layers: finalPick, attributes: buildNFTAttributes(finalPick), gender });
+    if (gender==='male') maleGenerated++; else femaleGenerated++;
 
     if (progressCb && i % 200 === 0) await progressCb(i, total, maleGenerated, femaleGenerated);
   }
 
-  return { generatedSets, skipped, maleGenerated, femaleGenerated };
+  return { generatedSets, skipped: 0, maleGenerated, femaleGenerated };
 }
 
 // ============================================================
@@ -780,13 +744,10 @@ async function startMint() {
   };
 
   try {
-    progText.innerText = '⚡ PRELOADING...'; progPhase.innerText = 'Phase 1/3: Image cache';
-    await preloadAllImages();
-
-    progText.innerText = '🎲 APPLYING RARITY RULES...'; progPhase.innerText = 'Phase 2/3: Weighted trait selection';
-    const { generatedSets, skipped, maleGenerated, femaleGenerated } = await generateAllNFTs(total, async (i, tot, m, f) => {
+    progText.innerText = '🎲 APPLYING RARITY RULES...'; progPhase.innerText = 'Phase 1/2: Weighted trait selection';
+    const { generatedSets, maleGenerated, femaleGenerated } = await generateAllNFTs(total, async (i, tot, m, f) => {
       setProgress(Math.round(i / tot * 50), i, tot);
-      progPhase.innerText = `Phase 2/3: ${i}/${tot} combos | ♂${m} ♀${f}`;
+      progPhase.innerText = `Phase 1/2: ${i}/${tot} combos | ♂${m} ♀${f}`;
       await yieldFrame();
     });
 
@@ -796,14 +757,13 @@ async function startMint() {
     }
 
     progText.innerText = `✅ ${generatedSets.length} COMBOS READY`;
-    progPhase.innerText = `♂${maleGenerated} male | ♀${femaleGenerated} female${skipped > 0 ? ` | ⚠️ ${skipped} skipped` : ''}`;
-    if (skipped > 0) showToast(`⚠️ ${skipped} duplicates removed`, 4000);
+    progPhase.innerText = `♂${maleGenerated} male | ♀${femaleGenerated} female`;
     await yieldFrame();
 
-    progText.innerText = '🎨 COMPOSITING...'; progPhase.innerText = 'Phase 3/3: Drawing NFTs';
-    setProgress(0, 0, generatedSets.length);
+    progText.innerText = '🎨 BUILDING SVGs...'; progPhase.innerText = 'Phase 2/2: Compositing NFTs';
+    setProgress(50, 0, generatedSets.length);
     const startTime = Date.now();
-    const BATCH_SIZE = 100;
+    const BATCH_SIZE = 200;
     const newNFTs = [];
 
     for (let i = 0; i < generatedSets.length; i += BATCH_SIZE) {
@@ -827,13 +787,13 @@ async function startMint() {
       }
 
       const done = Math.min(i + BATCH_SIZE, generatedSets.length);
-      const pct = Math.round(done / generatedSets.length * 100);
+      const pct = 50 + Math.round(done / generatedSets.length * 50);
       setProgress(pct, done, generatedSets.length);
-      progText.innerText = `🎨 COMPOSITING... ${pct}%`;
+      progText.innerText = `🎨 BUILDING SVGs... ${pct}%`;
       const elapsed = (Date.now() - startTime) / 1000;
-      if (elapsed > 0.5) {
+      if (elapsed > 0.3) {
         const rate = done / elapsed;
-        progEta.innerText = `⚡ ${Math.round(rate)}/sec | ETA: ${Math.round((generatedSets.length - done) / rate)}s`;
+        progEta.innerText = `⚡ ${Math.round(rate)}/sec | ETA: ${Math.round((generatedSets.length - done) / Math.max(rate,1))}s`;
       }
       await yieldFrame();
     }
@@ -915,7 +875,7 @@ function openLightbox(id) {
       </div>
       ${attrsHtml}
       <div style="display:flex;gap:8px;margin-top:12px;">
-        <button onclick="App.downloadSingleImage('${id}')" class="win95-btn flex-1">📸 PNG</button>
+        <button onclick="App.downloadSingleImage('${id}')" class="win95-btn flex-1">📸 SVG</button>
         <button onclick="App.downloadSingleJSON('${id}')" class="win95-btn flex-1">📄 JSON</button>
         <button onclick="App.viewNFTDetails('${id}')" class="win95-btn flex-1">🧩 EDIT LAYERS</button>
         <button onclick="document.getElementById('lightbox-el').remove()" class="win95-btn flex-1">CLOSE</button>
@@ -973,7 +933,7 @@ function renderVSPage(container, displayNFTs) {
       <div style="font-family:'Press Start 2P',monospace;font-size:6px;text-align:center;color:#808080;">${nft.gender||''} | ${(nft.layers||[]).length} layers</div>
       <div style="display:flex;gap:4px;margin-top:6px;flex-wrap:wrap;">
         <button onclick="App.viewNFTDetails('${nft.id}')" class="win95-btn" style="padding:3px;font-size:6px;flex:1;">✏️ EDIT</button>
-        <button onclick="App.downloadSingleImage('${nft.id}')" class="win95-btn" style="padding:3px;font-size:6px;flex:1;">PNG</button>
+        <button onclick="App.downloadSingleImage('${nft.id}')" class="win95-btn" style="padding:3px;font-size:6px;flex:1;">SVG</button>
         <button onclick="App.downloadSingleJSON('${nft.id}')" class="win95-btn" style="padding:3px;font-size:6px;flex:1;">JSON</button>
         <button onclick="App.deleteSingleNFT('${nft.id}')" class="win95-btn" style="padding:3px;font-size:6px;border-color:#ff4444;">✕</button>
       </div>`;
@@ -1075,25 +1035,20 @@ async function deleteSingleNFT(id) {
 }
 
 // ============================================================
-// DOWNLOAD
+// DOWNLOAD — everything is exported as real .svg files now
 // ============================================================
-function dataURLtoUint8Array(dataURL) {
-  const b = atob(dataURL.split(',')[1]); const arr = new Uint8Array(b.length);
-  for (let i = 0; i < b.length; i++) arr[i] = b.charCodeAt(i); return arr;
-}
-
-async function downloadAllPNG() {
+async function downloadAllSVG() {
   const list = filteredNFTs||nfts; if (!list.length) { showToast('No NFTs!'); return; }
-  setZipStatus(`⏳ Building ZIP (${list.length} PNGs)...`, true);
+  setZipStatus(`⏳ Building ZIP (${list.length} SVGs)...`, true);
   const zip = new JSZip();
   for (let i = 0; i < list.length; i++) {
-    zip.file(`${i+1}.png`, dataURLtoUint8Array(list[i].image));
+    zip.file(`${i+1}.svg`, dataURLtoSvgText(list[i].image));
     if (i % 100 === 0) { setZipStatus(`⏳ Packing ${i+1}/${list.length}...`, true); await yieldFrame(); }
   }
   setZipStatus('⚙️ Compressing...', true);
-  const blob = await zip.generateAsync({type:'blob', compression:'STORE'});
+  const blob = await zip.generateAsync({type:'blob', compression:'DEFLATE', compressionOptions:{level:6}});
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'burnova_images.zip'; a.click();
-  URL.revokeObjectURL(a.href); setZipStatus('', false); showToast(`✅ burnova_images.zip (${list.length} PNGs)`);
+  URL.revokeObjectURL(a.href); setZipStatus('', false); showToast(`✅ burnova_images.zip (${list.length} SVGs)`);
 }
 
 async function downloadAllJSON() {
@@ -1104,7 +1059,7 @@ async function downloadAllJSON() {
     const n = list[i];
     zip.file(`${i+1}.json`, JSON.stringify({
       name: n.name, description: n.description,
-      image: `${i+1}.png`, attributes: n.attributes
+      image: `${i+1}.svg`, attributes: n.attributes
     }, null, 2));
     if (i % 500 === 0) { setZipStatus(`⏳ JSON ${i+1}/${list.length}...`, true); await yieldFrame(); }
   }
@@ -1116,13 +1071,17 @@ async function downloadAllJSON() {
 
 function downloadSingleImage(id) {
   const n = nfts.find(x=>x.id===id); if (!n) return;
-  const a = document.createElement('a'); a.href = n.image; a.download = `${nfts.indexOf(n)+1}.png`; a.click(); showToast('PNG SAVED');
+  const idx = nfts.indexOf(n)+1;
+  const blob = new Blob([dataURLtoSvgText(n.image)], {type:'image/svg+xml'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `${idx}.svg`; a.click();
+  URL.revokeObjectURL(a.href);
+  showToast('SVG SAVED');
 }
 
 function downloadSingleJSON(id) {
   const n = nfts.find(x=>x.id===id); if (!n) return;
   const idx = nfts.indexOf(n)+1;
-  const blob = new Blob([JSON.stringify({name:n.name,description:n.description,image:`${idx}.png`,attributes:n.attributes},null,2)],{type:'application/json'});
+  const blob = new Blob([JSON.stringify({name:n.name,description:n.description,image:`${idx}.svg`,attributes:n.attributes},null,2)],{type:'application/json'});
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `${idx}.json`; a.click(); showToast('JSON SAVED');
 }
 
@@ -1146,7 +1105,7 @@ async function viewNFTDetails(id) {
   modal.innerHTML = `<div class="win95-window" style="width:95%;max-width:520px;max-height:95vh;overflow:auto;">
     <div class="win95-titlebar"><span>✏️ EDIT: ${escapeHtml(nft.name)} (${nft.gender})</span><button onclick="_closeModal('${id}')">✕</button></div>
     <div class="win95-content">
-      <canvas id="modal-canvas-${id}" width="256" height="256" style="width:100%;margin-bottom:10px;border:3px outset #808080;display:block;"></canvas>
+      <img id="modal-canvas-${id}" style="width:100%;margin-bottom:10px;border:3px outset #808080;display:block;background:#fff;">
       <div style="font-family:'Press Start 2P',monospace;font-size:8px;margin-bottom:8px;">LAYERS (↑↓ to reorder render order — auto-saves)</div>
       <div class="layers-list" id="modal-layers-${id}" style="max-height:260px;overflow:auto;"></div>
       <div style="margin-top:10px;background:#d4d0c8;border:2px inset #808080;padding:8px;">
@@ -1158,7 +1117,7 @@ async function viewNFTDetails(id) {
       </div>
       <div style="display:flex;gap:8px;margin-top:12px;">
         <button onclick="App.saveAndCloseModal('${id}')" class="win95-btn" style="flex:1;background:#004400;color:#0f0;">💾 SAVE & CLOSE</button>
-        <button onclick="App.downloadSingleImage('${id}')" class="win95-btn" style="flex:1;">📸 PNG</button>
+        <button onclick="App.downloadSingleImage('${id}')" class="win95-btn" style="flex:1;">📸 SVG</button>
         <button onclick="App.downloadSingleJSON('${id}')" class="win95-btn" style="flex:1;">📄 JSON</button>
         <button onclick="_closeModal('${id}')" class="win95-btn" style="flex:1;">CANCEL</button>
       </div>
@@ -1196,16 +1155,8 @@ function _renderModalLayers(id) {
 
 async function _drawModalCanvas(id) {
   const state = _modalState[id]; if (!state) return;
-  const mc = document.getElementById('modal-canvas-'+id); if (!mc) return;
-  const ctx = mc.getContext('2d');
-  ctx.clearRect(0, 0, 256, 256);
-  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, 256, 256);
-  const sorted = [...state.layers].sort((a,b)=>SECTIONS_ORDER.indexOf(a.section)-SECTIONS_ORDER.indexOf(b.section));
-  for (const l of sorted) {
-    let img = imageCache.get(l.imageUrl);
-    if (!img) img = await loadImage(l.imageUrl);
-    if (img) ctx.drawImage(img, 0, 0, 256, 256);
-  }
+  const el = document.getElementById('modal-canvas-'+id); if (!el) return;
+  el.src = await compositeFromLayers(state.layers, 256, 256);
 }
 
 // ✅ Apply modal state to real NFT — auto-save on every change
@@ -1334,11 +1285,10 @@ window._closeModal = _closeModal;
 window.App = {
   switchTab,
   toggleSectionLayers: s=>{openSectionLayers=openSectionLayers===s?null:s; renderSections();},
-  setLayerSource,
   addLayer, deleteLayer,
   renderExcludeCheckboxes, openEditLayerModal, saveEditLayer,
   onTotalChange, startMint, deleteAllNFTs,
-  downloadAllPNG, downloadAllJSON,
+  downloadAllSVG, downloadAllJSON,
   viewNFTDetails, downloadSingleImage, downloadSingleJSON, deleteSingleNFT,
   searchNFTs, clearSearch, applyFilters, clearFilters,
   openLightbox,
