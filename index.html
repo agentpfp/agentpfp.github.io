@@ -47,7 +47,7 @@
     .big-mint-btn:active { border-top-color: #005500; border-left-color: #005500; border-right-color: #00ff00; border-bottom-color: #00ff00; }
     .big-mint-btn:disabled { background: #555; opacity: 0.6; cursor: not-allowed; }
     .layer-section-header { background: #d4d0c8; border: 2px outset #808080; padding: 8px 14px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
-    .layer-section-body { padding: 12px; display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 8px; }
+    .layer-section-body { padding: 12px; display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; }
     .gender-badge-m { background: #4488ff; color: #fff; font-family: 'Press Start 2P', monospace; font-size: 6px; padding: 1px 4px; }
     .gender-badge-f { background: #ff88cc; color: #fff; font-family: 'Press Start 2P', monospace; font-size: 6px; padding: 1px 4px; }
     .gender-badge-b { background: #808080; color: #fff; font-family: 'Press Start 2P', monospace; font-size: 6px; padding: 1px 4px; }
@@ -60,15 +60,20 @@
     .score-badge { background: #004400; color: #00ff00; font-family: 'Press Start 2P', monospace; font-size: 7px; padding: 2px 5px; border: 1px solid #00aa00; display: inline-block; margin-top: 3px; }
     .del-layer-btn { background: #c0c0c0; border: 2px solid; border-top-color: #ffffff; border-left-color: #ffffff; border-right-color: #808080; border-bottom-color: #808080; padding: 3px 7px; cursor: pointer; font-family: 'Press Start 2P', monospace; font-size: 8px; color: #aa0000; margin-top: 6px; width: 100%; }
     .del-layer-btn:active { border-top-color: #808080; border-left-color: #808080; border-right-color: #ffffff; border-bottom-color: #ffffff; }
+    .edit-layer-btn { background: #c0c0c0; border: 2px solid; border-top-color: #ffffff; border-left-color: #ffffff; border-right-color: #808080; border-bottom-color: #808080; padding: 3px 7px; cursor: pointer; font-family: 'Press Start 2P', monospace; font-size: 8px; color: #004400; margin-top: 6px; width: 100%; }
+    .edit-layer-btn:active { border-top-color: #808080; border-left-color: #808080; border-right-color: #ffffff; border-bottom-color: #ffffff; }
     .src-tab { background: #c0c0c0; border: 2px solid; border-top-color: #ffffff; border-left-color: #ffffff; border-right-color: #808080; border-bottom-color: #808080; padding: 6px 14px; font-family: 'Press Start 2P', monospace; font-size: 8px; cursor: pointer; }
     .src-tab.active { border-top-color: #808080; border-left-color: #808080; border-right-color: #ffffff; border-bottom-color: #ffffff; background: #a0a0a0; }
     .svg-textarea { background: #ffffff; border: 2px inset #808080; padding: 8px 12px; font-family: 'Share Tech Mono', monospace; font-size: 12px; width: 100%; outline: none; resize: vertical; }
+    .filter-select { font-family: 'VT323', monospace; font-size: 13px; padding: 6px 8px; border: 2px inset #808080; background: #ffffff; cursor: pointer; }
+    .exclude-cb-label { font-family: 'VT323', monospace; font-size: 14px; background: #d4d0c8; border: 2px outset #808080; padding: 3px 8px; display:inline-flex; align-items:center; gap:4px; }
+    .lightbox-attr { display:flex; justify-content:space-between; align-items:center; background:#d4d0c8; border:2px inset #808080; padding:6px 10px; margin-bottom:6px; }
   </style>
 </head>
 <body>
 <div class="win95-desktop">
   <div class="win95-window">
-    <div class="win95-titlebar"><span>📁 BURNOVA NFT GENERATOR v11.0</span><button onclick="location.reload()">✕</button></div>
+    <div class="win95-titlebar"><span>📁 BURNOVA NFT GENERATOR v12.0</span><button onclick="location.reload()">✕</button></div>
     <div style="background: #c0c0c0; padding: 8px 16px 0 16px;">
       <div style="display: flex; gap: 4px; flex-wrap: wrap;">
         <button onclick="App.switchTab('layers')" id="tab-layers" class="win95-tab active">📂 LAYERS</button>
@@ -91,7 +96,7 @@
             <textarea id="svg-code" placeholder="[ PASTE SVG CODE HERE, e.g. <svg>...</svg> ]" rows="5" class="svg-textarea mb-2 hidden"></textarea>
             <div class="flex gap-2 mb-2 flex-wrap">
               <input id="layer-value" placeholder="[ VALUE / NAME ]" class="win95-input flex-1">
-              <select id="layer-section" class="win95-select flex-1">
+              <select id="layer-section" class="win95-select flex-1" onchange="App.renderExcludeCheckboxes()">
                 <option value="Background">Background</option>
                 <option value="Skin">Skin</option>
                 <option value="Clothes">Clothes</option>
@@ -104,11 +109,19 @@
               <label><input type="radio" name="layer-gender" value="female"> ♀ FEMALE</label>
               <label><input type="radio" name="layer-gender" value="both"> ⚥ BOTH</label>
             </div>
+            <div class="mb-3">
+              <div class="text-pixel" style="font-size:8px;margin-bottom:6px;">⚖️ RARITY WEIGHT % (how often this layer is picked inside its section — will never be exceeded)</div>
+              <input id="layer-weight" type="number" min="1" max="100" value="10" class="win95-input" style="max-width:140px;">
+            </div>
+            <div class="mb-3">
+              <div class="text-pixel" style="font-size:8px;margin-bottom:6px;">🚫 IF THIS LAYER IS USED, DO NOT ADD THESE SECTIONS TO THE NFT:</div>
+              <div id="layer-excludes-box" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
+            </div>
             <button onclick="App.addLayer()" class="win95-btn w-full">📀 ADD TO LIBRARY</button>
           </div>
         </div>
         <div style="background:#000080;color:#ffff00;font-family:'Press Start 2P',monospace;font-size:7px;padding:8px 12px;margin-bottom:12px;border:2px inset #808080;">
-          ⚙️ LAYER RENDER ORDER: Background → Skin → Clothes → Head → Eyes
+          ⚙️ LAYER RENDER ORDER: Background → Skin → Clothes → Head → Eyes. Each layer now has its own rarity weight % and can exclude other sections (conflict rules).
         </div>
         <div id="sections-container" class="space-y-3"></div>
       </div>
@@ -149,14 +162,8 @@
           <div class="stat-box"><div style="color:#aaaaff; margin-bottom:4px;">MAX COMBOS</div><div id="stat-combos" style="font-size:11px;">0</div></div>
         </div>
         <div style="background:#001a00;border:2px inset #808080;padding:10px 14px;margin-bottom:16px;font-family:'Press Start 2P',monospace;font-size:7px;line-height:2;">
-          <div style="color:#ffff00;margin-bottom:6px;">⚙️ TRAIT GENERATION PROBABILITY:</div>
-          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:4px;">
-            <span style="color:#00ff00;">✅ Background  — 100%</span>
-            <span style="color:#00ff00;">✅ Skin        — 100%</span>
-            <span style="color:#00ff00;">✅ Clothes     — 94%</span>
-            <span style="color:#00ff00;">✅ Head        — 87%</span>
-            <span style="color:#88ffaa;">👁 Eyes        —  77%</span>
-          </div>
+          <div style="color:#ffff00;margin-bottom:6px;">⚙️ RARITY SYSTEM:</div>
+          <div style="color:#88ffaa;">Each layer carries its own weight % (set it in the LAYERS tab). Generation picks layers proportionally to those weights and will never exceed the % you set. Layers with an exclusion rule will automatically block their chosen sections from appearing on the same NFT (e.g. a specific Eyes layer can block Head, or a specific Head layer can block Eyes).</div>
         </div>
         <div class="win95-window" style="margin-bottom:16px;">
           <div class="win95-titlebar" style="background:#808080;">⬇️ DOWNLOAD COLLECTION</div>
@@ -184,6 +191,13 @@
             <div style="font-family:'Press Start 2P',monospace; font-size:7px; color:#444; margin-top:8px;">
               TIP: Enter a range (1-80), a single number (500), or a trait name (Golden Armor)
             </div>
+          </div>
+        </div>
+        <div class="win95-window" style="margin-bottom: 16px;">
+          <div class="win95-titlebar" style="background: #808080;">🧬 FILTER BY TRAITS</div>
+          <div class="win95-content">
+            <div id="trait-filters" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px;"></div>
+            <button onclick="App.clearFilters()" class="win95-btn">🗑️ CLEAR FILTERS</button>
           </div>
         </div>
         <div id="nft-count" class="mb-3"></div>
@@ -223,6 +237,7 @@
 // LAYER ORDER: Background → Skin → Clothes → Head → Eyes
 // ============================================================
 const SECTIONS_ORDER = ["Background","Skin","Clothes","Head","Eyes"];
+const REQUIRED_SECTIONS = ["Background","Skin","Clothes"];
 const EXCLUDED_FROM_TRAITS = new Set(["Background","Skin"]);
 const MAX_NFT_LIMIT = 6666;
 const STORAGE_KEY = '404punks_nfts_v2';
@@ -249,6 +264,7 @@ let openSectionLayers = null;
 let addLayerTargetNFTId = null;
 let vsPage = 0;
 let currentLayerSource = 'url';
+let activeSearchQuery = '';
 const VS_PAGE_SIZE = 40;
 
 SECTIONS_ORDER.forEach(s => { layersBySection[s] = []; });
@@ -339,7 +355,21 @@ function setLayerSource(mode) {
 }
 
 // ============================================================
-// LAYERS RENDER — with DELETE button
+// EXCLUSION RULE CHECKBOXES (shared by add-layer form & edit modal)
+// ============================================================
+function renderExcludeCheckboxes(forSection, containerId, checkedList) {
+  const sec = forSection || document.getElementById('layer-section').value;
+  const cid = containerId || 'layer-excludes-box';
+  const checked = checkedList || [];
+  const box = document.getElementById(cid);
+  if (!box) return;
+  box.innerHTML = SECTIONS_ORDER.filter(s => s !== sec).map(s => `
+    <label class="exclude-cb-label"><input type="checkbox" class="exclude-cb" value="${s}" ${checked.includes(s)?'checked':''}> ${s}</label>
+  `).join('');
+}
+
+// ============================================================
+// LAYERS RENDER — with weight, exclusions, edit + delete
 // ============================================================
 function renderSections() {
   let html = '';
@@ -363,6 +393,9 @@ function renderSections() {
         <div style="aspect-ratio:1;background:#fff;margin-bottom:6px;"><img src="${l.imageUrl}" style="width:100%;height:100%;object-fit:contain;" loading="lazy"></div>
         <div class="text-pixel" style="font-size:7px;">${escapeHtml(l.value)}</div>
         <div style="margin:2px 0;">${l.gender==='male'?'<span class="gender-badge-m">♂</span>':l.gender==='female'?'<span class="gender-badge-f">♀</span>':'<span class="gender-badge-b">⚥</span>'}</div>
+        <div class="score-badge">⚖ ${l.weight||10}%</div>
+        ${(l.excludes&&l.excludes.length)?`<div style="font-family:'Press Start 2P',monospace;font-size:6px;color:#aa0000;margin-top:3px;">🚫 blocks: ${l.excludes.join(', ')}</div>`:''}
+        <button class="edit-layer-btn" onclick="event.stopPropagation();App.openEditLayerModal('${s}','${l.id}')">✏️ EDIT</button>
         <button class="del-layer-btn" onclick="event.stopPropagation();App.deleteLayer('${s}','${l.id}')">🗑️ DELETE</button>
       </div>`).join('')}</div>`:''}
     </div>`;
@@ -388,7 +421,8 @@ function updateStats() {
 
 function toCleanArray(section) {
   return (layersBySection[section]||[]).filter(Boolean).map(l=>({
-    id:l.id, value:l.value, imageUrl:l.imageUrl, gender:l.gender
+    id:l.id, value:l.value, imageUrl:l.imageUrl, gender:l.gender,
+    weight: l.weight||10, excludes: l.excludes||[]
   }));
 }
 
@@ -414,19 +448,23 @@ async function addLayer() {
   const val = document.getElementById('layer-value').value.trim();
   const section = document.getElementById('layer-section').value;
   const gender = document.querySelector('input[name="layer-gender"]:checked').value;
+  const weight = Math.max(1, Math.min(100, parseInt(document.getElementById('layer-weight').value)||10));
+  const excludes = Array.from(document.querySelectorAll('#layer-excludes-box .exclude-cb:checked')).map(cb=>cb.value);
   if (!val) { showToast('VALUE required'); return; }
 
   if (currentLayerSource === 'svg') {
     const svgCode = document.getElementById('svg-code').value.trim();
     if (!svgCode || !svgCode.includes('<svg')) { showToast('❌ PASTE VALID SVG CODE'); return; }
     const imgUrl = svgToDataUrl(svgCode);
-    const newLayer = { id: Date.now()+'_'+Math.random().toString(36).substr(2,6), value: val, imageUrl: imgUrl, gender };
+    const newLayer = { id: Date.now()+'_'+Math.random().toString(36).substr(2,6), value: val, imageUrl: imgUrl, gender, weight, excludes };
     const test = new Image();
     test.onload = () => addLayerToFirebase(section, newLayer);
     test.onerror = () => showToast('❌ BAD SVG CODE');
     test.src = imgUrl;
     document.getElementById('svg-code').value='';
     document.getElementById('layer-value').value='';
+    document.getElementById('layer-weight').value='10';
+    renderExcludeCheckboxes();
     return;
   }
 
@@ -435,13 +473,55 @@ async function addLayer() {
   let imgUrl = url;
   if (imgUrl.includes('github.com')&&!imgUrl.includes('raw.githubusercontent.com'))
     imgUrl = imgUrl.replace('github.com','raw.githubusercontent.com').replace('/blob/','/');
-  const newLayer = { id: Date.now()+'_'+Math.random().toString(36).substr(2,6), value: val, imageUrl: imgUrl, gender };
+  const newLayer = { id: Date.now()+'_'+Math.random().toString(36).substr(2,6), value: val, imageUrl: imgUrl, gender, weight, excludes };
   const test = new Image();
   test.onload = () => addLayerToFirebase(section, newLayer);
   test.onerror = () => showToast('❌ BAD IMAGE URL');
   test.src = imgUrl;
   document.getElementById('github-url').value='';
   document.getElementById('layer-value').value='';
+  document.getElementById('layer-weight').value='10';
+  renderExcludeCheckboxes();
+}
+
+// ============================================================
+// EDIT LAYER (weight + exclusion rules) MODAL
+// ============================================================
+function openEditLayerModal(section, id) {
+  const layer = (layersBySection[section]||[]).find(l=>String(l.id)===String(id));
+  if (!layer) return;
+  document.getElementById('edit-layer-modal-el')?.remove();
+  const modal = document.createElement('div');
+  modal.id = 'edit-layer-modal-el';
+  modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:20000;';
+  modal.innerHTML = `<div class="win95-window" style="width:90%;max-width:380px;">
+    <div class="win95-titlebar"><span>✏️ EDIT: ${escapeHtml(layer.value)}</span><button onclick="document.getElementById('edit-layer-modal-el').remove()">✕</button></div>
+    <div class="win95-content">
+      <div class="text-pixel" style="font-size:8px;margin-bottom:6px;">⚖️ RARITY WEIGHT % (won't be exceeded):</div>
+      <input id="edit-layer-weight" type="number" min="1" max="100" value="${layer.weight||10}" class="win95-input mb-3">
+      <div class="text-pixel" style="font-size:8px;margin-bottom:6px;">🚫 BLOCK THESE SECTIONS WHEN THIS LAYER IS USED:</div>
+      <div id="edit-layer-excludes-box" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;"></div>
+      <div style="display:flex;gap:8px;">
+        <button onclick="App.saveEditLayer('${section}','${id}')" class="win95-btn flex-1" style="background:#004400;color:#0f0;">💾 SAVE</button>
+        <button onclick="document.getElementById('edit-layer-modal-el').remove()" class="win95-btn flex-1">CANCEL</button>
+      </div>
+    </div></div>`;
+  document.body.appendChild(modal);
+  renderExcludeCheckboxes(section, 'edit-layer-excludes-box', layer.excludes||[]);
+}
+
+function saveEditLayer(section, id) {
+  const layer = (layersBySection[section]||[]).find(l=>String(l.id)===String(id));
+  if (!layer) return;
+  const weight = Math.max(1, Math.min(100, parseInt(document.getElementById('edit-layer-weight').value)||10));
+  const excludes = Array.from(document.querySelectorAll('#edit-layer-excludes-box .exclude-cb:checked')).map(cb=>cb.value);
+  layer.weight = weight;
+  layer.excludes = excludes;
+  saveLayersLocal();
+  database.ref(`layers/${section}`).set(toCleanArray(section)).catch(e=>_handleFirebaseWriteError(e));
+  document.getElementById('edit-layer-modal-el')?.remove();
+  renderSections();
+  showToast('✅ Layer rules updated');
 }
 
 // ============================================================
@@ -578,44 +658,100 @@ function buildExistingKeys() {
   return existing;
 }
 
-// ============================================================
-// TRAIT PROBABILITIES
-// ============================================================
 function pickRandom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 
-function generateNFTLayers(gender, existingKeys, maxAttempts=50) {
-  const bgLayers   = (layersBySection['Background']||[]).filter(l=>l.gender==='both'||l.gender===gender);
-  const skinLayers = (layersBySection['Skin']||[]).filter(l=>l.gender==='both'||l.gender===gender);
-  const clothesLayers = (layersBySection['Clothes']||[]).filter(l=>l.gender==='both'||l.gender===gender);
-  const headLayers = (layersBySection['Head']||[]).filter(l=>l.gender==='both'||l.gender===gender);
-  if (!bgLayers.length || !skinLayers.length || !clothesLayers.length || !headLayers.length) return null;
+// ============================================================
+// WEIGHTED, CAPPED GENERATION ENGINE
+// Builds one shuffled "quota queue" per section per gender, sized
+// so each layer appears AT MOST floor(weight% * total) times — the
+// requested % is a hard ceiling, never exceeded. Exclusion rules are
+// resolved by peeking every section's next candidate BEFORE
+// committing any of them, so a rule can point either direction
+// (e.g. an Eyes layer blocking Head, or a Head layer blocking Eyes).
+// ============================================================
+function buildWeightedQueue(layers, total) {
+  if (!layers.length || total <= 0) return [];
+  const totalWeight = layers.reduce((s,l)=>s+(l.weight||10),0) || 1;
+  let queue = [];
+  layers.forEach(l => {
+    const count = Math.floor((l.weight||10) / totalWeight * total); // floor => cap never exceeded
+    for (let i=0;i<count;i++) queue.push(l);
+  });
+  for (let i=queue.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [queue[i],queue[j]]=[queue[j],queue[i]]; }
+  return queue;
+}
 
-  const eyesLayers = (layersBySection['Eyes']||[]).filter(l=>l.gender==='both'||l.gender===gender);
+async function generateAllNFTs(total, progressCb) {
+  const genders = [];
+  for (let i=0;i<total;i++) genders.push(i%2===0 ? 'male' : 'female');
+  const counts = { male: genders.filter(g=>g==='male').length, female: 0 };
+  counts.female = total - counts.male;
 
-  for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    const pickedLayers = [];
-    const bg = pickRandom(bgLayers);
-    pickedLayers.push({section:'Background', value:bg.value, imageUrl:bg.imageUrl});
-    const skin = pickRandom(skinLayers);
-    pickedLayers.push({section:'Skin', value:skin.value, imageUrl:skin.imageUrl});
-    const clothes = pickRandom(clothesLayers);
-    pickedLayers.push({section:'Clothes', value:clothes.value, imageUrl:clothes.imageUrl});
-    const head = pickRandom(headLayers);
-    pickedLayers.push({section:'Head', value:head.value, imageUrl:head.imageUrl});
-    if (eyesLayers.length && Math.random() < 0.88) {
-      const e = pickRandom(eyesLayers);
-      pickedLayers.push({section:'Eyes', value:e.value, imageUrl:e.imageUrl});
-    }
-    pickedLayers.sort((a,b)=>SECTIONS_ORDER.indexOf(a.section)-SECTIONS_ORDER.indexOf(b.section));
-    const key = pickedLayers
-      .filter(l=>!EXCLUDED_FROM_TRAITS.has(l.section))
-      .map(l=>String(l.value).toLowerCase().trim()).sort().join('|');
-    if (!existingKeys.has(key)) {
-      existingKeys.add(key);
-      return { layers: pickedLayers, attributes: buildNFTAttributes(pickedLayers) };
+  const queues = {}, pointers = {};
+  for (const gender of ['male','female']) {
+    queues[gender] = {}; pointers[gender] = {};
+    for (const s of SECTIONS_ORDER) {
+      const layers = (layersBySection[s]||[]).filter(l=>l.gender==='both'||l.gender===gender);
+      queues[gender][s] = buildWeightedQueue(layers, counts[gender]);
+      pointers[gender][s] = 0;
     }
   }
-  return null;
+
+  const existingKeys = buildExistingKeys();
+  const generatedSets = [];
+  let skipped=0, maleGenerated=0, femaleGenerated=0;
+
+  for (let i=0;i<total;i++) {
+    const gender = genders[i];
+    let result = null;
+
+    for (let attempt=0; attempt<8 && !result; attempt++) {
+      // 1) Peek the next candidate for every section without consuming it
+      const candidates = {};
+      for (const s of SECTIONS_ORDER) {
+        const q = queues[gender][s]; const ptr = pointers[gender][s];
+        candidates[s] = ptr < q.length ? q[ptr] : null;
+      }
+      // 2) Gather every exclusion rule from ALL candidates, regardless of section order
+      const excludedSections = new Set();
+      for (const s of SECTIONS_ORDER) {
+        const c = candidates[s];
+        if (c && c.excludes && c.excludes.length) c.excludes.forEach(ex=>excludedSections.add(ex));
+      }
+      // 3) Build the picked layer set, only consuming the queue pointer for sections actually used
+      const pickedLayers = [];
+      const consumedSections = [];
+      for (const s of SECTIONS_ORDER) {
+        if (excludedSections.has(s)) continue;
+        let c = candidates[s];
+        if (!c && REQUIRED_SECTIONS.includes(s)) {
+          const pool = (layersBySection[s]||[]).filter(l=>l.gender==='both'||l.gender===gender);
+          if (pool.length) c = pickRandom(pool);
+        }
+        if (c) {
+          pickedLayers.push({ section:s, value:c.value, imageUrl:c.imageUrl });
+          if (candidates[s]===c) consumedSections.push(s);
+        }
+      }
+      const key = pickedLayers.filter(l=>!EXCLUDED_FROM_TRAITS.has(l.section)).map(l=>String(l.value).toLowerCase().trim()).sort().join('|');
+      if (!existingKeys.has(key)) {
+        existingKeys.add(key);
+        consumedSections.forEach(s=>pointers[gender][s]++);
+        result = { layers: pickedLayers, attributes: buildNFTAttributes(pickedLayers) };
+      } else if (attempt < 7) {
+        // Break the duplicate by nudging one section's pointer forward (never beyond its cap)
+        const eligible = SECTIONS_ORDER.filter(s => pointers[gender][s] < (queues[gender][s]||[]).length);
+        if (eligible.length) { const forceSec = pickRandom(eligible); pointers[gender][forceSec]++; }
+      }
+    }
+
+    if (result) { generatedSets.push({...result, gender}); if (gender==='male') maleGenerated++; else femaleGenerated++; }
+    else skipped++;
+
+    if (progressCb && i % 200 === 0) await progressCb(i, total, maleGenerated, femaleGenerated);
+  }
+
+  return { generatedSets, skipped, maleGenerated, femaleGenerated };
 }
 
 // ============================================================
@@ -625,8 +761,7 @@ async function startMint() {
   const total = Math.min(MAX_NFT_LIMIT, parseInt(document.getElementById('total-nft-count').value)||1);
   const prefix = document.getElementById('name-prefix').value.trim()||"BURNOVA#";
   const desc = document.getElementById('nft-description').value;
-  const required = ['Background','Skin','Clothes','Head'];
-  const missing = required.filter(s=>!(layersBySection[s]||[]).length);
+  const missing = REQUIRED_SECTIONS.filter(s=>!(layersBySection[s]||[]).length);
   if (missing.length) { showToast(`⚠️ Required layers missing: ${missing.join(', ')}`); return; }
 
   const btn = document.getElementById('bulk-mint-btn');
@@ -648,33 +783,12 @@ async function startMint() {
     progText.innerText = '⚡ PRELOADING...'; progPhase.innerText = 'Phase 1/3: Image cache';
     await preloadAllImages();
 
-    progText.innerText = '🎲 GENERATING COMBOS...'; progPhase.innerText = 'Phase 2/3: Generating traits';
-    const existingKeys = buildExistingKeys();
-    const generatedSets = [];
-    let skipped = 0;
-    let maleGenerated = 0;
-    let femaleGenerated = 0;
-
-    for (let i = 0; i < total; i++) {
-      let gender = (i % 2 === 0) ? 'male' : 'female';
-      let result = generateNFTLayers(gender, existingKeys);
-      if (!result) {
-        gender = gender === 'male' ? 'female' : 'male';
-        result = generateNFTLayers(gender, existingKeys);
-      }
-      if (result) {
-        generatedSets.push({...result, gender});
-        if (gender === 'male') maleGenerated++;
-        else femaleGenerated++;
-      } else {
-        skipped++;
-      }
-      if (i % 200 === 0) {
-        setProgress(Math.round(i / total * 50), i, total);
-        progPhase.innerText = `Phase 2/3: ${i}/${total} combos | ♂${maleGenerated} ♀${femaleGenerated}`;
-        await yieldFrame();
-      }
-    }
+    progText.innerText = '🎲 APPLYING RARITY RULES...'; progPhase.innerText = 'Phase 2/3: Weighted trait selection';
+    const { generatedSets, skipped, maleGenerated, femaleGenerated } = await generateAllNFTs(total, async (i, tot, m, f) => {
+      setProgress(Math.round(i / tot * 50), i, tot);
+      progPhase.innerText = `Phase 2/3: ${i}/${tot} combos | ♂${m} ♀${f}`;
+      await yieldFrame();
+    });
 
     for (let i = generatedSets.length-1; i > 0; i--) {
       const j = Math.floor(Math.random()*(i+1));
@@ -727,12 +841,88 @@ async function startMint() {
     nfts.push(...newNFTs);
     saveNFTsLocal();
     renderCollection();
+    renderFilters();
     showToast(`✅ ${newNFTs.length} NFTs generated! (♂${maleGenerated} ♀${femaleGenerated})`);
     progText.innerText = `✅ DONE! ${newNFTs.length} NFTs`;
     progEta.innerText = `Total: ${Math.round((Date.now()-startTime)/1000)}s`;
 
   } catch(err) { console.error(err); showToast('❌ '+err.message); }
   finally { btn.disabled = false; progPhase.innerText = ''; }
+}
+
+// ============================================================
+// RARITY (OpenSea-style % + statistical rarity rank)
+// ============================================================
+function computeTraitStats() {
+  const stats = {};
+  for (const n of nfts) {
+    for (const a of (n.attributes||[])) {
+      if (a.trait_type === 'Attribute Count') continue;
+      stats[a.trait_type] = stats[a.trait_type] || {};
+      stats[a.trait_type][a.value] = (stats[a.trait_type][a.value] || 0) + 1;
+    }
+  }
+  return stats;
+}
+
+function computeRarityRanks() {
+  const stats = computeTraitStats();
+  const total = nfts.length || 1;
+  const scored = nfts.map(n => {
+    let score = 0;
+    for (const a of (n.attributes||[])) {
+      if (a.trait_type === 'Attribute Count') continue;
+      const count = (stats[a.trait_type] && stats[a.trait_type][a.value]) || 1;
+      score += total / count; // statistical rarity — rarer traits contribute more
+    }
+    return { id: n.id, score };
+  });
+  scored.sort((a,b) => b.score - a.score);
+  const ranks = {};
+  scored.forEach((s, idx) => { ranks[s.id] = idx + 1; });
+  return { stats, ranks, total };
+}
+
+// ============================================================
+// LIGHTBOX — click an NFT to view it large with live rarity %
+// ============================================================
+function openLightbox(id) {
+  const nft = nfts.find(n=>n.id===id); if (!nft) return;
+  const { stats, ranks, total } = computeRarityRanks();
+  const rank = ranks[id] || '-';
+  document.getElementById('lightbox-el')?.remove();
+  const modal = document.createElement('div');
+  modal.id = 'lightbox-el';
+  modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);display:flex;align-items:center;justify-content:center;z-index:15000;overflow:auto;padding:20px;';
+
+  const attrsHtml = (nft.attributes||[]).filter(a=>a.trait_type!=='Attribute Count').map(a => {
+    const count = (stats[a.trait_type] && stats[a.trait_type][a.value]) || 0;
+    const pct = total ? ((count/total)*100).toFixed(1) : '0.0';
+    return `<div class="lightbox-attr">
+      <div><div style="font-family:'Press Start 2P',monospace;font-size:6px;color:#444;">${escapeHtml(a.trait_type)}</div>
+      <div style="font-family:'VT323';font-size:15px;">${escapeHtml(a.value)}</div></div>
+      <div class="score-badge">${pct}% have this</div>
+    </div>`;
+  }).join('');
+
+  modal.innerHTML = `<div class="win95-window" style="width:100%;max-width:480px;" onclick="event.stopPropagation()">
+    <div class="win95-titlebar"><span>🔍 ${escapeHtml(nft.name)}</span><button onclick="document.getElementById('lightbox-el').remove()">✕</button></div>
+    <div class="win95-content">
+      <div style="background:#fff;border:3px outset #808080;margin-bottom:12px;"><img src="${nft.image}" style="width:100%;display:block;"></div>
+      <div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
+        <div class="order-tag">🏆 RARITY RANK #${rank} / ${total}</div>
+        <div class="order-tag">${nft.gender==='male'?'♂':'♀'} ${(nft.layers||[]).length} layers</div>
+      </div>
+      ${attrsHtml}
+      <div style="display:flex;gap:8px;margin-top:12px;">
+        <button onclick="App.downloadSingleImage('${id}')" class="win95-btn flex-1">📸 PNG</button>
+        <button onclick="App.downloadSingleJSON('${id}')" class="win95-btn flex-1">📄 JSON</button>
+        <button onclick="App.viewNFTDetails('${id}')" class="win95-btn flex-1">🧩 EDIT LAYERS</button>
+        <button onclick="document.getElementById('lightbox-el').remove()" class="win95-btn flex-1">CLOSE</button>
+      </div>
+    </div></div>`;
+  modal.onclick = () => modal.remove();
+  document.body.appendChild(modal);
 }
 
 // ============================================================
@@ -776,7 +966,7 @@ function renderVSPage(container, displayNFTs) {
     div.id = `card-${nft.id}`;
     div.style.padding = '10px';
     div.innerHTML = `
-      <div style="aspect-ratio:1;background:#fff;margin-bottom:8px;border:2px inset #808080;">
+      <div style="aspect-ratio:1;background:#fff;margin-bottom:8px;border:2px inset #808080;cursor:pointer;" onclick="App.openLightbox('${nft.id}')" title="Click to view large">
         <img src="${nft.image}" style="width:100%;height:100%;object-fit:contain;" loading="lazy">
       </div>
       <div class="text-pixel" style="font-size:8px;text-align:center;">${escapeHtml(nft.name)}</div>
@@ -794,33 +984,74 @@ function renderVSPage(container, displayNFTs) {
 }
 
 // ============================================================
-// SEARCH
+// SEARCH + TRAIT FILTERS (combined)
 // ============================================================
-function searchNFTs() {
-  const val = document.getElementById('search-range').value.trim();
-  if (!val) { filteredNFTs=null; renderCollection(); return; }
-  if (/^\d+-\d+$/.test(val)) {
-    const [s,e] = val.split('-').map(Number);
-    filteredNFTs = nfts.filter((_,i)=>(i+1)>=s&&(i+1)<=e);
-  } else if (/^\d+$/.test(val)) {
-    const n = parseInt(val);
-    filteredNFTs = nfts.filter((_,i)=>(i+1)===n);
-  } else {
-    const query = val.toLowerCase().trim();
-    filteredNFTs = nfts.filter(nft =>
-      (nft.attributes||[]).some(a=>String(a.value).toLowerCase().includes(query))
-      || (nft.layers||[]).some(l=>l.value.toLowerCase().includes(query))
-      || (nft.name||'').toLowerCase().includes(query)
-    );
+function renderFilters() {
+  const opts = {};
+  for (const s of SECTIONS_ORDER) opts[s] = new Set();
+  for (const n of nfts) for (const l of (n.layers||[])) { if (opts[l.section]) opts[l.section].add(l.value); }
+  const box = document.getElementById('trait-filters');
+  if (!box) return;
+  let html = '';
+  for (const s of SECTIONS_ORDER) {
+    const vals = [...opts[s]].sort();
+    if (!vals.length) continue;
+    html += `<select class="win95-select filter-select" data-section="${s}" onchange="App.applyFilters()">
+      <option value="">${s}: ALL</option>
+      ${vals.map(v=>`<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('')}
+    </select>`;
   }
-  if (!filteredNFTs.length) showToast('⚠️ No NFTs found for that search');
+  box.innerHTML = html;
+}
+
+function applyAllFilters() {
+  let list = nfts;
+  const val = activeSearchQuery;
+  if (val) {
+    if (/^\d+-\d+$/.test(val)) {
+      const [s,e] = val.split('-').map(Number);
+      list = list.filter((_,i)=>(i+1)>=s&&(i+1)<=e);
+    } else if (/^\d+$/.test(val)) {
+      const n = parseInt(val);
+      list = list.filter((_,i)=>(i+1)===n);
+    } else {
+      const query = val.toLowerCase();
+      list = list.filter(nft =>
+        (nft.attributes||[]).some(a=>String(a.value).toLowerCase().includes(query))
+        || (nft.layers||[]).some(l=>l.value.toLowerCase().includes(query))
+        || (nft.name||'').toLowerCase().includes(query)
+      );
+    }
+  }
+  const selects = document.querySelectorAll('.filter-select');
+  const activeF = {};
+  selects.forEach(sel => { if (sel.value) activeF[sel.dataset.section] = sel.value; });
+  const keys = Object.keys(activeF);
+  if (keys.length) {
+    list = list.filter(nft => keys.every(s => (nft.layers||[]).some(l=>l.section===s && l.value===activeF[s])));
+  }
+
+  filteredNFTs = (val || keys.length) ? list : null;
+  if (filteredNFTs && !filteredNFTs.length) showToast('⚠️ No NFTs found');
   renderCollection();
 }
 
+function searchNFTs() {
+  activeSearchQuery = document.getElementById('search-range').value.trim();
+  applyAllFilters();
+}
+
 function clearSearch() {
-  filteredNFTs = null;
+  activeSearchQuery = '';
   document.getElementById('search-range').value = '';
-  renderCollection();
+  applyAllFilters();
+}
+
+function applyFilters() { applyAllFilters(); }
+
+function clearFilters() {
+  document.querySelectorAll('.filter-select').forEach(sel => sel.value = '');
+  applyAllFilters();
 }
 
 // ============================================================
@@ -832,7 +1063,7 @@ async function deleteAllNFTs() {
   if (!confirm(`⚠️ Delete ALL ${count} NFTs? Cannot be undone!`)) return;
   nfts = []; filteredNFTs = null;
   try { localStorage.removeItem(STORAGE_KEY); } catch(e) { console.warn(e); }
-  renderCollection();
+  renderCollection(); renderFilters();
   showToast(`✅ ALL ${count} NFTs DELETED`);
 }
 
@@ -840,7 +1071,7 @@ async function deleteSingleNFT(id) {
   if (!confirm('Delete this NFT?')) return;
   nfts = nfts.filter(x => x.id !== id);
   if (filteredNFTs) filteredNFTs = filteredNFTs.filter(x => x.id !== id);
-  saveNFTsLocal(); renderCollection(); showToast('🗑️ NFT DELETED');
+  saveNFTsLocal(); renderCollection(); renderFilters(); showToast('🗑️ NFT DELETED');
 }
 
 // ============================================================
@@ -996,6 +1227,7 @@ async function _applyModalToNFT(id) {
   }
 
   saveNFTsLocal();
+  renderFilters();
 }
 
 // ✅ Layer move — auto-saves after every move
@@ -1074,6 +1306,7 @@ async function applyLayerToNFT(nftId, section, value, imageUrl, layerId) {
     nfts[nftIndex].image = await compositeFromLayers(nfts[nftIndex].layers);
     nfts[nftIndex].attributes = buildNFTAttributes(nfts[nftIndex].layers);
     saveNFTsLocal();
+    renderFilters();
     const card = document.getElementById('card-'+nftId);
     if (card) { const img = card.querySelector('img'); if(img) img.src = nfts[nftIndex].image; }
   }
@@ -1089,7 +1322,7 @@ function switchTab(tab) {
     document.getElementById('tab-'+t).classList.toggle('active',t===tab);
   });
   if (tab==='create') updateStats();
-  if (tab==='collection') renderCollection();
+  if (tab==='collection') { renderFilters(); renderCollection(); }
 }
 
 function onTotalChange() { updateStats(); }
@@ -1103,10 +1336,12 @@ window.App = {
   toggleSectionLayers: s=>{openSectionLayers=openSectionLayers===s?null:s; renderSections();},
   setLayerSource,
   addLayer, deleteLayer,
+  renderExcludeCheckboxes, openEditLayerModal, saveEditLayer,
   onTotalChange, startMint, deleteAllNFTs,
   downloadAllPNG, downloadAllJSON,
   viewNFTDetails, downloadSingleImage, downloadSingleJSON, deleteSingleNFT,
-  searchNFTs, clearSearch,
+  searchNFTs, clearSearch, applyFilters, clearFilters,
+  openLightbox,
   _modalMoveLayer, _modalDeleteLayer, saveAndCloseModal,
   openAddLayerModal, applyLayerToNFT
 };
@@ -1116,6 +1351,8 @@ loadNFTsLocal();
 renderCollection();
 loadLayersLocal();
 renderSections();
+renderExcludeCheckboxes();
+renderFilters();
 listenFirebase();
 </script>
 </body>
